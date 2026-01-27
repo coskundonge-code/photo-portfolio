@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Images, FolderOpen, ShoppingBag, Eye, TrendingUp, DollarSign } from 'lucide-react';
+import { Image, FolderOpen, ShoppingBag, Eye, TrendingUp, DollarSign } from 'lucide-react';
 
 export default function AdminDashboard() {
   // Demo stats

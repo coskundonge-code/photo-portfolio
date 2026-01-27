@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAdminStore } from '@/lib/store';
 import { 
   LayoutDashboard, 
-  Images, 
+  Image, 
   FolderOpen, 
   ShoppingBag, 
   Settings,
