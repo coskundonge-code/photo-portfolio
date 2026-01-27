@@ -33,10 +33,6 @@ export default function ProductPage() {
     loadData();
   }, [params.id]);
 
-  const siteName = settings?.site_name || 'COŞKUN DÖNGE';
-  const email = settings?.email || 'CoskunDonge@CoskunDonge.com';
-  const instagram = settings?.instagram || 'https://instagram.com/coskundonge';
-
   const handleAddToCart = () => {
     toast.success('Ürün sepete eklendi!');
   };
@@ -52,18 +48,18 @@ export default function ProductPage() {
   if (!product) {
     return (
       <main className="min-h-screen bg-white">
-        <Navigation projects={projects} siteName={siteName} />
+        <Navigation projects={projects} settings={settings} />
         <div className="pt-32 pb-16 px-6 text-center">
           <h1 className="text-2xl text-neutral-900">Ürün bulunamadı</h1>
         </div>
-        <Footer siteName={siteName} email={email} instagram={instagram} />
+        <Footer settings={settings} />
       </main>
     );
   }
 
   return (
     <main className="min-h-screen bg-white">
-      <Navigation projects={projects} siteName={siteName} />
+      <Navigation projects={projects} settings={settings} />
       
       <section className="pt-28 pb-16 px-6 lg:px-12">
         <div className="max-w-6xl mx-auto">
@@ -131,7 +127,7 @@ export default function ProductPage() {
         </div>
       </section>
 
-      <Footer siteName={siteName} email={email} instagram={instagram} />
+      <Footer settings={settings} />
     </main>
   );
 }
