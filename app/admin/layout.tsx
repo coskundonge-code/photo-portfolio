@@ -11,7 +11,8 @@ import {
   ShoppingBag, 
   Settings,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Globe
 } from 'lucide-react';
 
 export default function AdminLayout({
@@ -29,12 +30,10 @@ export default function AdminLayout({
     }
   }, [isAuthenticated, pathname, router]);
 
-  // Login sayfasında sidebar gösterme
   if (pathname === '/admin/login') {
     return <>{children}</>;
   }
 
-  // Giriş yapmamışsa içeriği gösterme
   if (!isAuthenticated) {
     return null;
   }
@@ -44,6 +43,7 @@ export default function AdminLayout({
     { href: '/admin/photos', label: 'Photos', icon: ImageIcon },
     { href: '/admin/projects', label: 'Projects', icon: FolderOpen },
     { href: '/admin/products', label: 'Products', icon: ShoppingBag },
+    { href: '/admin/settings', label: 'Settings', icon: Settings },
   ];
 
   const handleLogout = () => {
@@ -52,7 +52,7 @@ export default function AdminLayout({
   };
 
   return (
-    <div className="min-h-screen bg-primary flex">
+    <div className="min-h-screen bg-neutral-950 flex">
       {/* Sidebar */}
       <aside className="w-64 bg-neutral-900 border-r border-neutral-800 flex flex-col">
         {/* Logo */}
@@ -77,7 +77,7 @@ export default function AdminLayout({
                     href={item.href}
                     className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                       isActive
-                        ? 'bg-accent/10 text-accent'
+                        ? 'bg-white/10 text-white'
                         : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
                     }`}
                   >
@@ -95,17 +95,18 @@ export default function AdminLayout({
         <div className="p-4 border-t border-neutral-800 space-y-1">
           <Link
             href="/"
+            target="_blank"
             className="flex items-center space-x-3 px-4 py-3 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
           >
-            <Settings className="w-5 h-5" />
-            <span>View Site</span>
+            <Globe className="w-5 h-5" />
+            <span>Siteyi Görüntüle</span>
           </Link>
           <button
             onClick={handleLogout}
             className="w-full flex items-center space-x-3 px-4 py-3 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition-colors"
           >
             <LogOut className="w-5 h-5" />
-            <span>Logout</span>
+            <span>Çıkış Yap</span>
           </button>
         </div>
       </aside>

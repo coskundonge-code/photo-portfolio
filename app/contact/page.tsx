@@ -1,214 +1,156 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import { Project } from '@/lib/types';
-import { Mail, MapPin, Phone, Instagram, Send } from 'lucide-react';
+import { getSettings, getProjects } from '@/lib/supabase';
+import { Settings, Project } from '@/lib/types';
+import { Send, Loader2, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const demoProjects: Project[] = [
-  { id: '1', title: 'Landscapes', slug: 'landscapes', order_index: 1, is_visible: true, created_at: '', updated_at: '' },
-  { id: '2', title: 'Urban', slug: 'urban', order_index: 2, is_visible: true, created_at: '', updated_at: '' },
-];
-
 export default function ContactPage() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    const loadData = async () => {
+      const [settingsData, projectsData] = await Promise.all([
+        getSettings(),
+        getProjects()
+      ]);
+      setSettings(settingsData);
+      setProjects(projectsData);
+      setLoading(false);
+    };
+    loadData();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setSending(true);
     
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Simüle edilmiş gönderim
+    await new Promise(resolve => setTimeout(resolve, 1500));
     
-    toast.success('Message sent successfully!');
-    setFormData({ name: '', email: '', subject: '', message: '' });
-    setIsSubmitting(false);
+    setSending(false);
+    setSent(true);
+    toast.success('Mesajınız gönderildi!');
+    
+    setName('');
+    setEmail('');
+    setMessage('');
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
-  };
+  const siteName = settings?.site_name || 'COŞKUN DÖNGE';
+  const contactEmail = settings?.email || 'CoskunDonge@CoskunDonge.com';
+  const instagram = settings?.instagram || 'https://instagram.com/coskundonge';
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
+      </div>
+    );
+  }
 
   return (
-    <main className="min-h-screen bg-primary">
-      <Navigation projects={demoProjects} siteName="PORTFOLIO" />
+    <main className="min-h-screen bg-white">
+      <Navigation projects={projects} siteName={siteName} />
       
-      <section className="pt-32 pb-20 px-6 lg:px-12">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20">
-            {/* Left Column - Info */}
-            <div className="space-y-12">
-              <div className="opacity-0 animate-fade-up">
-                <p className="text-accent uppercase tracking-wider text-sm mb-4">Contact</p>
-                <h1 className="font-display text-4xl md:text-5xl lg:text-6xl mb-6">
-                  Get in Touch
-                </h1>
-                <p className="text-neutral-400 text-lg leading-relaxed">
-                  Have a project in mind? Want to acquire a print? Or simply want to say hello? 
-                  I'd love to hear from you.
-                </p>
-              </div>
-
-              {/* Contact Details */}
-              <div className="space-y-6 opacity-0 animate-fade-up stagger-1">
-                <div className="flex items-start space-x-4">
-                  <Mail className="w-5 h-5 text-accent mt-1" />
-                  <div>
-                    <p className="text-neutral-500 text-sm uppercase tracking-wider mb-1">Email</p>
-                    <a href="mailto:hello@example.com" className="text-white hover:text-accent transition-colors">
-                      hello@example.com
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4">
-                  <Phone className="w-5 h-5 text-accent mt-1" />
-                  <div>
-                    <p className="text-neutral-500 text-sm uppercase tracking-wider mb-1">Phone</p>
-                    <a href="tel:+905551234567" className="text-white hover:text-accent transition-colors">
-                      +90 555 123 4567
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4">
-                  <MapPin className="w-5 h-5 text-accent mt-1" />
-                  <div>
-                    <p className="text-neutral-500 text-sm uppercase tracking-wider mb-1">Location</p>
-                    <p className="text-white">Istanbul, Turkey</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4">
-                  <Instagram className="w-5 h-5 text-accent mt-1" />
-                  <div>
-                    <p className="text-neutral-500 text-sm uppercase tracking-wider mb-1">Instagram</p>
-                    <a 
-                      href="https://instagram.com" 
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-white hover:text-accent transition-colors"
-                    >
-                      @yourhandle
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              {/* Response Time */}
-              <div className="p-6 border border-neutral-800 opacity-0 animate-fade-up stagger-2">
-                <p className="text-neutral-500 text-sm">
-                  I typically respond within 24-48 hours. For urgent inquiries, 
-                  please mention "URGENT" in your subject line.
-                </p>
-              </div>
-            </div>
-
-            {/* Right Column - Form */}
-            <div className="opacity-0 animate-fade-up stagger-2">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid sm:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="name" className="block text-sm text-neutral-400 mb-2">
-                      Name *
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                      className="input-field"
-                      placeholder="Your name"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="email" className="block text-sm text-neutral-400 mb-2">
-                      Email *
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      required
-                      className="input-field"
-                      placeholder="your@email.com"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="subject" className="block text-sm text-neutral-400 mb-2">
-                    Subject *
-                  </label>
-                  <select
-                    id="subject"
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleChange}
-                    required
-                    className="input-field"
-                  >
-                    <option value="">Select a subject</option>
-                    <option value="commission">Commission Work</option>
-                    <option value="print">Print Inquiry</option>
-                    <option value="collaboration">Collaboration</option>
-                    <option value="press">Press / Media</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="message" className="block text-sm text-neutral-400 mb-2">
-                    Message *
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    required
-                    rows={6}
-                    className="input-field resize-none"
-                    placeholder="Tell me about your project..."
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="btn-primary w-full flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? (
-                    <span>Sending...</span>
-                  ) : (
-                    <>
-                      <span>Send Message</span>
-                      <Send className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
+      <section className="pt-32 pb-16 px-6 lg:px-12">
+        <div className="max-w-2xl mx-auto">
+          <h1 className="font-display text-4xl md:text-5xl text-neutral-900 mb-4">
+            İletişim
+          </h1>
+          <p className="text-neutral-600 mb-8">
+            Sorularınız veya işbirliği teklifleriniz için bana ulaşabilirsiniz.
+          </p>
+          
+          <div className="mb-12">
+            <p className="text-neutral-600">
+              Email: <a href={`mailto:${contactEmail}`} className="text-neutral-900 hover:underline">{contactEmail}</a>
+            </p>
           </div>
+
+          {sent ? (
+            <div className="text-center py-12">
+              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+              <h2 className="text-2xl font-display text-neutral-900 mb-2">Teşekkürler!</h2>
+              <p className="text-neutral-600">Mesajınız başarıyla gönderildi. En kısa sürede dönüş yapacağım.</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Adınız
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="input-field"
+                  placeholder="Adınızı girin"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="input-field"
+                  placeholder="Email adresinizi girin"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Mesajınız
+                </label>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  required
+                  rows={5}
+                  className="input-field resize-none"
+                  placeholder="Mesajınızı yazın"
+                />
+              </div>
+              
+              <button
+                type="submit"
+                disabled={sending}
+                className="btn-primary w-full flex items-center justify-center gap-2"
+              >
+                {sending ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+                <span>{sending ? 'Gönderiliyor...' : 'Gönder'}</span>
+              </button>
+            </form>
+          )}
         </div>
       </section>
 
-      <Footer />
+      <Footer 
+        siteName={siteName}
+        email={contactEmail}
+        instagram={instagram}
+      />
     </main>
   );
 }
