@@ -23,7 +23,7 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
   // Menü başlıkları
   const menuItems = [
     { href: '/', label: settings?.menu_overview || 'Overview' },
-    { href: '/work', label: settings?.menu_work || 'Work', hasDropdown: true },
+    { href: '/work', label: settings?.menu_work || 'Work' },
     { href: '/shop', label: settings?.menu_shop || 'Shop' },
     { href: '/about', label: settings?.menu_about || 'About' },
     { href: '/contact', label: settings?.menu_contact || 'Contact' },
@@ -59,7 +59,7 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
               {siteName}
             </Link>
 
-            {/* Desktop Menu */}
+            {/* Desktop Menu - Levon Biss Style */}
             <div className="hidden lg:flex items-center space-x-8">
               {menuItems.map((item) => (
                 <Link
