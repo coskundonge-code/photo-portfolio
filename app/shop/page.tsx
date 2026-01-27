@@ -82,7 +82,7 @@ export default function ShopPage() {
         </div>
       </section>
 
-      <Footer settings={settings} email={email} instagram={instagram} />
+      <Footer settings={settings} />
     </main>
   );
 }
