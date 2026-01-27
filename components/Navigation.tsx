@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, User, ShoppingBag } from 'lucide-react';
-import { Settings, Project } from '@/lib/types';
+import { Menu, X, User, ShoppingBag, ChevronDown, Settings } from 'lucide-react';
+import { Settings as SettingsType, Project } from '@/lib/types';
 import CartDrawer from './CartDrawer';
 import AuthModal from './AuthModal';
 
 interface NavigationProps {
   projects?: Project[];
-  settings?: Settings | null;
+  settings?: SettingsType | null;
 }
 
 export default function Navigation({ projects = [], settings }: NavigationProps) {
@@ -20,6 +20,7 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [isWorkDropdownOpen, setIsWorkDropdownOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -73,23 +74,56 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
                   pathname === '/' ? 'font-medium' : ''
                 }`}
               >
-                {settings?.menu_overview || 'Ana Sayfa'}
+                Ana Sayfa
               </Link>
-              <Link 
-                href="/work" 
-                className={`text-sm tracking-wide hover:opacity-60 transition-opacity ${
-                  pathname?.startsWith('/work') ? 'font-medium' : ''
-                }`}
+              
+              {/* Çalışmalar Dropdown */}
+              <div 
+                className="relative"
+                onMouseEnter={() => setIsWorkDropdownOpen(true)}
+                onMouseLeave={() => setIsWorkDropdownOpen(false)}
               >
-                {settings?.menu_work || 'Çalışmalar'}
-              </Link>
+                <Link 
+                  href="/work" 
+                  className={`text-sm tracking-wide hover:opacity-60 transition-opacity flex items-center gap-1 ${
+                    pathname?.startsWith('/work') ? 'font-medium' : ''
+                  }`}
+                >
+                  Çalışmalar
+                  {projects.length > 0 && <ChevronDown className="w-3 h-3" />}
+                </Link>
+                
+                {/* Dropdown Menu */}
+                {isWorkDropdownOpen && projects.length > 0 && (
+                  <div className="absolute top-full left-0 pt-2">
+                    <div className="bg-white border border-neutral-200 shadow-lg min-w-[200px]">
+                      <Link
+                        href="/work"
+                        className="block px-4 py-3 text-sm hover:bg-neutral-50 border-b border-neutral-100"
+                      >
+                        Tümü
+                      </Link>
+                      {projects.map((project) => (
+                        <Link
+                          key={project.id}
+                          href={`/work?project=${project.id}`}
+                          className="block px-4 py-3 text-sm hover:bg-neutral-50 text-neutral-600 hover:text-black"
+                        >
+                          {project.title}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <Link 
                 href="/shop" 
                 className={`text-sm tracking-wide hover:opacity-60 transition-opacity ${
                   pathname?.startsWith('/shop') ? 'font-medium' : ''
                 }`}
               >
-                {settings?.menu_shop || 'Mağaza'}
+                Mağaza
               </Link>
               <Link 
                 href="/about" 
@@ -97,7 +131,7 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
                   pathname === '/about' ? 'font-medium' : ''
                 }`}
               >
-                {settings?.menu_about || 'Hakkında'}
+                Hakkında
               </Link>
               <Link 
                 href="/contact" 
@@ -105,7 +139,7 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
                   pathname === '/contact' ? 'font-medium' : ''
                 }`}
               >
-                {settings?.menu_contact || 'İletişim'}
+                İletişim
               </Link>
             </div>
 
@@ -142,11 +176,22 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
           </div>
         </div>
 
+        {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="lg:hidden bg-white border-t">
             <div className="px-4 py-6 space-y-4">
               <Link href="/" className="block text-lg" onClick={() => setIsMenuOpen(false)}>Ana Sayfa</Link>
               <Link href="/work" className="block text-lg" onClick={() => setIsMenuOpen(false)}>Çalışmalar</Link>
+              {projects.map((project) => (
+                <Link 
+                  key={project.id}
+                  href={`/work?project=${project.id}`} 
+                  className="block text-base pl-4 text-neutral-500" 
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {project.title}
+                </Link>
+              ))}
               <Link href="/shop" className="block text-lg" onClick={() => setIsMenuOpen(false)}>Mağaza</Link>
               <Link href="/about" className="block text-lg" onClick={() => setIsMenuOpen(false)}>Hakkında</Link>
               <Link href="/contact" className="block text-lg" onClick={() => setIsMenuOpen(false)}>İletişim</Link>
@@ -154,6 +199,15 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
           </div>
         )}
       </nav>
+
+      {/* Admin Butonu - Sağ Alt */}
+      <Link
+        href="/admin"
+        className="fixed bottom-6 right-6 z-50 p-3 bg-black text-white rounded-full shadow-lg hover:bg-neutral-800 transition-colors"
+        title="Admin Panel"
+      >
+        <Settings className="w-5 h-5" />
+      </Link>
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />

@@ -54,15 +54,23 @@ export default function ProductPage() {
     loadData();
   }, [params.id]);
 
-  const isPhotoPortrait = (photo: any) => {
+  // FOTOĞRAF DİKEY Mİ KONTROL
+  const isPhotoPortrait = () => {
+    const photo = product?.photos;
     if (!photo) return false;
-    if (photo.orientation === 'portrait') return true;
-    if (photo.orientation === 'landscape') return false;
-    if (photo.width && photo.height) return photo.height > photo.width;
+    if ((photo as any).orientation === 'portrait') return true;
+    if ((photo as any).orientation === 'landscape') return false;
+    if ((photo as any).width && (photo as any).height) {
+      return (photo as any).height > (photo as any).width;
+    }
     return false;
   };
 
-  const isPortrait = isPhotoPortrait(product?.photos);
+  const isPortrait = isPhotoPortrait();
+
+  // ÇERÇEVE BOYUTLARI - DİKEY/YATAY
+  const frameWidth = isPortrait ? 220 : 320;
+  const frameHeight = isPortrait ? 320 : 220;
 
   const calculatePrice = () => {
     return (selectedSize.price || product?.base_price || 0) + (selectedFrame.price || 0);
@@ -115,7 +123,7 @@ export default function ProductPage() {
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
             
-            {/* Sol: Ürün Önizleme - TIKLANINCA LIGHTBOX AÇILIR */}
+            {/* Sol: Ürün Önizleme - TIKLANINCA LIGHTBOX */}
             <div className="relative">
               <div className="sticky top-24">
                 <div 
@@ -138,12 +146,13 @@ export default function ProductPage() {
                       style={{ 
                         backgroundColor: selectedFrame.color,
                         padding: '6px',
-                        boxShadow: '0 25px 50px -10px rgba(0,0,0,0.4)'
+                        boxShadow: '0 25px 50px -10px rgba(0,0,0,0.4)',
+                        border: selectedFrame.color === '#ffffff' ? '1px solid #e5e5e5' : 'none'
                       }}
                     >
                       {/* Mat */}
                       <div 
-                        className={selectedStyle === 'mat' ? 'bg-white' : ''}
+                        className={selectedStyle === 'mat' ? 'bg-white relative' : 'relative'}
                         style={{ 
                           padding: selectedStyle === 'mat' 
                             ? (isPortrait ? '22px 28px' : '28px 22px') 
@@ -166,19 +175,21 @@ export default function ProductPage() {
                         
                         {/* Fotoğraf - DİKEY/YATAY */}
                         <div 
-                          className="relative overflow-hidden"
+                          className="relative overflow-hidden bg-neutral-100"
                           style={{
-                            width: isPortrait ? '220px' : '320px',
-                            height: isPortrait ? '320px' : '220px',
+                            width: `${frameWidth}px`,
+                            height: `${frameHeight}px`,
                           }}
                         >
-                          <Image
-                            src={product.photos?.url || '/placeholder.jpg'}
-                            alt={product.title}
-                            fill
-                            className="object-contain"
-                            priority
-                          />
+                          {product.photos?.url && (
+                            <Image
+                              src={product.photos.url}
+                              alt={product.title}
+                              fill
+                              className="object-cover"
+                              priority
+                            />
+                          )}
                         </div>
                       </div>
                     </div>
@@ -195,7 +206,7 @@ export default function ProductPage() {
               </div>
             </div>
 
-            {/* Sağ: Satın Alma Seçenekleri */}
+            {/* Sağ: Satın Alma */}
             <div className="lg:pt-4">
               <h1 className="text-2xl lg:text-3xl font-light mb-2 tracking-wide">
                 {product.title.toUpperCase()}
@@ -252,16 +263,17 @@ export default function ProductPage() {
                       }`}
                     >
                       <span className="font-medium text-sm">{size.name}</span>
-                      <span className="text-neutral-500 text-sm">{size.dimensions}</span>
+                      <span className="text-neutral-500 text-sm">{size.dimensions} — ₺{formatPrice(size.price)}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Çerçeve Rengi */}
+              {/* Çerçeve */}
               <div className="mb-8">
                 <h3 className="text-sm font-medium mb-3">
                   Çerçeve: <span className="font-normal text-neutral-500">{selectedFrame.name}</span>
+                  {selectedFrame.price > 0 && <span className="text-neutral-400"> (+₺{selectedFrame.price})</span>}
                 </h3>
                 <div className="flex gap-3">
                   {defaultFrames.map((frame) => (
@@ -340,7 +352,6 @@ export default function ProductPage() {
         </div>
       </section>
 
-      {/* LIGHTBOX - Fotoğrafa tıklayınca açılır */}
       <Lightbox
         isOpen={lightboxOpen}
         onClose={() => setLightboxOpen(false)}

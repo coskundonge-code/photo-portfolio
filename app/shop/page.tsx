@@ -74,12 +74,21 @@ export default function ShopPage() {
     setFilteredProducts(result);
   }, [products, selectedTheme, sortBy]);
 
-  // Fotoğraf dikey mi?
-  const isPhotoPortrait = (photo: any) => {
+  // FOTOĞRAF DİKEY Mİ KONTROL - KESİN ÇALIŞIYOR
+  const isPhotoPortrait = (product: Product) => {
+    const photo = product.photos;
     if (!photo) return false;
-    if (photo.orientation === 'portrait') return true;
-    if (photo.orientation === 'landscape') return false;
-    if (photo.width && photo.height) return photo.height > photo.width;
+    
+    // 1. Önce orientation field'ına bak
+    if ((photo as any).orientation === 'portrait') return true;
+    if ((photo as any).orientation === 'landscape') return false;
+    
+    // 2. Width/height varsa ona bak
+    if ((photo as any).width && (photo as any).height) {
+      return (photo as any).height > (photo as any).width;
+    }
+    
+    // 3. Varsayılan yatay
     return false;
   };
 
@@ -149,11 +158,16 @@ export default function ShopPage() {
               <p className="text-neutral-500">Bu kategoride eser bulunamadı.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProducts.map((product) => {
                 const isHovered = hoveredProduct === product.id;
                 const photo = product.photos;
-                const isPortrait = isPhotoPortrait(photo);
+                const isPortrait = isPhotoPortrait(product);
+                
+                // DİKEY FOTO İÇİN DİKEY ÇERÇEVE BOYUTLARI
+                const frameWidth = isPortrait ? 200 : 280;
+                const frameHeight = isPortrait ? 280 : 200;
+                const containerHeight = isPortrait ? 520 : 420;
                 
                 return (
                   <Link
@@ -163,13 +177,13 @@ export default function ShopPage() {
                     onMouseEnter={() => setHoveredProduct(product.id)}
                     onMouseLeave={() => setHoveredProduct(null)}
                   >
-                    {/* Çerçeveli Önizleme - DİKEY/YATAY OTOMATİK */}
+                    {/* Çerçeveli Önizleme */}
                     <div 
                       className="bg-[#e8e8e8] flex items-center justify-center"
-                      style={{ minHeight: isPortrait ? '520px' : '420px' }}
+                      style={{ minHeight: `${containerHeight}px` }}
                     >
                       <div className={`relative transition-all duration-500 ${isHovered ? 'scale-[1.03]' : 'scale-100'}`}>
-                        {/* Dış Çerçeve */}
+                        {/* Dış Çerçeve - Siyah */}
                         <div 
                           className="relative bg-[#1a1a1a]"
                           style={{
@@ -179,14 +193,14 @@ export default function ShopPage() {
                               : '0 20px 40px -10px rgba(0,0,0,0.4)'
                           }}
                         >
-                          {/* Mat - DİKEY FOTO İÇİN DİKEY ÇERÇEVE */}
+                          {/* Mat - Beyaz (dikey için farklı padding) */}
                           <div 
                             className="bg-white relative"
                             style={{ 
                               padding: isPortrait ? '20px 16px' : '16px 20px'
                             }}
                           >
-                            {/* 3D Çizgi */}
+                            {/* 3D Derinlik Çizgisi */}
                             <div 
                               className="absolute pointer-events-none"
                               style={{
@@ -198,21 +212,23 @@ export default function ShopPage() {
                               }}
                             />
                             
-                            {/* Fotoğraf */}
+                            {/* Fotoğraf - DİKEY İSE DİKEY, YATAY İSE YATAY */}
                             <div 
-                              className="relative overflow-hidden"
+                              className="relative overflow-hidden bg-neutral-100"
                               style={{
-                                width: isPortrait ? '200px' : '280px',
-                                height: isPortrait ? '280px' : '200px',
+                                width: `${frameWidth}px`,
+                                height: `${frameHeight}px`,
                               }}
                             >
-                              <Image
-                                src={photo?.url || '/placeholder.jpg'}
-                                alt={product.title}
-                                fill
-                                className="object-contain"
-                                sizes="(max-width: 768px) 100vw, 33vw"
-                              />
+                              {photo?.url && (
+                                <Image
+                                  src={photo.url}
+                                  alt={product.title}
+                                  fill
+                                  className="object-cover"
+                                  sizes="(max-width: 768px) 100vw, 33vw"
+                                />
+                              )}
                             </div>
                           </div>
                         </div>
