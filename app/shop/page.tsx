@@ -44,7 +44,7 @@ export default function ShopPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <Navigation projects={projects} siteName={siteName} />
+      <Navigation projects={projects} settings={settings} />
       
       <section className="pt-28 pb-16 px-6 lg:px-12">
         <div className="max-w-7xl mx-auto">
@@ -82,7 +82,7 @@ export default function ShopPage() {
         </div>
       </section>
 
-      <Footer siteName={siteName} email={email} instagram={instagram} />
+      <Footer settings={settings} email={email} instagram={instagram} />
     </main>
   );
 }
