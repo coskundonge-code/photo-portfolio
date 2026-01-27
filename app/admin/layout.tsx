@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAdminStore } from '@/lib/store';
 import { 
   LayoutDashboard, 
-  Image, 
+  ImageIcon, 
   FolderOpen, 
   ShoppingBag, 
   Settings,
@@ -41,7 +41,7 @@ export default function AdminLayout({
 
   const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/photos', label: 'Photos', icon: Images },
+    { href: '/admin/photos', label: 'Photos', icon: ImageIcon },
     { href: '/admin/projects', label: 'Projects', icon: FolderOpen },
     { href: '/admin/products', label: 'Products', icon: ShoppingBag },
   ];
