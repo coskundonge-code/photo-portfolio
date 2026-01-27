@@ -3,6 +3,7 @@ export interface Settings {
   site_name: string;
   email: string;
   instagram: string;
+  linkedin: string;
   about_text: string;
   about_image: string;
   menu_overview: string;
@@ -10,6 +11,7 @@ export interface Settings {
   menu_shop: string;
   menu_about: string;
   menu_contact: string;
+  footer_text: string;
   created_at: string;
   updated_at: string;
 }
@@ -32,6 +34,7 @@ export interface Photo {
   url: string;
   project_id?: string;
   order_index: number;
+  is_featured: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -45,6 +48,7 @@ export interface Product {
   edition_type: 'open' | 'limited';
   edition_total?: number;
   edition_sold?: number;
+  sizes?: string[];
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -62,6 +66,7 @@ export interface Order {
   notes?: string;
   created_at: string;
   updated_at: string;
+  items?: OrderItem[];
 }
 
 export interface OrderItem {
@@ -74,4 +79,5 @@ export interface OrderItem {
   paper_type?: string;
   unit_price: number;
   created_at: string;
+  product?: Product;
 }

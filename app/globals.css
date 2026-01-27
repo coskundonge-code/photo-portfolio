@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -13,59 +13,32 @@
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
   }
   
   body {
-    @apply bg-white text-neutral-900 font-sans;
+    @apply bg-white text-black font-sans;
     font-feature-settings: "kern" 1;
-    font-kerning: normal;
   }
   
   ::selection {
-    @apply bg-neutral-200 text-neutral-900;
-  }
-  
-  ::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    @apply bg-neutral-300 rounded-full;
+    @apply bg-black text-white;
   }
 }
 
 @layer components {
-  .link-hover {
-    @apply relative inline-block;
-  }
-  
-  .link-hover::after {
-    content: '';
-    @apply absolute bottom-0 left-0 w-0 h-px bg-neutral-900 transition-all duration-300;
-  }
-  
-  .link-hover:hover::after {
-    @apply w-full;
-  }
-  
   .btn-primary {
-    @apply px-6 py-3 bg-neutral-900 text-white text-sm tracking-wide transition-all duration-300 hover:bg-neutral-700;
+    @apply px-6 py-3 bg-black text-white text-sm tracking-wide transition-all hover:bg-neutral-800;
   }
   
   .btn-secondary {
-    @apply px-6 py-3 border border-neutral-300 text-neutral-900 text-sm tracking-wide transition-all duration-300 hover:bg-neutral-900 hover:text-white hover:border-neutral-900;
+    @apply px-6 py-3 border border-black text-black text-sm tracking-wide transition-all hover:bg-black hover:text-white;
   }
   
   .input-field {
-    @apply w-full px-4 py-3 bg-white border border-neutral-300 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-neutral-900 transition-colors;
+    @apply w-full px-4 py-3 bg-white border border-neutral-200 text-black placeholder-neutral-400 focus:outline-none focus:border-black transition-colors;
   }
   
   .admin-card {
-    @apply bg-neutral-900 border border-neutral-800 p-6 text-white;
+    @apply bg-neutral-900 border border-neutral-800 rounded-lg p-6;
   }
 }

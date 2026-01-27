@@ -2,29 +2,31 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Save, Loader2, Upload, X } from 'lucide-react';
+import { Save, Loader2, Upload, X, Globe, Menu, User, Mail } from 'lucide-react';
 import { getSettings, updateSettings, uploadImage } from '@/lib/supabase';
 import { Settings } from '@/lib/types';
 import toast from 'react-hot-toast';
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState('general');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form state
   const [siteName, setSiteName] = useState('');
   const [email, setEmail] = useState('');
   const [instagram, setInstagram] = useState('');
+  const [linkedin, setLinkedin] = useState('');
   const [aboutText, setAboutText] = useState('');
   const [aboutImage, setAboutImage] = useState('');
-  const [menuOverview, setMenuOverview] = useState('');
-  const [menuWork, setMenuWork] = useState('');
-  const [menuShop, setMenuShop] = useState('');
-  const [menuAbout, setMenuAbout] = useState('');
-  const [menuContact, setMenuContact] = useState('');
+  const [footerText, setFooterText] = useState('');
+  const [menuOverview, setMenuOverview] = useState('Overview');
+  const [menuWork, setMenuWork] = useState('Work');
+  const [menuShop, setMenuShop] = useState('Shop');
+  const [menuAbout, setMenuAbout] = useState('About');
+  const [menuContact, setMenuContact] = useState('Contact');
 
   useEffect(() => {
     loadSettings();
@@ -34,12 +36,13 @@ export default function SettingsPage() {
     setLoading(true);
     const data = await getSettings();
     if (data) {
-      setSettings(data);
       setSiteName(data.site_name || '');
       setEmail(data.email || '');
       setInstagram(data.instagram || '');
+      setLinkedin(data.linkedin || '');
       setAboutText(data.about_text || '');
       setAboutImage(data.about_image || '');
+      setFooterText(data.footer_text || '');
       setMenuOverview(data.menu_overview || 'Overview');
       setMenuWork(data.menu_work || 'Work');
       setMenuShop(data.menu_shop || 'Shop');
@@ -53,10 +56,12 @@ export default function SettingsPage() {
     setSaving(true);
     const updated = await updateSettings({
       site_name: siteName,
-      email: email,
-      instagram: instagram,
+      email,
+      instagram,
+      linkedin,
       about_text: aboutText,
       about_image: aboutImage,
+      footer_text: footerText,
       menu_overview: menuOverview,
       menu_work: menuWork,
       menu_shop: menuShop,
@@ -66,9 +71,8 @@ export default function SettingsPage() {
 
     if (updated) {
       toast.success('Ayarlar kaydedildi!');
-      setSettings(updated);
     } else {
-      toast.error('Ayarlar kaydedilemedi!');
+      toast.error('Kaydetme başarısız!');
     }
     setSaving(false);
   };
@@ -83,14 +87,17 @@ export default function SettingsPage() {
       setAboutImage(url);
       toast.success('Fotoğraf yüklendi!');
     } else {
-      toast.error('Fotoğraf yüklenemedi!');
+      toast.error('Yükleme başarısız!');
     }
     setUploading(false);
   };
 
-  const removeImage = () => {
-    setAboutImage('');
-  };
+  const tabs = [
+    { id: 'general', label: 'Genel', icon: Globe },
+    { id: 'menu', label: 'Menü', icon: Menu },
+    { id: 'about', label: 'Hakkımda', icon: User },
+    { id: 'contact', label: 'İletişim', icon: Mail },
+  ];
 
   if (loading) {
     return (
@@ -105,26 +112,47 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-display text-white mb-2">Site Ayarları</h1>
-          <p className="text-neutral-400">Tüm site ayarlarını buradan yönetin.</p>
+          <h1 className="text-3xl font-display text-white mb-2">Ayarlar</h1>
+          <p className="text-neutral-400">Tüm site ayarlarını buradan yönetin</p>
         </div>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center space-x-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
         >
           {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
           <span>Kaydet</span>
         </button>
       </div>
 
-      <div className="max-w-2xl space-y-8">
-        {/* Genel Ayarlar */}
-        <div>
-          <h2 className="text-xl font-display text-white mb-4">Genel Ayarlar</h2>
-          <div className="space-y-4">
+      {/* Tabs */}
+      <div className="flex gap-2 mb-8 border-b border-neutral-800 pb-4">
+        {tabs.map(tab => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-white text-black'
+                  : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tab Content */}
+      <div className="max-w-2xl">
+        {/* General Tab */}
+        {activeTab === 'general' && (
+          <div className="space-y-6">
             <div className="admin-card">
-              <label className="block text-sm font-medium text-neutral-300 mb-2">Site Adı</label>
+              <label className="block text-sm font-medium text-neutral-300 mb-2">Site Adı / Logo Yazısı</label>
               <input
                 type="text"
                 value={siteName}
@@ -132,10 +160,126 @@ export default function SettingsPage() {
                 placeholder="COŞKUN DÖNGE"
                 className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 rounded-lg focus:outline-none focus:border-neutral-500"
               />
+              <p className="text-xs text-neutral-500 mt-2">Sol üstte görünecek isim</p>
             </div>
 
             <div className="admin-card">
-              <label className="block text-sm font-medium text-neutral-300 mb-2">Email</label>
+              <label className="block text-sm font-medium text-neutral-300 mb-2">Footer Yazısı</label>
+              <input
+                type="text"
+                value={footerText}
+                onChange={(e) => setFooterText(e.target.value)}
+                placeholder="© 2024 Tüm hakları saklıdır."
+                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 rounded-lg focus:outline-none focus:border-neutral-500"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Menu Tab */}
+        {activeTab === 'menu' && (
+          <div className="space-y-6">
+            <div className="admin-card">
+              <h3 className="text-lg font-medium text-white mb-4">Menü Başlıkları</h3>
+              <p className="text-sm text-neutral-400 mb-6">Navigasyonda görünecek menü isimlerini özelleştirin</p>
+              
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { label: 'Ana Sayfa', value: menuOverview, setter: setMenuOverview },
+                  { label: 'Çalışmalar', value: menuWork, setter: setMenuWork },
+                  { label: 'Mağaza', value: menuShop, setter: setMenuShop },
+                  { label: 'Hakkımda', value: menuAbout, setter: setMenuAbout },
+                  { label: 'İletişim', value: menuContact, setter: setMenuContact },
+                ].map((item, i) => (
+                  <div key={i}>
+                    <label className="block text-sm text-neutral-400 mb-2">{item.label}</label>
+                    <input
+                      type="text"
+                      value={item.value}
+                      onChange={(e) => item.setter(e.target.value)}
+                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white rounded-lg focus:outline-none focus:border-neutral-500"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* About Tab */}
+        {activeTab === 'about' && (
+          <div className="space-y-6">
+            <div className="admin-card">
+              <label className="block text-sm font-medium text-neutral-300 mb-4">Profil Fotoğrafı</label>
+              
+              <div className="flex items-start gap-6">
+                {aboutImage ? (
+                  <div className="relative w-40 h-40 rounded-lg overflow-hidden">
+                    <Image src={aboutImage} alt="About" fill className="object-cover" />
+                    <button
+                      onClick={() => setAboutImage('')}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-40 h-40 border-2 border-dashed border-neutral-700 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-neutral-500 transition-colors"
+                  >
+                    {uploading ? (
+                      <Loader2 className="w-8 h-8 animate-spin text-neutral-500" />
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 text-neutral-500 mb-2" />
+                        <span className="text-xs text-neutral-500">Yükle</span>
+                      </>
+                    )}
+                  </div>
+                )}
+                
+                <div className="flex-1">
+                  <p className="text-sm text-neutral-400 mb-2">Hakkımda sayfasında görünecek fotoğraf</p>
+                  {aboutImage && (
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="text-sm text-neutral-400 hover:text-white underline"
+                    >
+                      Değiştir
+                    </button>
+                  )}
+                </div>
+              </div>
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </div>
+
+            <div className="admin-card">
+              <label className="block text-sm font-medium text-neutral-300 mb-2">Hakkımda Metni</label>
+              <textarea
+                value={aboutText}
+                onChange={(e) => setAboutText(e.target.value)}
+                placeholder="Kendinizi tanıtan bir metin yazın..."
+                rows={8}
+                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 rounded-lg focus:outline-none focus:border-neutral-500 resize-none"
+              />
+              <p className="text-xs text-neutral-500 mt-2">Hakkımda sayfasında görünecek biyografi</p>
+            </div>
+          </div>
+        )}
+
+        {/* Contact Tab */}
+        {activeTab === 'contact' && (
+          <div className="space-y-6">
+            <div className="admin-card">
+              <label className="block text-sm font-medium text-neutral-300 mb-2">Email Adresi</label>
               <input
                 type="email"
                 value={email}
@@ -155,136 +299,19 @@ export default function SettingsPage() {
                 className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 rounded-lg focus:outline-none focus:border-neutral-500"
               />
             </div>
-          </div>
-        </div>
 
-        {/* Menü Başlıkları */}
-        <div>
-          <h2 className="text-xl font-display text-white mb-4">Menü Başlıkları</h2>
-          <div className="admin-card space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">Ana Sayfa</label>
-                <input
-                  type="text"
-                  value={menuOverview}
-                  onChange={(e) => setMenuOverview(e.target.value)}
-                  placeholder="Overview"
-                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 rounded-lg focus:outline-none focus:border-neutral-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">Çalışmalar</label>
-                <input
-                  type="text"
-                  value={menuWork}
-                  onChange={(e) => setMenuWork(e.target.value)}
-                  placeholder="Work"
-                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 rounded-lg focus:outline-none focus:border-neutral-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">Mağaza</label>
-                <input
-                  type="text"
-                  value={menuShop}
-                  onChange={(e) => setMenuShop(e.target.value)}
-                  placeholder="Shop"
-                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 rounded-lg focus:outline-none focus:border-neutral-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">Hakkımda</label>
-                <input
-                  type="text"
-                  value={menuAbout}
-                  onChange={(e) => setMenuAbout(e.target.value)}
-                  placeholder="About"
-                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 rounded-lg focus:outline-none focus:border-neutral-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">İletişim</label>
-                <input
-                  type="text"
-                  value={menuContact}
-                  onChange={(e) => setMenuContact(e.target.value)}
-                  placeholder="Contact"
-                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 rounded-lg focus:outline-none focus:border-neutral-500"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Hakkımda */}
-        <div>
-          <h2 className="text-xl font-display text-white mb-4">Hakkımda Sayfası</h2>
-          <div className="space-y-4">
             <div className="admin-card">
-              <label className="block text-sm font-medium text-neutral-300 mb-2">Hakkımda Fotoğrafı</label>
-              
-              {aboutImage ? (
-                <div className="relative w-48 h-48 mb-4">
-                  <Image
-                    src={aboutImage}
-                    alt="About"
-                    fill
-                    className="object-cover rounded-lg"
-                  />
-                  <button
-                    onClick={removeImage}
-                    className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-48 h-48 border-2 border-dashed border-neutral-700 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-neutral-500 transition-colors"
-                >
-                  {uploading ? (
-                    <Loader2 className="w-8 h-8 animate-spin text-neutral-500" />
-                  ) : (
-                    <>
-                      <Upload className="w-8 h-8 text-neutral-500 mb-2" />
-                      <span className="text-sm text-neutral-500">Fotoğraf Yükle</span>
-                    </>
-                  )}
-                </div>
-              )}
-              
+              <label className="block text-sm font-medium text-neutral-300 mb-2">LinkedIn</label>
               <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              
-              {aboutImage && (
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="mt-2 text-sm text-neutral-400 hover:text-white"
-                >
-                  Değiştir
-                </button>
-              )}
-            </div>
-
-            <div className="admin-card">
-              <label className="block text-sm font-medium text-neutral-300 mb-2">Hakkımda Metni</label>
-              <textarea
-                value={aboutText}
-                onChange={(e) => setAboutText(e.target.value)}
-                placeholder="Kendinizi tanıtan bir metin yazın..."
-                rows={6}
-                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 rounded-lg focus:outline-none focus:border-neutral-500 resize-none"
+                type="url"
+                value={linkedin}
+                onChange={(e) => setLinkedin(e.target.value)}
+                placeholder="https://linkedin.com/in/kullaniciadi"
+                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 rounded-lg focus:outline-none focus:border-neutral-500"
               />
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

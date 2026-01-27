@@ -12,14 +12,11 @@ import {
   Settings,
   LogOut,
   ChevronRight,
-  Globe
+  Globe,
+  Package
 } from 'lucide-react';
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, logout } = useAdminStore();
   const router = useRouter();
   const pathname = usePathname();
@@ -40,10 +37,11 @@ export default function AdminLayout({
 
   const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/photos', label: 'Photos', icon: ImageIcon },
-    { href: '/admin/projects', label: 'Projects', icon: FolderOpen },
-    { href: '/admin/products', label: 'Products', icon: ShoppingBag },
-    { href: '/admin/settings', label: 'Settings', icon: Settings },
+    { href: '/admin/photos', label: 'Fotoğraflar', icon: ImageIcon },
+    { href: '/admin/projects', label: 'Projeler', icon: FolderOpen },
+    { href: '/admin/products', label: 'Ürünler', icon: ShoppingBag },
+    { href: '/admin/orders', label: 'Siparişler', icon: Package },
+    { href: '/admin/settings', label: 'Ayarlar', icon: Settings },
   ];
 
   const handleLogout = () => {
@@ -54,17 +52,13 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-neutral-950 flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-neutral-900 border-r border-neutral-800 flex flex-col">
-        {/* Logo */}
+      <aside className="w-64 bg-neutral-900 border-r border-neutral-800 flex flex-col fixed h-full">
         <div className="p-6 border-b border-neutral-800">
-          <Link href="/" className="font-display text-xl text-white">
-            PORTFOLIO
-          </Link>
-          <p className="text-xs text-neutral-500 mt-1">Admin Panel</p>
+          <h1 className="font-display text-xl text-white">Admin Panel</h1>
+          <p className="text-xs text-neutral-500 mt-1">Site Yönetimi</p>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4">
+        <nav className="flex-1 p-4 overflow-y-auto">
           <ul className="space-y-1">
             {navItems.map((item) => {
               const isActive = pathname === item.href || 
@@ -91,7 +85,6 @@ export default function AdminLayout({
           </ul>
         </nav>
 
-        {/* Bottom Actions */}
         <div className="p-4 border-t border-neutral-800 space-y-1">
           <Link
             href="/"
@@ -112,7 +105,7 @@ export default function AdminLayout({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 ml-64 overflow-auto min-h-screen">
         {children}
       </main>
     </div>

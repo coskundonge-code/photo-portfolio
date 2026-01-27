@@ -6,66 +6,60 @@ import { getSettings, getProjects } from '@/lib/supabase';
 export const revalidate = 60;
 
 export default async function AboutPage() {
-  const settings = await getSettings();
-  const projects = await getProjects();
-  
-  const siteName = settings?.site_name || 'COŞKUN DÖNGE';
-  const email = settings?.email || 'CoskunDonge@CoskunDonge.com';
-  const instagram = settings?.instagram || 'https://instagram.com/coskundonge';
-  const aboutText = settings?.about_text || 'Fotoğraf sanatçısı ve görsel hikaye anlatıcısı.';
-  const aboutImage = settings?.about_image || '';
-  const menuAbout = settings?.menu_about || 'About';
+  const [settings, projects] = await Promise.all([
+    getSettings(),
+    getProjects()
+  ]);
+
+  const aboutImage = settings?.about_image;
+  const aboutText = settings?.about_text || '';
+  const email = settings?.email;
 
   return (
     <main className="min-h-screen bg-white">
-      <Navigation projects={projects} siteName={siteName} settings={settings} />
+      <Navigation projects={projects} settings={settings} />
       
-      <section className="pt-32 pb-16 px-6 lg:px-12">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
+      <section className="pt-28 pb-16 px-6 lg:px-12">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
             {/* Image */}
             {aboutImage && (
-              <div className="relative aspect-[4/5] bg-neutral-100">
+              <div className="relative aspect-[3/4] bg-neutral-100">
                 <Image
                   src={aboutImage}
-                  alt={siteName}
+                  alt="About"
                   fill
                   className="object-cover"
+                  priority
                 />
               </div>
             )}
             
             {/* Content */}
-            <div className={aboutImage ? '' : 'lg:col-span-2'}>
-              <h1 className="font-display text-4xl md:text-5xl text-neutral-900 mb-8">
-                {menuAbout}
+            <div className={aboutImage ? '' : 'lg:col-span-2 max-w-2xl'}>
+              <h1 className="text-4xl font-light text-black mb-8">
+                {settings?.menu_about || 'About'}
               </h1>
               
               <div className="prose prose-lg max-w-none">
-                <p className="text-neutral-600 text-lg leading-relaxed whitespace-pre-line">
+                <p className="text-neutral-600 leading-relaxed whitespace-pre-line">
                   {aboutText}
                 </p>
               </div>
 
-              <div className="mt-12 pt-8 border-t border-neutral-200">
-                <h2 className="font-display text-2xl text-neutral-900 mb-4">İletişim</h2>
-                <p className="text-neutral-600">
-                  Email: <a href={`mailto:${email}`} className="text-neutral-900 hover:underline">{email}</a>
-                </p>
-                <p className="text-neutral-600 mt-2">
-                  Instagram: <a href={instagram} target="_blank" rel="noopener noreferrer" className="text-neutral-900 hover:underline">@{instagram.split('/').pop()}</a>
-                </p>
-              </div>
+              {email && (
+                <div className="mt-12 pt-8 border-t border-neutral-200">
+                  <p className="text-neutral-600">
+                    İletişim için: <a href={`mailto:${email}`} className="text-black hover:underline">{email}</a>
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </section>
 
-      <Footer 
-        siteName={siteName}
-        email={email}
-        instagram={instagram}
-      />
+      <Footer settings={settings} />
     </main>
   );
 }
