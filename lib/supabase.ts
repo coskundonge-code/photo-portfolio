@@ -308,6 +308,26 @@ export const deletePhoto = async (id: string): Promise<boolean> => {
   return true;
 };
 
+export const updatePhotoOrder = async (photos: { id: string; order_index: number }[]): Promise<boolean> => {
+  try {
+    for (const photo of photos) {
+      const { error } = await supabase
+        .from('photos')
+        .update({ order_index: photo.order_index })
+        .eq('id', photo.id);
+
+      if (error) {
+        console.error('Error updating photo order:', error);
+        return false;
+      }
+    }
+    return true;
+  } catch (error) {
+    console.error('Error updating photo order:', error);
+    return false;
+  }
+};
+
 // ================================================
 // PRODUCTS
 // ================================================
@@ -476,6 +496,22 @@ export const updateOrder = async (id: string, order: Partial<Order>): Promise<Or
 
   if (error) {
     console.error('Error updating order:', error);
+    return null;
+  }
+
+  return data;
+};
+
+export const updateOrderStatus = async (id: string, status: string): Promise<Order | null> => {
+  const { data, error } = await supabase
+    .from('orders')
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating order status:', error);
     return null;
   }
 
