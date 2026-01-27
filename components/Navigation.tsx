@@ -4,18 +4,26 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, ChevronDown } from 'lucide-react';
-import { Project } from '@/lib/types';
+import { Project, Settings } from '@/lib/types';
 
 interface NavigationProps {
   projects?: Project[];
   siteName?: string;
+  settings?: Settings | null;
 }
 
-export default function Navigation({ projects = [], siteName = 'PORTFOLIO' }: NavigationProps) {
+export default function Navigation({ projects = [], siteName = 'PORTFOLIO', settings }: NavigationProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isWorkOpen, setIsWorkOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+
+  // Menü başlıkları
+  const menuOverview = settings?.menu_overview || 'Overview';
+  const menuWork = settings?.menu_work || 'Work';
+  const menuShop = settings?.menu_shop || 'Shop';
+  const menuAbout = settings?.menu_about || 'About';
+  const menuContact = settings?.menu_contact || 'Contact';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -51,7 +59,7 @@ export default function Navigation({ projects = [], siteName = 'PORTFOLIO' }: Na
                 href="/" 
                 className={`text-xs tracking-widest uppercase ${pathname === '/' ? 'text-neutral-900' : 'text-neutral-500 hover:text-neutral-900'} transition-colors`}
               >
-                Overview
+                {menuOverview}
               </Link>
               
               <div 
@@ -64,7 +72,7 @@ export default function Navigation({ projects = [], siteName = 'PORTFOLIO' }: Na
                     pathname.startsWith('/work') ? 'text-neutral-900' : 'text-neutral-500'
                   } hover:text-neutral-900 transition-colors`}
                 >
-                  <span>Work</span>
+                  <span>{menuWork}</span>
                   <ChevronDown className={`w-3 h-3 transition-transform ${isWorkOpen ? 'rotate-180' : ''}`} />
                 </button>
                 
@@ -83,6 +91,9 @@ export default function Navigation({ projects = [], siteName = 'PORTFOLIO' }: Na
                         {project.title}
                       </Link>
                     ))}
+                    {projects.length === 0 && (
+                      <span className="block px-4 py-2 text-sm text-neutral-400">Henüz proje yok</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -91,21 +102,21 @@ export default function Navigation({ projects = [], siteName = 'PORTFOLIO' }: Na
                 href="/shop" 
                 className={`text-xs tracking-widest uppercase ${pathname.startsWith('/shop') ? 'text-neutral-900' : 'text-neutral-500 hover:text-neutral-900'} transition-colors`}
               >
-                Shop
+                {menuShop}
               </Link>
               
               <Link 
                 href="/about" 
                 className={`text-xs tracking-widest uppercase ${pathname === '/about' ? 'text-neutral-900' : 'text-neutral-500 hover:text-neutral-900'} transition-colors`}
               >
-                About
+                {menuAbout}
               </Link>
               
               <Link 
                 href="/contact" 
                 className={`text-xs tracking-widest uppercase ${pathname === '/contact' ? 'text-neutral-900' : 'text-neutral-500 hover:text-neutral-900'} transition-colors`}
               >
-                Contact
+                {menuContact}
               </Link>
             </div>
 
@@ -126,14 +137,14 @@ export default function Navigation({ projects = [], siteName = 'PORTFOLIO' }: Na
         }`}
       >
         <div className="flex flex-col items-center justify-center min-h-screen space-y-8 p-6">
-          <Link href="/" className="text-2xl font-display tracking-wide text-neutral-900">Overview</Link>
+          <Link href="/" className="text-2xl font-display tracking-wide text-neutral-900">{menuOverview}</Link>
           
           <div className="text-center">
             <button 
               className="text-2xl font-display tracking-wide text-neutral-900 flex items-center space-x-2"
               onClick={() => setIsWorkOpen(!isWorkOpen)}
             >
-              <span>Work</span>
+              <span>{menuWork}</span>
               <ChevronDown className={`w-5 h-5 transition-transform ${isWorkOpen ? 'rotate-180' : ''}`} />
             </button>
             
@@ -152,9 +163,9 @@ export default function Navigation({ projects = [], siteName = 'PORTFOLIO' }: Na
             )}
           </div>
 
-          <Link href="/shop" className="text-2xl font-display tracking-wide text-neutral-900">Shop</Link>
-          <Link href="/about" className="text-2xl font-display tracking-wide text-neutral-900">About</Link>
-          <Link href="/contact" className="text-2xl font-display tracking-wide text-neutral-900">Contact</Link>
+          <Link href="/shop" className="text-2xl font-display tracking-wide text-neutral-900">{menuShop}</Link>
+          <Link href="/about" className="text-2xl font-display tracking-wide text-neutral-900">{menuAbout}</Link>
+          <Link href="/contact" className="text-2xl font-display tracking-wide text-neutral-900">{menuContact}</Link>
         </div>
       </div>
     </>

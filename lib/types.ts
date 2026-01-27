@@ -4,6 +4,12 @@ export interface Settings {
   email: string;
   instagram: string;
   about_text: string;
+  about_image: string;
+  menu_overview: string;
+  menu_work: string;
+  menu_shop: string;
+  menu_about: string;
+  menu_contact: string;
   created_at: string;
   updated_at: string;
 }

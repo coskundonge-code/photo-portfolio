@@ -19,26 +19,23 @@ const demoProjects: Project[] = [
   { id: '2', title: 'Urban', slug: 'urban', order_index: 2, is_visible: true, created_at: '', updated_at: '' },
 ];
 
-export const revalidate = 60; // Her 60 saniyede bir yenile
+export const revalidate = 60;
 
 export default async function HomePage() {
-  // Veritabanından verileri çek
   const settings = await getSettings();
   const dbProjects = await getProjects();
   const dbPhotos = await getPhotos();
   
-  // Veritabanı boşsa demo verileri kullan
   const projects = dbProjects.length > 0 ? dbProjects : demoProjects;
   const photos = dbPhotos.length > 0 ? dbPhotos : demoPhotos;
   
-  // Ayarlar
   const siteName = settings?.site_name || 'COŞKUN DÖNGE';
   const email = settings?.email || 'CoskunDonge@CoskunDonge.com';
   const instagram = settings?.instagram || 'https://instagram.com/coskundonge';
 
   return (
     <main className="min-h-screen bg-white">
-      <Navigation projects={projects} siteName={siteName} />
+      <Navigation projects={projects} siteName={siteName} settings={settings} />
       
       <section className="pt-24 pb-8">
         <div className="px-4 md:px-8">
