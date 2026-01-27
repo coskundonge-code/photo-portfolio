@@ -22,7 +22,7 @@ const demoProjects: Project[] = [
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-white">
-      <Navigation projects={demoProjects} siteName="LEVON BISS" />
+      <Navigation projects={demoProjects} siteName="COŞKUN DÖNGE" />
       
       <section className="pt-24 pb-8">
         <div className="px-4 md:px-8">
@@ -36,9 +36,9 @@ export default function HomePage() {
       </section>
 
       <Footer 
-        siteName="PORTFOLIO"
-        email="contact@example.com"
-        instagram="https://instagram.com"
+        siteName="COŞKUN DÖNGE"
+        email="CoskunDonge@CoskunDonge.com"
+        instagram="https://instagram.com/coskundonge"
       />
     </main>
   );
