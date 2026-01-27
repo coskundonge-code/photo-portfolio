@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Instagram, Linkedin, ChevronDown } from 'lucide-react';
-import { Project, Settings } from '@/lib/types';
+import { Menu, X, User, ShoppingBag } from 'lucide-react';
+import { Settings, Project } from '@/lib/types';
+import CartDrawer from './CartDrawer';
+import AuthModal from './AuthModal';
 
 interface NavigationProps {
   projects?: Project[];
@@ -12,239 +14,170 @@ interface NavigationProps {
 }
 
 export default function Navigation({ projects = [], settings }: NavigationProps) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isWorkOpen, setIsWorkOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-
-  const siteName = settings?.site_name || 'COŞKUN DÖNGE';
-  const instagram = settings?.instagram || '';
-  const linkedin = settings?.linkedin || '';
-  
-  const menuOverview = settings?.menu_overview || 'Overview';
-  const menuWork = settings?.menu_work || 'Work';
-  const menuShop = settings?.menu_shop || 'Shop';
-  const menuAbout = settings?.menu_about || 'About';
-  const menuContact = settings?.menu_contact || 'Contact';
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Sepet sayısını güncelle
   useEffect(() => {
-    setIsMenuOpen(false);
-    setIsWorkOpen(false);
-  }, [pathname]);
+    const updateCartCount = () => {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      setCartCount(cart.length);
+    };
+    
+    updateCartCount();
+    window.addEventListener('storage', updateCartCount);
+    window.addEventListener('cartUpdated', updateCartCount);
+    
+    return () => {
+      window.removeEventListener('storage', updateCartCount);
+      window.removeEventListener('cartUpdated', updateCartCount);
+    };
+  }, []);
 
-  const isActive = (href: string) => {
-    if (href === '/') return pathname === '/';
-    return pathname.startsWith(href);
-  };
+  const isAdminPage = pathname?.startsWith('/admin');
+  if (isAdminPage) return null;
+
+  const siteName = settings?.site_name || 'COŞKUN DÖNGE';
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'bg-white/95 backdrop-blur-sm' : 'bg-white'
+      <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+        isScrolled ? 'bg-white/95 backdrop-blur-sm shadow-sm' : 'bg-transparent'
       }`}>
-        <nav className="max-w-[1800px] mx-auto px-6 lg:px-12">
+        <div className="max-w-[1800px] mx-auto px-4 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
-            {/* Logo */}
-            <Link 
-              href="/" 
-              className="font-display text-lg lg:text-xl tracking-wider text-black hover:opacity-70 transition-opacity"
-            >
-              {siteName}
-            </Link>
-
-            {/* Desktop Menu */}
-            <div className="hidden lg:flex items-center space-x-8">
-              {/* Overview */}
-              <Link
-                href="/"
-                className={`text-sm tracking-wide transition-all ${
-                  isActive('/') && pathname === '/'
-                    ? 'text-black border-b border-black'
-                    : 'text-black hover:opacity-70'
-                }`}
+            
+            {/* Sol: Menü */}
+            <div className="flex items-center gap-8">
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="lg:hidden p-2 -ml-2"
               >
-                {menuOverview}
-              </Link>
+                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
 
-              {/* Work with Dropdown */}
-              <div 
-                className="relative"
-                onMouseEnter={() => setIsWorkOpen(true)}
-                onMouseLeave={() => setIsWorkOpen(false)}
-              >
-                <button
-                  className={`text-sm tracking-wide transition-all flex items-center gap-1 ${
-                    isActive('/work')
-                      ? 'text-black border-b border-black'
-                      : 'text-black hover:opacity-70'
+              {/* Desktop Navigation */}
+              <div className="hidden lg:flex items-center gap-8">
+                <Link 
+                  href="/" 
+                  className={`text-sm tracking-wide hover:opacity-60 transition-opacity ${
+                    pathname === '/' ? 'font-medium' : ''
                   }`}
                 >
-                  {menuWork}
-                  {projects.length > 0 && (
-                    <ChevronDown className={`w-3 h-3 transition-transform ${isWorkOpen ? 'rotate-180' : ''}`} />
-                  )}
-                </button>
-
-                {/* Dropdown */}
-                {projects.length > 0 && (
-                  <div 
-                    className={`absolute top-full right-0 pt-2 transition-all duration-200 ${
-                      isWorkOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
-                    }`}
-                  >
-                    <div className="bg-white border border-neutral-200 shadow-lg py-2 min-w-[200px]">
-                      {projects.map((project) => (
-                        <Link
-                          key={project.id}
-                          href={`/work/${project.slug}`}
-                          className="block px-4 py-2 text-sm text-neutral-700 hover:text-black hover:bg-neutral-50 transition-colors text-right"
-                        >
-                          {project.title}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Shop */}
-              <Link
-                href="/shop"
-                className={`text-sm tracking-wide transition-all ${
-                  isActive('/shop')
-                    ? 'text-black border-b border-black'
-                    : 'text-black hover:opacity-70'
-                }`}
-              >
-                {menuShop}
-              </Link>
-
-              {/* About */}
-              <Link
-                href="/about"
-                className={`text-sm tracking-wide transition-all ${
-                  isActive('/about')
-                    ? 'text-black border-b border-black'
-                    : 'text-black hover:opacity-70'
-                }`}
-              >
-                {menuAbout}
-              </Link>
-
-              {/* Contact */}
-              <Link
-                href="/contact"
-                className={`text-sm tracking-wide transition-all ${
-                  isActive('/contact')
-                    ? 'text-black border-b border-black'
-                    : 'text-black hover:opacity-70'
-                }`}
-              >
-                {menuContact}
-              </Link>
-              
-              {/* Social Icons */}
-              <div className="flex items-center space-x-4 ml-4 pl-4 border-l border-neutral-200">
-                {instagram && (
-                  <a 
-                    href={instagram} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-black hover:opacity-70 transition-opacity"
-                  >
-                    <Instagram className="w-5 h-5" />
-                  </a>
-                )}
-                {linkedin && (
-                  <a 
-                    href={linkedin} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-black hover:opacity-70 transition-opacity"
-                  >
-                    <Linkedin className="w-5 h-5" />
-                  </a>
-                )}
+                  {settings?.menu_overview || 'Ana Sayfa'}
+                </Link>
+                <Link 
+                  href="/work" 
+                  className={`text-sm tracking-wide hover:opacity-60 transition-opacity ${
+                    pathname?.startsWith('/work') ? 'font-medium' : ''
+                  }`}
+                >
+                  {settings?.menu_work || 'Çalışmalar'}
+                </Link>
+                <Link 
+                  href="/shop" 
+                  className={`text-sm tracking-wide hover:opacity-60 transition-opacity ${
+                    pathname?.startsWith('/shop') ? 'font-medium' : ''
+                  }`}
+                >
+                  {settings?.menu_shop || 'Mağaza'}
+                </Link>
+                <Link 
+                  href="/about" 
+                  className={`text-sm tracking-wide hover:opacity-60 transition-opacity ${
+                    pathname === '/about' ? 'font-medium' : ''
+                  }`}
+                >
+                  {settings?.menu_about || 'Hakkında'}
+                </Link>
+                <Link 
+                  href="/contact" 
+                  className={`text-sm tracking-wide hover:opacity-60 transition-opacity ${
+                    pathname === '/contact' ? 'font-medium' : ''
+                  }`}
+                >
+                  {settings?.menu_contact || 'İletişim'}
+                </Link>
               </div>
             </div>
 
-            {/* Mobile Menu Button */}
-            <button
-              className="lg:hidden text-black p-2"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-        </nav>
-      </header>
+            {/* Orta: Logo */}
+            <Link href="/" className="absolute left-1/2 -translate-x-1/2">
+              <h1 className="text-lg lg:text-xl font-semibold tracking-wider">
+                {siteName}
+              </h1>
+            </Link>
 
-      {/* Mobile Menu */}
-      <div className={`fixed inset-0 z-40 bg-white lg:hidden transition-all duration-300 ${
-        isMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
-      }`}>
-        <div className="flex flex-col items-center justify-center min-h-screen space-y-6 p-6">
-          <Link href="/" className="text-2xl tracking-wide text-black">
-            {menuOverview}
-          </Link>
-          
-          {/* Work with sub-items */}
-          <div className="text-center">
-            <button 
-              onClick={() => setIsWorkOpen(!isWorkOpen)}
-              className="text-2xl tracking-wide text-black flex items-center gap-2"
-            >
-              {menuWork}
-              {projects.length > 0 && (
-                <ChevronDown className={`w-5 h-5 transition-transform ${isWorkOpen ? 'rotate-180' : ''}`} />
-              )}
-            </button>
-            {isWorkOpen && projects.length > 0 && (
-              <div className="mt-4 space-y-3">
-                {projects.map((project) => (
-                  <Link
-                    key={project.id}
-                    href={`/work/${project.slug}`}
-                    className="block text-lg text-neutral-500 hover:text-black transition-colors"
-                  >
-                    {project.title}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+            {/* Sağ: User & Cart */}
+            <div className="flex items-center gap-4">
+              {/* Üye ikonu */}
+              <button
+                onClick={() => setIsAuthOpen(true)}
+                className="p-2 hover:opacity-60 transition-opacity"
+                title="Hesabım"
+              >
+                <User className="w-5 h-5" strokeWidth={1.5} />
+              </button>
 
-          <Link href="/shop" className="text-2xl tracking-wide text-black">
-            {menuShop}
-          </Link>
-          <Link href="/about" className="text-2xl tracking-wide text-black">
-            {menuAbout}
-          </Link>
-          <Link href="/contact" className="text-2xl tracking-wide text-black">
-            {menuContact}
-          </Link>
-          
-          {/* Mobile Social Icons */}
-          <div className="flex items-center space-x-6 pt-6">
-            {instagram && (
-              <a href={instagram} target="_blank" rel="noopener noreferrer" className="text-black">
-                <Instagram className="w-6 h-6" />
-              </a>
-            )}
-            {linkedin && (
-              <a href={linkedin} target="_blank" rel="noopener noreferrer" className="text-black">
-                <Linkedin className="w-6 h-6" />
-              </a>
-            )}
+              {/* Sepet ikonu */}
+              <button
+                onClick={() => setIsCartOpen(true)}
+                className="p-2 hover:opacity-60 transition-opacity relative"
+                title="Sepetim"
+              >
+                <ShoppingBag className="w-5 h-5" strokeWidth={1.5} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-xs rounded-full flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="lg:hidden bg-white border-t">
+            <div className="px-4 py-6 space-y-4">
+              <Link href="/" className="block text-lg" onClick={() => setIsMenuOpen(false)}>
+                {settings?.menu_overview || 'Ana Sayfa'}
+              </Link>
+              <Link href="/work" className="block text-lg" onClick={() => setIsMenuOpen(false)}>
+                {settings?.menu_work || 'Çalışmalar'}
+              </Link>
+              <Link href="/shop" className="block text-lg" onClick={() => setIsMenuOpen(false)}>
+                {settings?.menu_shop || 'Mağaza'}
+              </Link>
+              <Link href="/about" className="block text-lg" onClick={() => setIsMenuOpen(false)}>
+                {settings?.menu_about || 'Hakkında'}
+              </Link>
+              <Link href="/contact" className="block text-lg" onClick={() => setIsMenuOpen(false)}>
+                {settings?.menu_contact || 'İletişim'}
+              </Link>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      {/* Cart Drawer */}
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
+      {/* Auth Modal */}
+      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </>
   );
 }

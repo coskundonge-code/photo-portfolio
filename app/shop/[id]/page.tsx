@@ -5,11 +5,13 @@ import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import { getSettings, getProjects, getProductById, getFrameOptions, getProductSizes } from '@/lib/supabase';
+import Lightbox from '@/components/Lightbox';
+import RoomPreview from '@/components/RoomPreview';
+import { getSettings, getProjects, getProductById } from '@/lib/supabase';
 import { Settings, Project, Product } from '@/lib/types';
-import { Loader2, Check, Ruler } from 'lucide-react';
+import { Loader2, Check, Ruler, ZoomIn } from 'lucide-react';
 
-// Varsayılan boyutlar (veritabanından gelmezse)
+// Varsayılan boyutlar
 const defaultSizes = [
   { id: 'compact', name: 'Compact', dimensions: '42x37cm', price: 1500, scale: 0.7 },
   { id: 'regular', name: 'Regular', dimensions: '52x42cm', price: 2500, scale: 0.85 },
@@ -24,7 +26,6 @@ const defaultFrames = [
   { id: 'walnut', name: 'Ceviz', color: '#5c4033', price: 200 },
 ];
 
-// Fiyat formatlama
 const formatPrice = (price: number) => {
   return price.toLocaleString('tr-TR');
 };
@@ -39,12 +40,12 @@ export default function ProductPage() {
   
   // Seçimler
   const [selectedStyle, setSelectedStyle] = useState<'mat' | 'fullbleed'>('mat');
-  const [selectedSize, setSelectedSize] = useState(defaultSizes[1]); // Regular varsayılan
-  const [selectedFrame, setSelectedFrame] = useState(defaultFrames[0]); // Siyah varsayılan
+  const [selectedSize, setSelectedSize] = useState(defaultSizes[1]);
+  const [selectedFrame, setSelectedFrame] = useState(defaultFrames[0]);
   
-  // Boyut/Çerçeve seçenekleri (veritabanından)
-  const [sizes, setSizes] = useState(defaultSizes);
-  const [frames, setFrames] = useState(defaultFrames);
+  // Modals
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [roomPreviewOpen, setRoomPreviewOpen] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -57,27 +58,14 @@ export default function ProductPage() {
       setSettings(settingsData);
       setProjects(projectsData);
       setProduct(productData);
-      
-      // Ürüne özel boyutları yükle (varsa)
-      // const productSizes = await getProductSizes(params.id as string);
-      // if (productSizes.length > 0) setSizes(productSizes);
-      
-      // Çerçeve seçeneklerini yükle
-      // const frameOptions = await getFrameOptions();
-      // if (frameOptions.length > 0) setFrames(frameOptions);
-      
       setLoading(false);
     };
     loadData();
   }, [params.id]);
 
   // Fotoğraf orientation
-  const getOrientation = () => {
-    if (product?.photos?.width && product?.photos?.height) {
-      return product.photos.width > product.photos.height ? 'landscape' : 'portrait';
-    }
-    return product?.photos?.orientation || 'landscape';
-  };
+  const isPortrait = product?.photos?.orientation === 'portrait' || 
+    (product?.photos?.height && product?.photos?.width && product.photos.height > product.photos.width);
 
   // Toplam fiyat hesaplama
   const calculatePrice = () => {
@@ -88,7 +76,6 @@ export default function ProductPage() {
 
   // Sepete ekle
   const handleAddToCart = () => {
-    // Sepet verilerini localStorage'a kaydet
     const cartItem = {
       productId: product?.id,
       productTitle: product?.title,
@@ -104,7 +91,10 @@ export default function ProductPage() {
     cart.push(cartItem);
     localStorage.setItem('cart', JSON.stringify(cart));
     
-    // Checkout sayfasına yönlendir
+    // Cart updated event
+    window.dispatchEvent(new Event('cartUpdated'));
+    
+    // Checkout'a yönlendir
     router.push('/checkout');
   };
 
@@ -128,8 +118,6 @@ export default function ProductPage() {
     );
   }
 
-  const orientation = getOrientation();
-
   return (
     <main className="min-h-screen bg-white">
       <Navigation projects={projects} settings={settings} />
@@ -138,11 +126,20 @@ export default function ProductPage() {
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
             
-            {/* Sol: Ürün Önizleme - Boyut değiştikçe büyür/küçülür */}
+            {/* Sol: Ürün Önizleme */}
             <div className="relative">
               <div className="sticky top-24">
-                <div className="bg-[#f5f5f5] rounded-lg flex items-center justify-center min-h-[500px] lg:min-h-[600px] p-8">
-                  
+                {/* Ana Görsel - Tıklanabilir */}
+                <div 
+                  className="bg-[#e8e8e8] flex items-center justify-center cursor-pointer relative group"
+                  style={{ minHeight: '500px' }}
+                  onClick={() => setLightboxOpen(true)}
+                >
+                  {/* Zoom icon */}
+                  <div className="absolute top-4 right-4 p-2 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ZoomIn className="w-5 h-5" />
+                  </div>
+
                   {/* Çerçeve Önizleme - Scale ile boyut değişimi */}
                   <div 
                     className="relative transition-all duration-500 ease-out"
@@ -150,39 +147,51 @@ export default function ProductPage() {
                   >
                     {/* Dış Çerçeve */}
                     <div 
-                      className="relative p-[10px] transition-colors duration-300"
+                      className="relative transition-colors duration-300"
                       style={{ 
                         backgroundColor: selectedFrame.color,
-                        boxShadow: '0 30px 60px -15px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0,0,0,0.1)'
+                        padding: '6px',
+                        boxShadow: '0 25px 50px -10px rgba(0, 0, 0, 0.4), 0 15px 30px -15px rgba(0, 0, 0, 0.3)'
                       }}
                     >
-                      {/* İç Mat (sadece mat seçiliyse) */}
+                      {/* İç Mat */}
                       <div 
-                        className={`transition-all duration-300 ${
-                          selectedStyle === 'mat' ? 'bg-white p-6 lg:p-8' : ''
+                        className={`transition-all duration-300 relative ${
+                          selectedStyle === 'mat' ? 'bg-white' : ''
                         }`}
+                        style={{ 
+                          padding: selectedStyle === 'mat' 
+                            ? (isPortrait ? '28px 22px' : '22px 28px') 
+                            : '0' 
+                        }}
                       >
                         {/* 3D Derinlik Çizgisi */}
                         {selectedStyle === 'mat' && (
                           <div 
-                            className="absolute inset-[22px] lg:inset-[30px] pointer-events-none"
+                            className="absolute pointer-events-none"
                             style={{
-                              boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.08), inset 0 2px 4px rgba(0,0,0,0.03)'
+                              top: isPortrait ? '26px' : '20px',
+                              left: isPortrait ? '20px' : '26px',
+                              right: isPortrait ? '20px' : '26px',
+                              bottom: isPortrait ? '26px' : '20px',
+                              boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.06)',
                             }}
                           />
                         )}
                         
                         {/* Fotoğraf */}
-                        <div className={`relative overflow-hidden ${
-                          orientation === 'portrait' 
-                            ? 'aspect-[3/4] w-[220px] lg:w-[280px]' 
-                            : 'aspect-[4/3] w-[300px] lg:w-[380px]'
-                        }`}>
+                        <div 
+                          className="relative overflow-hidden"
+                          style={{
+                            width: isPortrait ? '220px' : '320px',
+                            height: isPortrait ? '320px' : '220px',
+                          }}
+                        >
                           <Image
                             src={product.photos?.url || '/placeholder.jpg'}
                             alt={product.title}
                             fill
-                            className="object-cover"
+                            className="object-contain"
                             priority
                           />
                         </div>
@@ -191,9 +200,9 @@ export default function ProductPage() {
 
                     {/* Alt Gölge */}
                     <div 
-                      className="absolute -bottom-4 left-[8%] right-[8%] h-8 -z-10"
+                      className="absolute -bottom-4 left-[10%] right-[10%] h-8 -z-10"
                       style={{
-                        background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, transparent 70%)'
+                        background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, transparent 70%)'
                       }}
                     />
                   </div>
@@ -210,14 +219,14 @@ export default function ProductPage() {
             <div className="lg:pt-4">
               
               {/* Başlık */}
-              <h1 className="text-2xl lg:text-3xl font-light text-black mb-2">
-                {product.title}
+              <h1 className="text-2xl lg:text-3xl font-light text-black mb-2 tracking-wide">
+                {product.title.toUpperCase()}
               </h1>
               
-              {/* Edisyon bilgisi */}
+              {/* Edisyon */}
               <p className="text-neutral-500 mb-4">
                 {product.edition_type === 'limited' 
-                  ? `Sınırlı Sayıda ${product.edition_total} Adet — ${(product.edition_total || 0) - (product.edition_sold || 0)} kaldı`
+                  ? `Sınırlı Baskı • ${product.edition_total} Adet — ${(product.edition_total || 0) - (product.edition_sold || 0)} kaldı`
                   : 'Açık Edisyon'}
               </p>
 
@@ -231,7 +240,7 @@ export default function ProductPage() {
                 </p>
               </div>
 
-              {/* Stil Seçimi: Mat / Full Bleed */}
+              {/* Stil Seçimi */}
               <div className="mb-8">
                 <h3 className="text-sm font-medium text-black mb-3">
                   Stilinizi Seçin: <span className="font-normal text-neutral-500">{selectedStyle === 'mat' ? 'Mat' : 'Full Bleed'}</span>
@@ -239,7 +248,7 @@ export default function ProductPage() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setSelectedStyle('mat')}
-                    className={`px-6 py-2.5 border rounded transition-all ${
+                    className={`px-6 py-2.5 border text-sm transition-all ${
                       selectedStyle === 'mat'
                         ? 'border-black bg-black text-white'
                         : 'border-neutral-300 hover:border-neutral-400'
@@ -249,7 +258,7 @@ export default function ProductPage() {
                   </button>
                   <button
                     onClick={() => setSelectedStyle('fullbleed')}
-                    className={`px-6 py-2.5 border rounded transition-all ${
+                    className={`px-6 py-2.5 border text-sm transition-all ${
                       selectedStyle === 'fullbleed'
                         ? 'border-black bg-black text-white'
                         : 'border-neutral-300 hover:border-neutral-400'
@@ -266,30 +275,30 @@ export default function ProductPage() {
                   Çerçeve Boyutu: <span className="font-normal text-neutral-500">{selectedSize.name}</span>
                 </h3>
                 <div className="space-y-2">
-                  {sizes.map((size) => (
+                  {defaultSizes.map((size) => (
                     <button
                       key={size.id}
                       onClick={() => setSelectedSize(size)}
-                      className={`w-full flex items-center justify-between px-4 py-3 border rounded-lg transition-all ${
+                      className={`w-full flex items-center justify-between px-4 py-3 border transition-all ${
                         selectedSize.id === size.id
                           ? 'border-black'
                           : 'border-neutral-200 hover:border-neutral-300'
                       }`}
                     >
-                      <span className="font-medium">{size.name}</span>
-                      <span className="text-neutral-500">{size.dimensions}</span>
+                      <span className="font-medium text-sm">{size.name}</span>
+                      <span className="text-neutral-500 text-sm">{size.dimensions}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Çerçeve Rengi Seçimi - Yuvarlak Küreler */}
+              {/* Çerçeve Rengi - Yuvarlak Küreler */}
               <div className="mb-8">
                 <h3 className="text-sm font-medium text-black mb-3">
                   Çerçeve Rengi: <span className="font-normal text-neutral-500">{selectedFrame.name}</span>
                 </h3>
                 <div className="flex gap-3">
-                  {frames.map((frame) => (
+                  {defaultFrames.map((frame) => (
                     <button
                       key={frame.id}
                       onClick={() => setSelectedFrame(frame)}
@@ -322,25 +331,28 @@ export default function ProductPage() {
                 <span className="underline">Boyut Rehberi</span>
               </button>
 
-              {/* Sepete Ekle Butonu */}
+              {/* Sepete Ekle */}
               <button
                 onClick={handleAddToCart}
-                className="w-full py-4 bg-black text-white font-medium rounded hover:bg-neutral-800 transition-colors mb-4"
+                className="w-full py-4 bg-black text-white text-sm tracking-wide hover:bg-neutral-800 transition-colors mb-4"
               >
                 Sepete Ekle — ₺{formatPrice(calculatePrice())}
               </button>
 
               {/* Odanda Görüntüle */}
-              <button className="w-full py-4 bg-neutral-100 text-black font-medium rounded hover:bg-neutral-200 transition-colors mb-4">
+              <button 
+                onClick={() => setRoomPreviewOpen(true)}
+                className="w-full py-4 bg-neutral-100 text-black text-sm tracking-wide hover:bg-neutral-200 transition-colors mb-4"
+              >
                 Odanda Görüntüle
               </button>
 
-              {/* Hikaye / Açıklama */}
-              {(product.description || product.story) && (
+              {/* Hikaye */}
+              {(product.description || (product as any).story) && (
                 <div className="mt-10 pt-8 border-t border-neutral-200">
                   <h3 className="font-medium text-black mb-4">Bu Eser Hakkında</h3>
                   <p className="text-neutral-600 leading-relaxed">
-                    {product.story || product.description}
+                    {(product as any).story || product.description}
                   </p>
                 </div>
               )}
@@ -351,23 +363,19 @@ export default function ProductPage() {
                 <dl className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <dt className="text-neutral-500">Kağıt</dt>
-                    <dd className="text-black">{product.paper_type || 'Hahnemühle Photo Rag 308gsm'}</dd>
+                    <dd className="text-black">{(product as any).paper_type || 'Hahnemühle Photo Rag 308gsm'}</dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-neutral-500">Baskı Tekniği</dt>
-                    <dd className="text-black">{product.print_method || 'Giclée (Arşivsel Pigment)'}</dd>
+                    <dd className="text-black">{(product as any).print_method || 'Giclée (Arşivsel Pigment)'}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-neutral-500">Çerçeve Malzemesi</dt>
+                    <dt className="text-neutral-500">Çerçeve</dt>
                     <dd className="text-black">Masif Ahşap</dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-neutral-500">Cam</dt>
                     <dd className="text-black">Müze Camı (UV Korumalı)</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-neutral-500">Montaj</dt>
-                    <dd className="text-black">Asitsiz Mat Board</dd>
                   </div>
                 </dl>
               </div>
@@ -375,6 +383,23 @@ export default function ProductPage() {
           </div>
         </div>
       </section>
+
+      {/* Lightbox */}
+      <Lightbox
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        imageUrl={product.photos?.url || ''}
+        title={product.title}
+      />
+
+      {/* Room Preview Modal */}
+      <RoomPreview
+        isOpen={roomPreviewOpen}
+        onClose={() => setRoomPreviewOpen(false)}
+        imageUrl={product.photos?.url || ''}
+        frameColor={selectedFrame.color}
+        size={selectedSize}
+      />
 
       <Footer settings={settings} />
     </main>

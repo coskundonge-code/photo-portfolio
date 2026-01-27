@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { 
   Loader2, Plus, Edit2, Trash2, X, Check, 
-  ImageIcon, DollarSign, Package, ChevronDown 
+  ImageIcon, DollarSign, Package 
 } from 'lucide-react';
 import { 
   getProducts, 
@@ -15,6 +15,17 @@ import {
 } from '@/lib/supabase';
 import { Product, Photo } from '@/lib/types';
 
+// Tema seçenekleri
+const themeOptions = [
+  { id: 'portrait', label: 'Portre' },
+  { id: 'landscape', label: 'Manzara' },
+  { id: 'street', label: 'Sokak' },
+  { id: 'nature', label: 'Doğa' },
+  { id: 'blackwhite', label: 'Siyah Beyaz' },
+  { id: 'travel', label: 'Seyahat' },
+  { id: 'documentary', label: 'Belgesel' },
+];
+
 // Varsayılan boyutlar
 const defaultSizes = [
   { name: 'Compact', dimensions: '42x37cm', price: 1500 },
@@ -22,7 +33,6 @@ const defaultSizes = [
   { name: 'Classical', dimensions: '63x52cm', price: 3500 },
 ];
 
-// Fiyat formatlama
 const formatPrice = (price: number) => {
   return price.toLocaleString('tr-TR');
 };
@@ -45,6 +55,7 @@ export default function AdminProductsPage() {
     title: '',
     description: '',
     story: '',
+    theme: '',
     base_price: 1500,
     edition_type: 'open' as 'open' | 'limited',
     edition_total: 50,
@@ -52,7 +63,6 @@ export default function AdminProductsPage() {
     is_available: true,
     paper_type: 'Hahnemühle Photo Rag 308gsm',
     print_method: 'Giclée (Arşivsel Pigment)',
-    // Boyut fiyatları
     sizes: defaultSizes,
   });
 
@@ -76,6 +86,7 @@ export default function AdminProductsPage() {
       title: '',
       description: '',
       story: '',
+      theme: '',
       base_price: 1500,
       edition_type: 'open',
       edition_total: 50,
@@ -100,6 +111,7 @@ export default function AdminProductsPage() {
       title: product.title,
       description: product.description || '',
       story: (product as any).story || '',
+      theme: (product as any).theme || '',
       base_price: product.base_price,
       edition_type: product.edition_type,
       edition_total: product.edition_total || 50,
@@ -107,7 +119,7 @@ export default function AdminProductsPage() {
       is_available: product.is_available,
       paper_type: (product as any).paper_type || 'Hahnemühle Photo Rag 308gsm',
       print_method: (product as any).print_method || 'Giclée (Arşivsel Pigment)',
-      sizes: defaultSizes, // TODO: Ürüne özel boyutları yükle
+      sizes: defaultSizes,
     });
     setIsModalOpen(true);
   };
@@ -119,6 +131,7 @@ export default function AdminProductsPage() {
       title: formData.title,
       description: formData.description,
       story: formData.story,
+      theme: formData.theme,
       base_price: formData.base_price,
       edition_type: formData.edition_type,
       edition_total: formData.edition_type === 'limited' ? formData.edition_total : null,
@@ -128,7 +141,6 @@ export default function AdminProductsPage() {
       print_method: formData.print_method,
     };
 
-    // photo_id varsa ekle
     if (formData.photo_id) {
       productData.photo_id = formData.photo_id;
     }
@@ -138,8 +150,6 @@ export default function AdminProductsPage() {
     } else {
       await createProduct(productData);
     }
-
-    // TODO: Boyut fiyatlarını kaydet (product_sizes tablosuna)
 
     setIsModalOpen(false);
     resetForm();
@@ -191,10 +201,7 @@ export default function AdminProductsPage() {
         <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-12 text-center">
           <Package className="w-12 h-12 text-neutral-600 mx-auto mb-4" />
           <p className="text-neutral-400">Henüz ürün yok</p>
-          <button
-            onClick={openCreateModal}
-            className="mt-4 text-blue-500 hover:text-blue-400"
-          >
+          <button onClick={openCreateModal} className="mt-4 text-blue-500 hover:text-blue-400">
             İlk ürünü ekle
           </button>
         </div>
@@ -205,15 +212,10 @@ export default function AdminProductsPage() {
               key={product.id}
               className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 flex items-center gap-4"
             >
-              {/* Ürün Görseli */}
+              {/* Görsel */}
               <div className="relative w-20 h-20 bg-neutral-800 rounded-lg overflow-hidden flex-shrink-0">
                 {product.photos?.url ? (
-                  <Image
-                    src={product.photos.url}
-                    alt={product.title}
-                    fill
-                    className="object-cover"
-                  />
+                  <Image src={product.photos.url} alt={product.title} fill className="object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <ImageIcon className="w-8 h-8 text-neutral-600" />
@@ -221,16 +223,23 @@ export default function AdminProductsPage() {
                 )}
               </div>
 
-              {/* Ürün Bilgileri */}
+              {/* Bilgiler */}
               <div className="flex-1 min-w-0">
                 <h3 className="text-white font-medium truncate">{product.title}</h3>
-                <p className="text-sm text-neutral-500 mt-1">
-                  {product.edition_type === 'limited' 
-                    ? `Sınırlı Sayıda ${product.edition_total} (${product.edition_sold} satıldı)`
-                    : 'Açık Edisyon'}
-                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  {(product as any).theme && (
+                    <span className="px-2 py-0.5 bg-neutral-800 text-xs text-neutral-400 rounded">
+                      {themeOptions.find(t => t.id === (product as any).theme)?.label || (product as any).theme}
+                    </span>
+                  )}
+                  <span className="text-sm text-neutral-500">
+                    {product.edition_type === 'limited' 
+                      ? `Sınırlı ${product.edition_total}`
+                      : 'Açık Edisyon'}
+                  </span>
+                </div>
                 <p className="text-blue-400 font-medium mt-1">
-                  ₺{formatPrice(product.base_price)}'dan başlayan
+                  ₺{formatPrice(product.base_price)}'dan
                 </p>
               </div>
 
@@ -262,34 +271,26 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* Ürün Ekleme/Düzenleme Modal */}
+      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-start justify-center overflow-y-auto py-8">
           <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-3xl mx-4">
-            {/* Modal Header */}
+            {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-neutral-800">
               <h2 className="text-xl font-semibold text-white">
                 {editingProduct ? 'Ürün Düzenle' : 'Yeni Ürün'}
               </h2>
-              <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  resetForm();
-                }}
-                className="text-neutral-400 hover:text-white"
-              >
+              <button onClick={() => { setIsModalOpen(false); resetForm(); }} className="text-neutral-400 hover:text-white">
                 <X className="w-6 h-6" />
               </button>
             </div>
 
-            {/* Modal Body */}
+            {/* Form */}
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               
               {/* Fotoğraf Seçimi */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Fotoğraf
-                </label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Fotoğraf</label>
                 <button
                   type="button"
                   onClick={() => setIsPhotoPickerOpen(true)}
@@ -298,12 +299,7 @@ export default function AdminProductsPage() {
                   {selectedPhoto ? (
                     <div className="flex items-center gap-4">
                       <div className="relative w-24 h-24 rounded-lg overflow-hidden">
-                        <Image
-                          src={selectedPhoto.url}
-                          alt={selectedPhoto.title || ''}
-                          fill
-                          className="object-cover"
-                        />
+                        <Image src={selectedPhoto.url} alt="" fill className="object-cover" />
                       </div>
                       <div className="text-left">
                         <p className="text-white">{selectedPhoto.title || 'Başlıksız'}</p>
@@ -321,9 +317,7 @@ export default function AdminProductsPage() {
 
               {/* Ürün Adı */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Ürün Adı
-                </label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Ürün Adı</label>
                 <input
                   type="text"
                   value={formData.title}
@@ -333,11 +327,24 @@ export default function AdminProductsPage() {
                 />
               </div>
 
+              {/* Tema Seçimi */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Tema (Filtre için)</label>
+                <select
+                  value={formData.theme}
+                  onChange={(e) => setFormData({ ...formData, theme: e.target.value })}
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                >
+                  <option value="">Tema seçin...</option>
+                  {themeOptions.map((theme) => (
+                    <option key={theme.id} value={theme.id}>{theme.label}</option>
+                  ))}
+                </select>
+              </div>
+
               {/* Açıklama */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Kısa Açıklama
-                </label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Kısa Açıklama</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -348,9 +355,7 @@ export default function AdminProductsPage() {
 
               {/* Hikaye */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Hikaye / Sanatçı Notu
-                </label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Hikaye / Sanatçı Notu</label>
                 <textarea
                   value={formData.story}
                   onChange={(e) => setFormData({ ...formData, story: e.target.value })}
@@ -385,70 +390,36 @@ export default function AdminProductsPage() {
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-neutral-500 mt-2">
-                  * Binlik ayracı otomatik eklenir (örn: 1.500)
-                </p>
               </div>
 
-              {/* Edisyon Tipi */}
+              {/* Edisyon */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-300 mb-2">
-                    Edisyon Tipi
-                  </label>
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">Edisyon Tipi</label>
                   <select
                     value={formData.edition_type}
                     onChange={(e) => setFormData({ ...formData, edition_type: e.target.value as 'open' | 'limited' })}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white"
                   >
                     <option value="open">Açık Edisyon</option>
                     <option value="limited">Sınırlı Sayıda</option>
                   </select>
                 </div>
-
                 {formData.edition_type === 'limited' && (
                   <div>
-                    <label className="block text-sm font-medium text-neutral-300 mb-2">
-                      Toplam Adet
-                    </label>
+                    <label className="block text-sm font-medium text-neutral-300 mb-2">Toplam Adet</label>
                     <input
                       type="number"
                       value={formData.edition_total}
                       onChange={(e) => setFormData({ ...formData, edition_total: parseInt(e.target.value) || 0 })}
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white"
                       min={1}
                     />
                   </div>
                 )}
               </div>
 
-              {/* Teknik Özellikler */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-300 mb-2">
-                    Kağıt Türü
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.paper_type}
-                    onChange={(e) => setFormData({ ...formData, paper_type: e.target.value })}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-300 mb-2">
-                    Baskı Tekniği
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.print_method}
-                    onChange={(e) => setFormData({ ...formData, print_method: e.target.value })}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Satışta mı? */}
+              {/* Satışta */}
               <div className="flex items-center gap-3">
                 <input
                   type="checkbox"
@@ -457,19 +428,14 @@ export default function AdminProductsPage() {
                   onChange={(e) => setFormData({ ...formData, is_available: e.target.checked })}
                   className="w-5 h-5 rounded bg-neutral-800 border-neutral-700"
                 />
-                <label htmlFor="is_available" className="text-neutral-300">
-                  Satışta
-                </label>
+                <label htmlFor="is_available" className="text-neutral-300">Satışta</label>
               </div>
 
               {/* Butonlar */}
               <div className="flex justify-end gap-3 pt-4 border-t border-neutral-800">
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    resetForm();
-                  }}
+                  onClick={() => { setIsModalOpen(false); resetForm(); }}
                   className="px-6 py-2 text-neutral-400 hover:text-white transition-colors"
                 >
                   İptal
@@ -486,16 +452,13 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* Fotoğraf Seçici Modal */}
+      {/* Fotoğraf Seçici */}
       {isPhotoPickerOpen && (
         <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4">
           <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-4xl max-h-[80vh] overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-neutral-800">
               <h3 className="text-lg font-medium text-white">Fotoğraf Seç</h3>
-              <button
-                onClick={() => setIsPhotoPickerOpen(false)}
-                className="text-neutral-400 hover:text-white"
-              >
+              <button onClick={() => setIsPhotoPickerOpen(false)} className="text-neutral-400 hover:text-white">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -509,17 +472,10 @@ export default function AdminProductsPage() {
                       setIsPhotoPickerOpen(false);
                     }}
                     className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                      formData.photo_id === photo.id 
-                        ? 'border-blue-500' 
-                        : 'border-transparent hover:border-neutral-600'
+                      formData.photo_id === photo.id ? 'border-blue-500' : 'border-transparent hover:border-neutral-600'
                     }`}
                   >
-                    <Image
-                      src={photo.url}
-                      alt={photo.title || ''}
-                      fill
-                      className="object-cover"
-                    />
+                    <Image src={photo.url} alt="" fill className="object-cover" />
                     {formData.photo_id === photo.id && (
                       <div className="absolute inset-0 bg-blue-500/30 flex items-center justify-center">
                         <Check className="w-8 h-8 text-white" />

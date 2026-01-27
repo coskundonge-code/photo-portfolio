@@ -53,6 +53,7 @@ export interface Product {
   title: string;
   description?: string;
   story?: string;
+  theme?: string;
   base_price: number;
   edition_type: 'open' | 'limited';
   edition_total?: number;
