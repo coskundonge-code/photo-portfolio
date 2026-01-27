@@ -8,24 +8,28 @@ import Footer from '@/components/Footer';
 import { getSettings, getProjects, getProductById } from '@/lib/supabase';
 import { Settings, Project, Product } from '@/lib/types';
 import { Loader2, Check, Truck, Shield, RotateCcw } from 'lucide-react';
-import toast from 'react-hot-toast';
 
-// Boyut seçenekleri
+// Boyut seçenekleri - TÜRKÇE
 const sizes = [
-  { id: 'small', label: 'Small', dimensions: '30 × 40 cm', priceMultiplier: 1 },
-  { id: 'medium', label: 'Medium', dimensions: '50 × 70 cm', priceMultiplier: 1.8 },
-  { id: 'large', label: 'Large', dimensions: '70 × 100 cm', priceMultiplier: 2.5 },
-  { id: 'xlarge', label: 'X-Large', dimensions: '100 × 140 cm', priceMultiplier: 3.5 },
+  { id: 'small', label: 'Küçük', dimensions: '30 × 40 cm', priceMultiplier: 1 },
+  { id: 'medium', label: 'Orta', dimensions: '50 × 70 cm', priceMultiplier: 1.8 },
+  { id: 'large', label: 'Büyük', dimensions: '70 × 100 cm', priceMultiplier: 2.5 },
+  { id: 'xlarge', label: 'Çok Büyük', dimensions: '100 × 140 cm', priceMultiplier: 3.5 },
 ];
 
-// Çerçeve seçenekleri
+// Çerçeve seçenekleri - TÜRKÇE
 const frames = [
-  { id: 'none', label: 'No Frame', color: 'transparent', price: 0 },
-  { id: 'black', label: 'Black', color: '#1a1a1a', price: 500 },
-  { id: 'white', label: 'White', color: '#ffffff', price: 500 },
-  { id: 'natural', label: 'Natural Oak', color: '#c4a574', price: 700 },
-  { id: 'walnut', label: 'Walnut', color: '#5c4033', price: 700 },
+  { id: 'none', label: 'Çerçevesiz', color: 'transparent', price: 0 },
+  { id: 'black', label: 'Siyah', color: '#1a1a1a', price: 500 },
+  { id: 'white', label: 'Beyaz', color: '#ffffff', price: 500 },
+  { id: 'natural', label: 'Doğal Meşe', color: '#c4a574', price: 700 },
+  { id: 'walnut', label: 'Ceviz', color: '#5c4033', price: 700 },
 ];
+
+// Fiyat formatı (nokta ile binlik ayracı)
+const formatPrice = (price: number) => {
+  return price.toLocaleString('tr-TR');
+};
 
 export default function ProductPage() {
   const params = useParams();
@@ -34,9 +38,8 @@ export default function ProductPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   
-  const [selectedSize, setSelectedSize] = useState(sizes[1]); // Default: Medium
-  const [selectedFrame, setSelectedFrame] = useState(frames[1]); // Default: Black
-  const [quantity, setQuantity] = useState(1);
+  const [selectedSize, setSelectedSize] = useState(sizes[1]);
+  const [selectedFrame, setSelectedFrame] = useState(frames[1]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -61,7 +64,7 @@ export default function ProductPage() {
   };
 
   const handleAddToCart = () => {
-    toast.success('Added to cart!');
+    alert('Sepete eklendi!');
   };
 
   if (loading) {
@@ -92,83 +95,105 @@ export default function ProductPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20">
             
-            {/* Left: Product Preview with Frame */}
+            {/* Sol: Ürün Önizleme - Çerçeveli */}
             <div className="relative">
               <div className="sticky top-28">
-                {/* Wall background */}
-                <div className="bg-neutral-100 p-12 lg:p-16 rounded-lg">
-                  {/* Frame Preview */}
-                  <div className="relative max-w-md mx-auto">
-                    {/* Outer frame */}
+                {/* Duvar Arka Planı - States Gallery tarzı */}
+                <div className="bg-[#f0f0f0] p-12 lg:p-16 flex items-center justify-center min-h-[500px]">
+                  {/* Çerçeve Önizleme */}
+                  <div className="relative w-full max-w-md">
+                    {/* Dış Çerçeve */}
                     <div 
-                      className="relative p-3 shadow-2xl transition-all duration-300"
+                      className="relative p-[10px] transition-all duration-300"
                       style={{ 
                         backgroundColor: selectedFrame.id === 'none' ? 'transparent' : selectedFrame.color,
-                        boxShadow: selectedFrame.id === 'none' ? 'none' : '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                        boxShadow: selectedFrame.id === 'none' 
+                          ? 'none' 
+                          : '0 30px 60px -15px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0,0,0,0.1)'
                       }}
                     >
                       {/* Mat / Passepartout */}
                       <div 
-                        className={`${selectedFrame.id === 'none' ? '' : 'bg-white p-6'} transition-all duration-300`}
+                        className={`relative transition-all duration-300 ${
+                          selectedFrame.id === 'none' ? '' : 'bg-white p-6 lg:p-8'
+                        }`}
                       >
-                        {/* Image */}
-                        <div className="relative aspect-[4/3] overflow-hidden">
+                        {/* Derinlik Çizgisi (3D Efekt) */}
+                        {selectedFrame.id !== 'none' && (
+                          <div 
+                            className="absolute inset-4 lg:inset-6 pointer-events-none"
+                            style={{
+                              boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.12), inset 0 3px 6px rgba(0,0,0,0.06)'
+                            }}
+                          />
+                        )}
+                        
+                        {/* Fotoğraf - Kesilmeden Sığdırılmış */}
+                        <div className="relative aspect-[4/3] bg-white flex items-center justify-center">
                           <Image
                             src={product.photos?.url || 'https://via.placeholder.com/800'}
                             alt={product.title}
                             fill
-                            className="object-cover"
+                            className="object-contain"
                             priority
                           />
                         </div>
                       </div>
                     </div>
                     
-                    {/* Shadow under frame */}
+                    {/* Çerçeve Alt Gölgesi */}
                     {selectedFrame.id !== 'none' && (
-                      <div className="absolute -bottom-4 left-4 right-4 h-8 bg-black/10 blur-xl -z-10" />
+                      <div 
+                        className="absolute -bottom-4 left-[10%] right-[10%] h-8 -z-10"
+                        style={{
+                          background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, transparent 70%)'
+                        }}
+                      />
                     )}
                   </div>
-                  
-                  {/* Size indicator */}
-                  <p className="text-center text-sm text-neutral-400 mt-8">
-                    {selectedSize.dimensions}
-                  </p>
                 </div>
+                
+                {/* Boyut göstergesi */}
+                <p className="text-center text-sm text-neutral-400 mt-4">
+                  {selectedSize.dimensions}
+                </p>
               </div>
             </div>
 
-            {/* Right: Product Options */}
+            {/* Sağ: Ürün Seçenekleri */}
             <div className="lg:pt-4">
-              {/* Title & Price */}
+              {/* Başlık ve Edisyon */}
               <div className="mb-8">
+                <p className="text-xs text-neutral-400 uppercase tracking-wider mb-2">
+                  {product.edition_type === 'limited' ? 'Sınırlı Sayıda' : 'Açık Edisyon'}
+                </p>
                 <h1 className="text-3xl lg:text-4xl font-light text-black mb-2">
                   {product.title}
                 </h1>
-                <p className="text-neutral-500">
-                  {product.edition_type === 'limited' 
-                    ? `Limited Edition of ${product.edition_total} — ${(product.edition_total || 0) - (product.edition_sold || 0)} remaining`
-                    : 'Open Edition'}
-                </p>
+                {product.edition_type === 'limited' && (
+                  <p className="text-neutral-500">
+                    {product.edition_total} adet üretildi — {(product.edition_total || 0) - (product.edition_sold || 0)} adet kaldı
+                  </p>
+                )}
               </div>
 
-              {/* Price */}
+              {/* Fiyat */}
               <div className="mb-8">
                 <p className="text-3xl font-medium text-black">
-                  ₺{calculatePrice().toLocaleString()}
+                  ₺{formatPrice(calculatePrice())}
                 </p>
-                <p className="text-sm text-neutral-400 mt-1">Tax included. Shipping calculated at checkout.</p>
+                <p className="text-sm text-neutral-400 mt-1">KDV dahil. Kargo ücreti hesaplanacak.</p>
               </div>
 
-              {/* Size Selection */}
+              {/* Boyut Seçimi */}
               <div className="mb-8">
-                <h3 className="text-sm font-medium text-black mb-4">SIZE</h3>
+                <h3 className="text-sm font-medium text-black mb-4 uppercase tracking-wider">Boyut</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {sizes.map((size) => (
                     <button
                       key={size.id}
                       onClick={() => setSelectedSize(size)}
-                      className={`p-4 border rounded-lg text-left transition-all ${
+                      className={`p-4 border text-left transition-all ${
                         selectedSize.id === size.id
                           ? 'border-black bg-black text-white'
                           : 'border-neutral-200 hover:border-neutral-400'
@@ -183,21 +208,20 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              {/* Frame Selection */}
+              {/* Çerçeve Seçimi */}
               <div className="mb-8">
-                <h3 className="text-sm font-medium text-black mb-4">FRAME</h3>
+                <h3 className="text-sm font-medium text-black mb-4 uppercase tracking-wider">Çerçeve</h3>
                 <div className="flex flex-wrap gap-3">
                   {frames.map((frame) => (
                     <button
                       key={frame.id}
                       onClick={() => setSelectedFrame(frame)}
-                      className={`relative flex items-center gap-3 px-4 py-3 border rounded-lg transition-all ${
+                      className={`relative flex items-center gap-3 px-4 py-3 border transition-all ${
                         selectedFrame.id === frame.id
                           ? 'border-black'
                           : 'border-neutral-200 hover:border-neutral-400'
                       }`}
                     >
-                      {/* Frame color swatch */}
                       {frame.id === 'none' ? (
                         <div className="w-6 h-6 rounded border-2 border-dashed border-neutral-300" />
                       ) : (
@@ -208,7 +232,7 @@ export default function ProductPage() {
                       )}
                       <span className="text-sm">{frame.label}</span>
                       {frame.price > 0 && (
-                        <span className="text-xs text-neutral-400">+₺{frame.price}</span>
+                        <span className="text-xs text-neutral-400">+₺{formatPrice(frame.price)}</span>
                       )}
                       {selectedFrame.id === frame.id && (
                         <Check className="w-4 h-4 text-black absolute top-1 right-1" />
@@ -218,70 +242,70 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              {/* Add to Cart */}
+              {/* Sepete Ekle */}
               <button
                 onClick={handleAddToCart}
-                className="w-full py-4 bg-black text-white font-medium rounded-lg hover:bg-neutral-800 transition-colors"
+                className="w-full py-4 bg-black text-white font-medium hover:bg-neutral-800 transition-colors uppercase tracking-wider"
               >
-                Add to Cart — ₺{calculatePrice().toLocaleString()}
+                Sepete Ekle — ₺{formatPrice(calculatePrice())}
               </button>
 
-              {/* Product Info */}
+              {/* Ürün Bilgileri */}
               <div className="mt-10 pt-8 border-t border-neutral-200 space-y-6">
                 <div className="flex items-start gap-4">
                   <Truck className="w-5 h-5 text-neutral-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-black">Free Shipping</h4>
-                    <p className="text-sm text-neutral-500">Delivery in 5-7 business days</p>
+                    <h4 className="font-medium text-black">Ücretsiz Kargo</h4>
+                    <p className="text-sm text-neutral-500">5-7 iş günü içinde teslimat</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
                   <Shield className="w-5 h-5 text-neutral-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-black">Quality Guarantee</h4>
-                    <p className="text-sm text-neutral-500">Museum-quality archival prints</p>
+                    <h4 className="font-medium text-black">Kalite Garantisi</h4>
+                    <p className="text-sm text-neutral-500">Müze kalitesinde arşivsel baskı</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
                   <RotateCcw className="w-5 h-5 text-neutral-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-black">Easy Returns</h4>
-                    <p className="text-sm text-neutral-500">30-day money-back guarantee</p>
+                    <h4 className="font-medium text-black">Kolay İade</h4>
+                    <p className="text-sm text-neutral-500">30 gün içinde para iade garantisi</p>
                   </div>
                 </div>
               </div>
 
-              {/* Description */}
+              {/* Açıklama */}
               {product.description && (
                 <div className="mt-8 pt-8 border-t border-neutral-200">
-                  <h3 className="font-medium text-black mb-4">About this print</h3>
+                  <h3 className="font-medium text-black mb-4">Bu Baskı Hakkında</h3>
                   <p className="text-neutral-600 leading-relaxed">{product.description}</p>
                 </div>
               )}
 
-              {/* Specifications */}
+              {/* Teknik Özellikler */}
               <div className="mt-8 pt-8 border-t border-neutral-200">
-                <h3 className="font-medium text-black mb-4">Specifications</h3>
+                <h3 className="font-medium text-black mb-4">Teknik Özellikler</h3>
                 <dl className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <dt className="text-neutral-500">Paper</dt>
+                    <dt className="text-neutral-500">Kağıt</dt>
                     <dd className="text-black">Hahnemühle Photo Rag 308gsm</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-neutral-500">Print Method</dt>
-                    <dd className="text-black">Giclée (Archival Pigment)</dd>
+                    <dt className="text-neutral-500">Baskı Tekniği</dt>
+                    <dd className="text-black">Giclée (Arşivsel Pigment)</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-neutral-500">Frame Material</dt>
-                    <dd className="text-black">Solid Wood</dd>
+                    <dt className="text-neutral-500">Çerçeve Malzemesi</dt>
+                    <dd className="text-black">Masif Ahşap</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-neutral-500">Glazing</dt>
-                    <dd className="text-black">Museum Glass (UV Protection)</dd>
+                    <dt className="text-neutral-500">Cam</dt>
+                    <dd className="text-black">Müze Camı (UV Korumalı)</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-neutral-500">Mounting</dt>
-                    <dd className="text-black">Acid-free Mat Board</dd>
+                    <dt className="text-neutral-500">Montaj</dt>
+                    <dd className="text-black">Asitsiz Pasparto</dd>
                   </div>
                 </dl>
               </div>
