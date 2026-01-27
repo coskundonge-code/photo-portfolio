@@ -72,15 +72,29 @@ export default function ProductsPage() {
 
     setSaving(true);
 
-    const productData = {
-      photo_id: selectedPhotoId || null,
+    const productData: {
+      photo_id?: string;
+      title: string;
+      description: string;
+      base_price: number;
+      edition_type: string;
+      edition_total?: number;
+      is_active: boolean;
+    } = {
       title,
       description,
       base_price: parseFloat(basePrice),
       edition_type: editionType,
-      edition_total: editionType === 'limited' ? parseInt(editionTotal) : null,
       is_active: true,
     };
+
+    if (selectedPhotoId) {
+      productData.photo_id = selectedPhotoId;
+    }
+
+    if (editionType === 'limited' && editionTotal) {
+      productData.edition_total = parseInt(editionTotal);
+    }
 
     let result;
     if (editingProduct) {
