@@ -10,72 +10,54 @@ interface MasonryGridProps {
   projects?: Project[];
   showOverlay?: boolean;
   linkToProject?: boolean;
-  linkToShop?: boolean;
 }
 
 export default function MasonryGrid({ 
   photos, 
   projects = [],
   showOverlay = true,
-  linkToProject = true,
-  linkToShop = false,
+  linkToProject = false
 }: MasonryGridProps) {
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
 
-  const handleImageLoad = (id: string) => {
-    setLoadedImages(prev => new Set(prev).add(id));
-  };
-
-  const getProjectForPhoto = (photo: Photo) => {
-    return projects.find(p => p.id === photo.project_id);
-  };
-
-  const getLink = (photo: Photo) => {
-    if (linkToShop) return `/shop/${photo.id}`;
-    if (linkToProject) {
-      const project = getProjectForPhoto(photo);
-      return project ? `/work/${project.slug}` : '#';
-    }
-    return '#';
+  const getProjectByPhotoId = (projectId?: string) => {
+    if (!projectId) return null;
+    return projects.find(p => p.id === projectId);
   };
 
   return (
     <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
       {photos.map((photo, index) => {
-        const project = getProjectForPhoto(photo);
-        const isLoaded = loadedImages.has(photo.id);
+        const project = getProjectByPhotoId(photo.project_id);
+        const href = linkToProject && project ? `/work/${project.slug}` : `/shop/${photo.id}`;
         
         return (
           <Link
             key={photo.id}
-            href={getLink(photo)}
-            className={`masonry-item block break-inside-avoid opacity-0 ${
-              isLoaded ? 'animate-fade-in' : ''
+            href={href}
+            className={`block break-inside-avoid mb-4 overflow-hidden transition-opacity duration-500 ${
+              loadedImages.has(photo.id) ? 'opacity-100' : 'opacity-0'
             }`}
-            style={{ animationDelay: `${index * 0.1}s` }}
           >
-            <div className="relative overflow-hidden bg-neutral-900">
+            <div className="relative group">
               <Image
                 src={photo.url}
                 alt={photo.title || 'Photo'}
                 width={800}
                 height={600}
-                className="w-full h-auto object-cover"
-                onLoad={() => handleImageLoad(photo.id)}
+                quality={90}
+                className="w-full h-auto transition-transform duration-700 group-hover:scale-[1.02]"
+                onLoad={() => setLoadedImages(prev => new Set(prev).add(photo.id))}
               />
               
               {showOverlay && (
-                <div className="overlay">
-                  <div className="overlay-content">
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-500 flex items-end p-4">
+                  <div className="transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
                     {project && (
-                      <span className="text-xs uppercase tracking-wider text-accent mb-1 block">
-                        {project.title}
-                      </span>
+                      <p className="text-white text-xs uppercase tracking-wider mb-1">{project.title}</p>
                     )}
                     {photo.title && (
-                      <h3 className="text-lg font-display text-white">
-                        {photo.title}
-                      </h3>
+                      <p className="text-white text-sm font-medium">{photo.title}</p>
                     )}
                   </div>
                 </div>
@@ -88,20 +70,17 @@ export default function MasonryGrid({
   );
 }
 
-// Alternative: Uniform Grid (daha düzenli görünüm için)
+// Uniform Grid alternatifi
 export function UniformGrid({ 
   photos, 
   projects = [],
-  columns = 4,
+  columns = 4
 }: MasonryGridProps & { columns?: number }) {
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
 
-  const handleImageLoad = (id: string) => {
-    setLoadedImages(prev => new Set(prev).add(id));
-  };
-
-  const getProjectForPhoto = (photo: Photo) => {
-    return projects.find(p => p.id === photo.project_id);
+  const getProjectByPhotoId = (projectId?: string) => {
+    if (!projectId) return null;
+    return projects.find(p => p.id === projectId);
   };
 
   const gridCols = {
@@ -111,35 +90,32 @@ export function UniformGrid({
   };
 
   return (
-    <div className={`grid ${gridCols[columns as keyof typeof gridCols] || gridCols[4]} gap-1`}>
-      {photos.map((photo, index) => {
-        const project = getProjectForPhoto(photo);
-        const isLoaded = loadedImages.has(photo.id);
+    <div className={`grid ${gridCols[columns as keyof typeof gridCols]} gap-4`}>
+      {photos.map((photo) => {
+        const project = getProjectByPhotoId(photo.project_id);
         
         return (
           <Link
             key={photo.id}
-            href={project ? `/work/${project.slug}` : '#'}
-            className={`masonry-item block aspect-square opacity-0 ${
-              isLoaded ? 'animate-fade-in' : ''
+            href={`/work/${project?.slug || ''}`}
+            className={`block aspect-square overflow-hidden transition-opacity duration-500 ${
+              loadedImages.has(photo.id) ? 'opacity-100' : 'opacity-0'
             }`}
-            style={{ animationDelay: `${index * 0.05}s` }}
           >
-            <div className="relative w-full h-full overflow-hidden bg-neutral-900">
+            <div className="relative w-full h-full group">
               <Image
                 src={photo.url}
                 alt={photo.title || 'Photo'}
                 fill
-                className="object-cover"
-                onLoad={() => handleImageLoad(photo.id)}
+                quality={90}
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                onLoad={() => setLoadedImages(prev => new Set(prev).add(photo.id))}
               />
               
-              <div className="overlay">
-                <div className="overlay-content">
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-500 flex items-end p-4">
+                <div className="transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
                   {project && (
-                    <span className="text-xs uppercase tracking-wider text-accent mb-1 block">
-                      {project.title}
-                    </span>
+                    <p className="text-white text-xs uppercase tracking-wider">{project.title}</p>
                   )}
                 </div>
               </div>
