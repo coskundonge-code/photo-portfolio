@@ -14,7 +14,6 @@ export default function ProductsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-  // Form state
   const [selectedPhotoId, setSelectedPhotoId] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -45,7 +44,7 @@ export default function ProductsPage() {
       setTitle(product.title);
       setDescription(product.description || '');
       setBasePrice(product.base_price?.toString() || '');
-      setEditionType(product.edition_type as 'open' | 'limited');
+      setEditionType(product.edition_type === 'limited' ? 'limited' : 'open');
       setEditionTotal(product.edition_total?.toString() || '');
     } else {
       setEditingProduct(null);
@@ -72,15 +71,7 @@ export default function ProductsPage() {
 
     setSaving(true);
 
-    const productData: {
-      photo_id?: string;
-      title: string;
-      description: string;
-      base_price: number;
-      edition_type: string;
-      edition_total?: number;
-      is_active: boolean;
-    } = {
+    const productData: Partial<Product> = {
       title,
       description,
       base_price: parseFloat(basePrice),
@@ -141,7 +132,6 @@ export default function ProductsPage() {
 
   return (
     <div className="p-8">
-      {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-display text-white mb-2">Ürünler</h1>
@@ -156,14 +146,10 @@ export default function ProductsPage() {
         </button>
       </div>
 
-      {/* Products Grid */}
       {products.length === 0 ? (
         <div className="admin-card text-center py-12">
           <p className="text-neutral-400 mb-4">Henüz ürün eklenmemiş.</p>
-          <button
-            onClick={() => openModal()}
-            className="text-white hover:underline"
-          >
+          <button onClick={() => openModal()} className="text-white hover:underline">
             İlk ürünü ekle →
           </button>
         </div>
@@ -205,7 +191,6 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div className="bg-neutral-900 rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
@@ -219,11 +204,8 @@ export default function ProductsPage() {
             </div>
 
             <div className="p-6 space-y-4">
-              {/* Photo Select */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Fotoğraf
-                </label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Fotoğraf</label>
                 <select
                   value={selectedPhotoId}
                   onChange={(e) => setSelectedPhotoId(e.target.value)}
@@ -231,18 +213,13 @@ export default function ProductsPage() {
                 >
                   <option value="">Fotoğraf Seç</option>
                   {photos.map((photo) => (
-                    <option key={photo.id} value={photo.id}>
-                      {photo.title || 'İsimsiz'}
-                    </option>
+                    <option key={photo.id} value={photo.id}>{photo.title || 'İsimsiz'}</option>
                   ))}
                 </select>
               </div>
 
-              {/* Title */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Ürün Adı *
-                </label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Ürün Adı *</label>
                 <input
                   type="text"
                   value={title}
@@ -252,11 +229,8 @@ export default function ProductsPage() {
                 />
               </div>
 
-              {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Açıklama
-                </label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Açıklama</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -266,11 +240,8 @@ export default function ProductsPage() {
                 />
               </div>
 
-              {/* Price */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Fiyat (₺) *
-                </label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Fiyat (₺) *</label>
                 <input
                   type="number"
                   value={basePrice}
@@ -281,39 +252,23 @@ export default function ProductsPage() {
                 />
               </div>
 
-              {/* Edition Type */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Edisyon Tipi
-                </label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Edisyon Tipi</label>
                 <div className="flex gap-4">
                   <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={editionType === 'open'}
-                      onChange={() => setEditionType('open')}
-                      className="w-4 h-4"
-                    />
+                    <input type="radio" checked={editionType === 'open'} onChange={() => setEditionType('open')} className="w-4 h-4" />
                     <span className="text-white">Açık Edisyon</span>
                   </label>
                   <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={editionType === 'limited'}
-                      onChange={() => setEditionType('limited')}
-                      className="w-4 h-4"
-                    />
+                    <input type="radio" checked={editionType === 'limited'} onChange={() => setEditionType('limited')} className="w-4 h-4" />
                     <span className="text-white">Limitli</span>
                   </label>
                 </div>
               </div>
 
-              {/* Edition Total */}
               {editionType === 'limited' && (
                 <div>
-                  <label className="block text-sm font-medium text-neutral-300 mb-2">
-                    Toplam Adet
-                  </label>
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">Toplam Adet</label>
                   <input
                     type="number"
                     value={editionTotal}
@@ -327,10 +282,7 @@ export default function ProductsPage() {
             </div>
 
             <div className="flex gap-4 p-6 border-t border-neutral-800">
-              <button
-                onClick={closeModal}
-                className="flex-1 px-4 py-3 border border-neutral-700 text-white rounded-lg hover:bg-neutral-800 transition-colors"
-              >
+              <button onClick={closeModal} className="flex-1 px-4 py-3 border border-neutral-700 text-white rounded-lg hover:bg-neutral-800 transition-colors">
                 İptal
               </button>
               <button
@@ -338,11 +290,7 @@ export default function ProductsPage() {
                 disabled={saving}
                 className="flex-1 px-4 py-3 bg-white text-black rounded-lg hover:bg-neutral-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {saving ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Save className="w-5 h-5" />
-                )}
+                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
                 <span>Kaydet</span>
               </button>
             </div>
