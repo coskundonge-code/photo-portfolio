@@ -54,7 +54,6 @@ export default function ProductPage() {
     loadData();
   }, [params.id]);
 
-  // FOTOĞRAF DİKEY Mİ KONTROL
   const isPhotoPortrait = () => {
     const photo = product?.photos;
     if (!photo) return false;
@@ -67,13 +66,28 @@ export default function ProductPage() {
   };
 
   const isPortrait = isPhotoPortrait();
-
-  // ÇERÇEVE BOYUTLARI - DİKEY/YATAY
-  const frameWidth = isPortrait ? 220 : 320;
-  const frameHeight = isPortrait ? 320 : 220;
+  const photoWidth = isPortrait ? 180 : 280;
+  const photoHeight = isPortrait ? 260 : 180;
 
   const calculatePrice = () => {
     return (selectedSize.price || product?.base_price || 0) + (selectedFrame.price || 0);
+  };
+
+  // Çerçeve rengi için 3D efekt
+  const getFrameStyle = (color: string) => {
+    const isWhite = color === '#ffffff';
+    const isLight = color === '#c4a574';
+    
+    return {
+      background: color,
+      boxShadow: `
+        inset 1px 1px 0 0 ${isWhite ? '#ffffff' : isLight ? '#d4b584' : '#3a3a3a'},
+        inset 2px 2px 0 0 ${isWhite ? '#f8f8f8' : isLight ? '#c4a574' : '#2a2a2a'},
+        inset -1px -1px 0 0 ${isWhite ? '#e8e8e8' : isLight ? '#a48854' : '#0a0a0a'},
+        inset -2px -2px 0 0 ${isWhite ? '#e0e0e0' : isLight ? '#8a7044' : '#000000'},
+        0 25px 50px -15px rgba(0,0,0,0.35)
+      `
+    };
   };
 
   const handleAddToCart = () => {
@@ -123,12 +137,12 @@ export default function ProductPage() {
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
             
-            {/* Sol: Ürün Önizleme - TIKLANINCA LIGHTBOX */}
+            {/* Sol: STATES GALLERY 3D ÇERÇEVE */}
             <div className="relative">
               <div className="sticky top-24">
                 <div 
-                  className="bg-[#e8e8e8] flex items-center justify-center cursor-pointer relative group"
-                  style={{ minHeight: '500px' }}
+                  className="bg-[#f5f5f5] flex items-center justify-center cursor-pointer relative group"
+                  style={{ minHeight: '550px' }}
                   onClick={() => setLightboxOpen(true)}
                 >
                   {/* Zoom icon */}
@@ -136,49 +150,56 @@ export default function ProductPage() {
                     <ZoomIn className="w-5 h-5" />
                   </div>
 
-                  {/* Çerçeve */}
                   <div 
                     className="relative transition-all duration-500"
                     style={{ transform: `scale(${selectedSize.scale || 1})` }}
                   >
-                    {/* Dış Çerçeve */}
+                    {/* ===== DIŞ ÇERÇEVE ===== */}
                     <div 
-                      style={{ 
-                        backgroundColor: selectedFrame.color,
-                        padding: '6px',
-                        boxShadow: '0 25px 50px -10px rgba(0,0,0,0.4)',
-                        border: selectedFrame.color === '#ffffff' ? '1px solid #e5e5e5' : 'none'
+                      style={{
+                        ...getFrameStyle(selectedFrame.color),
+                        padding: '12px',
+                        position: 'relative',
                       }}
                     >
-                      {/* Mat */}
+                      {/* ===== PASSEPARTOUT / MAT ===== */}
                       <div 
-                        className={selectedStyle === 'mat' ? 'bg-white relative' : 'relative'}
                         style={{ 
+                          background: selectedStyle === 'mat' ? '#ffffff' : 'transparent',
                           padding: selectedStyle === 'mat' 
-                            ? (isPortrait ? '22px 28px' : '28px 22px') 
-                            : '0' 
+                            ? (isPortrait ? '40px 35px' : '35px 40px') 
+                            : '0',
+                          position: 'relative',
+                          boxShadow: selectedStyle === 'mat' ? 'inset 0 0 15px rgba(0,0,0,0.04)' : 'none'
                         }}
                       >
-                        {/* 3D Çizgi */}
+                        {/* ===== V-GROOVE / İÇ ÇİZGİ ===== */}
                         {selectedStyle === 'mat' && (
                           <div 
-                            className="absolute pointer-events-none"
                             style={{
-                              top: isPortrait ? '20px' : '26px',
-                              left: isPortrait ? '26px' : '20px',
-                              right: isPortrait ? '26px' : '20px',
-                              bottom: isPortrait ? '20px' : '26px',
-                              boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.06)',
+                              position: 'absolute',
+                              top: isPortrait ? '35px' : '30px',
+                              left: isPortrait ? '30px' : '35px',
+                              right: isPortrait ? '30px' : '35px',
+                              bottom: isPortrait ? '35px' : '30px',
+                              boxShadow: `
+                                inset 1px 1px 0 0 rgba(0,0,0,0.12),
+                                inset -1px -1px 0 0 rgba(255,255,255,0.9),
+                                inset 2px 2px 4px 0 rgba(0,0,0,0.06)
+                              `,
+                              pointerEvents: 'none'
                             }}
                           />
                         )}
                         
-                        {/* Fotoğraf - DİKEY/YATAY */}
+                        {/* ===== FOTOĞRAF ===== */}
                         <div 
-                          className="relative overflow-hidden bg-neutral-100"
                           style={{
-                            width: `${frameWidth}px`,
-                            height: `${frameHeight}px`,
+                            width: `${photoWidth}px`,
+                            height: `${photoHeight}px`,
+                            position: 'relative',
+                            overflow: 'hidden',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                           }}
                         >
                           {product.photos?.url && (
@@ -194,10 +215,18 @@ export default function ProductPage() {
                       </div>
                     </div>
 
-                    {/* Gölge */}
+                    {/* ===== ALT GÖLGE ===== */}
                     <div 
-                      className="absolute -bottom-4 left-[10%] right-[10%] h-8 -z-10"
-                      style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, transparent 70%)' }}
+                      style={{
+                        position: 'absolute',
+                        bottom: '-18px',
+                        left: '8%',
+                        right: '8%',
+                        height: '25px',
+                        background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, transparent 70%)',
+                        filter: 'blur(4px)',
+                        zIndex: -1
+                      }}
                     />
                   </div>
                 </div>
@@ -231,16 +260,16 @@ export default function ProductPage() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setSelectedStyle('mat')}
-                    className={`px-6 py-2.5 border text-sm ${
-                      selectedStyle === 'mat' ? 'border-black bg-black text-white' : 'border-neutral-300'
+                    className={`px-6 py-2.5 border text-sm transition-all ${
+                      selectedStyle === 'mat' ? 'border-black bg-black text-white' : 'border-neutral-300 hover:border-black'
                     }`}
                   >
                     Mat
                   </button>
                   <button
                     onClick={() => setSelectedStyle('fullbleed')}
-                    className={`px-6 py-2.5 border text-sm ${
-                      selectedStyle === 'fullbleed' ? 'border-black bg-black text-white' : 'border-neutral-300'
+                    className={`px-6 py-2.5 border text-sm transition-all ${
+                      selectedStyle === 'fullbleed' ? 'border-black bg-black text-white' : 'border-neutral-300 hover:border-black'
                     }`}
                   >
                     Full Bleed
@@ -258,8 +287,8 @@ export default function ProductPage() {
                     <button
                       key={size.id}
                       onClick={() => setSelectedSize(size)}
-                      className={`w-full flex items-center justify-between px-4 py-3 border ${
-                        selectedSize.id === size.id ? 'border-black' : 'border-neutral-200'
+                      className={`w-full flex items-center justify-between px-4 py-3 border transition-all ${
+                        selectedSize.id === size.id ? 'border-black' : 'border-neutral-200 hover:border-neutral-400'
                       }`}
                     >
                       <span className="font-medium text-sm">{size.name}</span>
@@ -280,16 +309,17 @@ export default function ProductPage() {
                     <button
                       key={frame.id}
                       onClick={() => setSelectedFrame(frame)}
-                      className={`relative w-10 h-10 rounded-full ${
-                        selectedFrame.id === frame.id ? 'ring-2 ring-offset-2 ring-black' : ''
+                      className={`relative w-12 h-12 rounded-full transition-all ${
+                        selectedFrame.id === frame.id ? 'ring-2 ring-offset-2 ring-black scale-110' : 'hover:scale-105'
                       }`}
                       style={{ 
                         backgroundColor: frame.color,
-                        border: frame.color === '#ffffff' ? '1px solid #e5e5e5' : 'none'
+                        border: frame.color === '#ffffff' ? '1px solid #e0e0e0' : 'none',
+                        boxShadow: '0 3px 10px rgba(0,0,0,0.15)'
                       }}
                     >
                       {selectedFrame.id === frame.id && (
-                        <Check className={`absolute inset-0 m-auto w-4 h-4 ${
+                        <Check className={`absolute inset-0 m-auto w-5 h-5 ${
                           frame.color === '#ffffff' || frame.color === '#c4a574' ? 'text-black' : 'text-white'
                         }`} />
                       )}
@@ -305,26 +335,17 @@ export default function ProductPage() {
 
               <button
                 onClick={handleAddToCart}
-                className="w-full py-4 bg-black text-white text-sm tracking-wide hover:bg-neutral-800 mb-4"
+                className="w-full py-4 bg-black text-white text-sm tracking-wide hover:bg-neutral-800 transition-colors mb-4"
               >
                 Sepete Ekle — ₺{formatPrice(calculatePrice())}
               </button>
 
               <button 
                 onClick={() => setRoomPreviewOpen(true)}
-                className="w-full py-4 bg-neutral-100 text-sm hover:bg-neutral-200 mb-4"
+                className="w-full py-4 bg-neutral-100 text-sm hover:bg-neutral-200 transition-colors mb-4"
               >
                 Odanda Görüntüle
               </button>
-
-              {(product.description || (product as any).story) && (
-                <div className="mt-10 pt-8 border-t">
-                  <h3 className="font-medium mb-4">Bu Eser Hakkında</h3>
-                  <p className="text-neutral-600 leading-relaxed">
-                    {(product as any).story || product.description}
-                  </p>
-                </div>
-              )}
 
               <div className="mt-8 pt-8 border-t">
                 <h3 className="font-medium mb-4">Teknik Özellikler</h3>

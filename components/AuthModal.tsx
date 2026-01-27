@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { X, Loader2, Mail, Lock, User } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -12,33 +12,23 @@ interface AuthModalProps {
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  
   const [formData, setFormData] = useState({
-    name: '',
     email: '',
     password: '',
+    name: '',
     confirmPassword: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage('');
 
-    // Şifre kontrolü (kayıt için)
-    if (mode === 'register' && formData.password !== formData.confirmPassword) {
-      setMessage('Şifreler eşleşmiyor');
-      setLoading(false);
-      return;
-    }
-
-    // Simülasyon - Supabase Auth entegrasyonu yapılacak
+    // TODO: Implement actual auth logic with Supabase Auth
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Şimdilik bilgi mesajı göster
-    setMessage('Üyelik sistemi yakında aktif olacak!');
     setLoading(false);
+    // onClose();
+    alert('Üyelik sistemi yakında aktif olacak!');
   };
 
   if (!isOpen) return null;
@@ -46,132 +36,124 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Overlay */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      
+      <div 
+        className="absolute inset-0 bg-black/40"
+        onClick={onClose}
+      />
+
       {/* Modal */}
-      <div className="relative bg-white w-full max-w-4xl max-h-[90vh] overflow-hidden flex">
-        
+      <div className="relative bg-white w-full max-w-4xl flex rounded-lg overflow-hidden shadow-2xl">
         {/* Sol: Görsel */}
-        <div className="hidden md:block w-1/2 bg-neutral-100 relative">
-          <div className="absolute inset-0 flex items-center justify-center p-12">
-            <div className="relative">
-              {/* Çerçeve */}
-              <div className="bg-[#1a1a1a] p-1.5">
-                <div className="bg-white p-4">
-                  <div className="w-48 h-64 bg-neutral-200 relative">
-                    <Image
-                      src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400"
-                      alt="Art"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                </div>
+        <div className="hidden md:block w-1/2 relative">
+          <Image
+            src="/room-preview.jpg"
+            alt="Gallery"
+            fill
+            className="object-cover"
+          />
+          {/* Fallback gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-neutral-200 to-neutral-300" />
+          {/* Çerçeveli fotoğraf preview */}
+          <div className="absolute inset-0 flex items-center justify-center p-8">
+            <div className="bg-[#c4a574] p-2 shadow-2xl">
+              <div className="bg-white p-4">
+                <div className="w-48 h-64 bg-neutral-800" />
               </div>
-              {/* Gölge */}
-              <div 
-                className="absolute -bottom-3 left-[15%] right-[15%] h-6 -z-10"
-                style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, transparent 70%)' }}
-              />
             </div>
           </div>
         </div>
 
         {/* Sağ: Form */}
-        <div className="w-full md:w-1/2 p-8 md:p-12 overflow-y-auto">
-          {/* Kapat */}
+        <div className="w-full md:w-1/2 p-8 lg:p-12">
+          {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-neutral-400 hover:text-black"
+            className="absolute right-4 top-4 p-2 hover:opacity-60 transition-opacity"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
 
-          {/* Başlık */}
-          <h2 className="text-2xl font-semibold mb-2">
-            {mode === 'login' ? 'GİRİŞ YAP' : 'HESAP OLUŞTUR'}
-          </h2>
-          <p className="text-neutral-500 text-sm mb-8">
-            {mode === 'login' 
-              ? 'Siparişlerinizi takip edin ve özel fırsatlardan haberdar olun.'
-              : 'Siparişlerinizi takip edin ve özel fırsatlardan haberdar olun.'}
-          </p>
-
-          {/* Mesaj */}
-          {message && (
-            <div className={`mb-6 p-4 rounded-lg text-sm ${
-              message.includes('yakında') 
-                ? 'bg-blue-50 text-blue-700 border border-blue-200' 
-                : 'bg-red-50 text-red-700 border border-red-200'
-            }`}>
-              {message}
-            </div>
-          )}
+          {/* Title */}
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-medium tracking-wide mb-2">
+              {mode === 'login' ? 'HOŞ GELDİNİZ' : 'HESAP OLUŞTUR'}
+            </h2>
+            <p className="text-sm text-neutral-500">
+              {mode === 'login' 
+                ? 'Özel üye fiyatlarından yararlanın.'
+                : 'Siparişlerinizi takip edin ve özel fırsatlardan haberdar olun.'}
+            </p>
+          </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'register' && (
               <div>
-                <label className="block text-xs font-medium text-neutral-500 mb-2">AD SOYAD</label>
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full pl-12 pr-4 py-3 border border-neutral-300 focus:border-black outline-none"
-                    placeholder="Adınız Soyadınız"
-                  />
-                </div>
+                <label className="block text-xs font-medium text-neutral-500 mb-1 tracking-wide">
+                  AD SOYAD
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-4 py-3 border border-neutral-300 focus:border-black focus:outline-none transition-colors"
+                  placeholder="Ad Soyad"
+                  required
+                />
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-medium text-neutral-500 mb-2">E-POSTA</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
-                <input
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3 border border-neutral-300 focus:border-black outline-none"
-                  placeholder="ornek@email.com"
-                />
-              </div>
+              <label className="block text-xs font-medium text-neutral-500 mb-1 tracking-wide">
+                E-POSTA
+              </label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full px-4 py-3 border border-neutral-300 focus:border-black focus:outline-none transition-colors"
+                placeholder="E-posta"
+                required
+              />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-neutral-500 mb-2">ŞİFRE</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
-                <input
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3 border border-neutral-300 focus:border-black outline-none"
-                  placeholder="••••••••"
-                />
-              </div>
+              <label className="block text-xs font-medium text-neutral-500 mb-1 tracking-wide">
+                ŞİFRE
+              </label>
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="w-full px-4 py-3 border border-neutral-300 focus:border-black focus:outline-none transition-colors"
+                placeholder="Şifre"
+                required
+              />
             </div>
 
             {mode === 'register' && (
               <div>
-                <label className="block text-xs font-medium text-neutral-500 mb-2">ŞİFRE TEKRAR</label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
-                  <input
-                    type="password"
-                    required
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className="w-full pl-12 pr-4 py-3 border border-neutral-300 focus:border-black outline-none"
-                    placeholder="••••••••"
-                  />
-                </div>
+                <label className="block text-xs font-medium text-neutral-500 mb-1 tracking-wide">
+                  ŞİFRE TEKRAR
+                </label>
+                <input
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  className="w-full px-4 py-3 border border-neutral-300 focus:border-black focus:outline-none transition-colors"
+                  placeholder="Şifre Tekrar"
+                  required
+                />
               </div>
+            )}
+
+            {mode === 'login' && (
+              <button
+                type="button"
+                className="text-sm text-neutral-500 hover:text-black transition-colors"
+              >
+                Şifremi unuttum?
+              </button>
             )}
 
             <button
@@ -179,34 +161,20 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               disabled={loading}
               className="w-full py-4 bg-black text-white text-sm tracking-wide hover:bg-neutral-800 transition-colors disabled:bg-neutral-400 flex items-center justify-center gap-2"
             >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  İşleniyor...
-                </>
-              ) : (
-                mode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'
-              )}
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              {mode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
             </button>
           </form>
 
-          {/* Alt Link */}
+          {/* Toggle mode */}
           <div className="mt-6 text-center">
-            {mode === 'login' ? (
-              <button
-                onClick={() => { setMode('register'); setMessage(''); }}
-                className="text-sm text-neutral-600 hover:text-black underline"
-              >
-                Hesabınız yok mu? Kayıt olun
-              </button>
-            ) : (
-              <button
-                onClick={() => { setMode('login'); setMessage(''); }}
-                className="text-sm text-neutral-600 hover:text-black underline"
-              >
-                Zaten hesabım var
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+              className="text-sm text-neutral-600 hover:text-black transition-colors underline"
+            >
+              {mode === 'login' ? 'Hesap oluştur' : 'Zaten hesabım var'}
+            </button>
           </div>
         </div>
       </div>

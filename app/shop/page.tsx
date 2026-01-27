@@ -74,27 +74,20 @@ export default function ShopPage() {
     setFilteredProducts(result);
   }, [products, selectedTheme, sortBy]);
 
-  // FOTOĞRAF DİKEY Mİ KONTROL - KESİN ÇALIŞIYOR
   const isPhotoPortrait = (product: Product) => {
     const photo = product.photos;
     if (!photo) return false;
-    
-    // 1. Önce orientation field'ına bak
     if ((photo as any).orientation === 'portrait') return true;
     if ((photo as any).orientation === 'landscape') return false;
-    
-    // 2. Width/height varsa ona bak
     if ((photo as any).width && (photo as any).height) {
       return (photo as any).height > (photo as any).width;
     }
-    
-    // 3. Varsayılan yatay
     return false;
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#e8e8e8] flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-100 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
       </div>
     );
@@ -158,16 +151,16 @@ export default function ShopPage() {
               <p className="text-neutral-500">Bu kategoride eser bulunamadı.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredProducts.map((product) => {
                 const isHovered = hoveredProduct === product.id;
                 const photo = product.photos;
                 const isPortrait = isPhotoPortrait(product);
                 
-                // DİKEY FOTO İÇİN DİKEY ÇERÇEVE BOYUTLARI
-                const frameWidth = isPortrait ? 200 : 280;
-                const frameHeight = isPortrait ? 280 : 200;
-                const containerHeight = isPortrait ? 520 : 420;
+                // DİKEY/YATAY BOYUTLAR - States Gallery oranları
+                const photoWidth = isPortrait ? 160 : 240;
+                const photoHeight = isPortrait ? 220 : 160;
+                const containerHeight = isPortrait ? 450 : 380;
                 
                 return (
                   <Link
@@ -177,47 +170,71 @@ export default function ShopPage() {
                     onMouseEnter={() => setHoveredProduct(product.id)}
                     onMouseLeave={() => setHoveredProduct(null)}
                   >
-                    {/* Çerçeveli Önizleme */}
+                    {/* STATES GALLERY 3D ÇERÇEVE */}
                     <div 
-                      className="bg-[#e8e8e8] flex items-center justify-center"
+                      className="bg-[#f5f5f5] flex items-center justify-center relative"
                       style={{ minHeight: `${containerHeight}px` }}
                     >
-                      <div className={`relative transition-all duration-500 ${isHovered ? 'scale-[1.03]' : 'scale-100'}`}>
-                        {/* Dış Çerçeve - Siyah */}
+                      {/* Ana Çerçeve Container */}
+                      <div 
+                        className={`relative transition-all duration-500 ease-out ${
+                          isHovered ? 'scale-[1.02]' : 'scale-100'
+                        }`}
+                      >
+                        {/* ===== DIŞ ÇERÇEVE - Kalın Siyah ===== */}
                         <div 
-                          className="relative bg-[#1a1a1a]"
                           style={{
-                            padding: '6px',
-                            boxShadow: isHovered 
-                              ? '0 30px 60px -10px rgba(0,0,0,0.5)'
-                              : '0 20px 40px -10px rgba(0,0,0,0.4)'
+                            background: '#1a1a1a',
+                            padding: '10px',
+                            position: 'relative',
+                            // 3D Çerçeve efekti - üst ve sol kenar açık, alt ve sağ koyu
+                            boxShadow: `
+                              inset 1px 1px 0 0 #3a3a3a,
+                              inset 2px 2px 0 0 #2a2a2a,
+                              inset -1px -1px 0 0 #0a0a0a,
+                              inset -2px -2px 0 0 #000000,
+                              0 20px 40px -10px rgba(0,0,0,0.4),
+                              0 10px 20px -5px rgba(0,0,0,0.2)
+                            `
                           }}
                         >
-                          {/* Mat - Beyaz (dikey için farklı padding) */}
+                          {/* ===== PASSEPARTOUT / MAT ===== */}
                           <div 
-                            className="bg-white relative"
                             style={{ 
-                              padding: isPortrait ? '20px 16px' : '16px 20px'
+                              background: '#ffffff',
+                              padding: isPortrait ? '35px 30px' : '30px 35px',
+                              position: 'relative',
+                              // Mat üzerinde hafif gölge
+                              boxShadow: 'inset 0 0 10px rgba(0,0,0,0.03)'
                             }}
                           >
-                            {/* 3D Derinlik Çizgisi */}
+                            {/* ===== V-GROOVE / İÇ ÇİZGİ - 3D Derinlik ===== */}
                             <div 
-                              className="absolute pointer-events-none"
                               style={{
-                                top: isPortrait ? '18px' : '14px',
-                                left: isPortrait ? '14px' : '18px',
-                                right: isPortrait ? '14px' : '18px',
-                                bottom: isPortrait ? '18px' : '14px',
-                                boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.06)',
+                                position: 'absolute',
+                                top: isPortrait ? '30px' : '25px',
+                                left: isPortrait ? '25px' : '30px',
+                                right: isPortrait ? '25px' : '30px',
+                                bottom: isPortrait ? '30px' : '25px',
+                                // Çift çizgi ile 3D efekt - üst/sol gölge, alt/sağ highlight
+                                boxShadow: `
+                                  inset 1px 1px 0 0 rgba(0,0,0,0.15),
+                                  inset -1px -1px 0 0 rgba(255,255,255,0.8),
+                                  inset 2px 2px 3px 0 rgba(0,0,0,0.08)
+                                `,
+                                pointerEvents: 'none'
                               }}
                             />
                             
-                            {/* Fotoğraf - DİKEY İSE DİKEY, YATAY İSE YATAY */}
+                            {/* ===== FOTOĞRAF ===== */}
                             <div 
-                              className="relative overflow-hidden bg-neutral-100"
                               style={{
-                                width: `${frameWidth}px`,
-                                height: `${frameHeight}px`,
+                                width: `${photoWidth}px`,
+                                height: `${photoHeight}px`,
+                                position: 'relative',
+                                overflow: 'hidden',
+                                // Fotoğraf etrafında ince gölge
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
                               }}
                             >
                               {photo?.url && (
@@ -233,19 +250,25 @@ export default function ShopPage() {
                           </div>
                         </div>
 
-                        {/* Alt Gölge */}
+                        {/* ===== ALT GÖLGE ===== */}
                         <div 
-                          className={`absolute -bottom-3 left-[15%] right-[15%] h-6 -z-10 transition-opacity ${
-                            isHovered ? 'opacity-50' : 'opacity-30'
-                          }`}
-                          style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, transparent 70%)' }}
+                          style={{
+                            position: 'absolute',
+                            bottom: '-15px',
+                            left: '10%',
+                            right: '10%',
+                            height: '20px',
+                            background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, transparent 70%)',
+                            filter: 'blur(3px)',
+                            zIndex: -1
+                          }}
                         />
                       </div>
                     </div>
 
                     {/* Ürün Bilgileri */}
-                    <div className="mt-5 text-center">
-                      <h3 className="text-sm font-medium tracking-wide group-hover:opacity-70">
+                    <div className="mt-6 text-center">
+                      <h3 className="text-sm font-medium tracking-wide group-hover:opacity-70 transition-opacity">
                         {product.title.toUpperCase()}
                       </h3>
                       <p className="text-xs text-neutral-500 mt-1">

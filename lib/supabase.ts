@@ -836,38 +836,74 @@ export const clearCart = async (sessionId: string): Promise<boolean> => {
 // ================================================
 // STORAGE (Image Upload)
 // ================================================
-export const uploadImage = async (file: File, bucket: string = 'photos'): Promise<string | null> => {
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+export const uploadImage = async (file: File, bucket: string = 'images'): Promise<string | null> => {
+  try {
+    const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `uploads/${fileName}`;
 
-  const { error } = await supabase.storage
-    .from(bucket)
-    .upload(fileName, file);
+    // Yükleme
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
 
-  if (error) {
-    console.error('Error uploading image:', error);
-    return null;
+    if (error) {
+      console.error('Storage upload error:', error.message);
+      
+      // Bucket yoksa hata mesajı
+      if (error.message?.includes('Bucket not found') || error.message?.includes('bucket')) {
+        throw new Error(`"${bucket}" bucket bulunamadı. Supabase Storage'da bu bucket'ı oluşturun ve public yapın.`);
+      }
+      
+      // İzin hatası
+      if (error.message?.includes('policy') || error.message?.includes('permission')) {
+        throw new Error('Yükleme izni yok. Bucket RLS politikalarını kontrol edin.');
+      }
+      
+      throw new Error(error.message || 'Yükleme başarısız');
+    }
+
+    // Public URL al
+    const { data: urlData } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(filePath);
+
+    if (!urlData?.publicUrl) {
+      throw new Error('Public URL oluşturulamadı');
+    }
+
+    return urlData.publicUrl;
+  } catch (err: any) {
+    console.error('Upload error:', err);
+    throw err;
   }
-
-  const { data: publicUrl } = supabase.storage
-    .from(bucket)
-    .getPublicUrl(fileName);
-
-  return publicUrl.publicUrl;
 };
 
-export const deleteImage = async (url: string, bucket: string = 'photos'): Promise<boolean> => {
-  const fileName = url.split('/').pop();
-  if (!fileName) return false;
+export const deleteImage = async (url: string, bucket: string = 'images'): Promise<boolean> => {
+  try {
+    // URL'den dosya yolunu çıkar
+    const urlParts = url.split('/');
+    const bucketIndex = urlParts.findIndex(p => p === bucket);
+    if (bucketIndex === -1) return false;
+    
+    const filePath = urlParts.slice(bucketIndex + 1).join('/');
+    if (!filePath) return false;
 
-  const { error } = await supabase.storage
-    .from(bucket)
-    .remove([fileName]);
+    const { error } = await supabase.storage
+      .from(bucket)
+      .remove([filePath]);
 
-  if (error) {
-    console.error('Error deleting image:', error);
+    if (error) {
+      console.error('Error deleting image:', error);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error('Delete error:', err);
     return false;
   }
-
-  return true;
 };
