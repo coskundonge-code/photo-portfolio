@@ -115,8 +115,7 @@ export default function AdminProductsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const productData = {
-      photo_id: formData.photo_id || null,
+    const productData: any = {
       title: formData.title,
       description: formData.description,
       story: formData.story,
@@ -128,6 +127,11 @@ export default function AdminProductsPage() {
       paper_type: formData.paper_type,
       print_method: formData.print_method,
     };
+
+    // photo_id varsa ekle
+    if (formData.photo_id) {
+      productData.photo_id = formData.photo_id;
+    }
 
     if (editingProduct) {
       await updateProduct(editingProduct.id, productData);
