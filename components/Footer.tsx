@@ -10,8 +10,8 @@ interface FooterProps {
 
 export default function Footer({ settings }: FooterProps) {
   const siteName = settings?.site_name || 'COŞKUN DÖNGE';
-  const email = settings?.contact_email || 'info@example.com';
-  const instagram = settings?.instagram_url;
+  const email = settings?.email || 'info@example.com';
+  const instagram = settings?.instagram;
 
   return (
     <footer className="bg-neutral-900 text-white py-16">
