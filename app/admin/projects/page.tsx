@@ -1,264 +1,302 @@
 'use client';
 
-import { useState } from 'react';
-import { 
-  Plus, 
-  Edit2, 
-  Trash2, 
-  Check, 
-  X, 
-  Eye,
-  EyeOff,
-  GripVertical,
-  FolderOpen
-} from 'lucide-react';
-import toast from 'react-hot-toast';
+import { useState, useEffect } from 'react';
+import { Plus, Trash2, Edit2, Loader2, Save, X, Eye, EyeOff } from 'lucide-react';
+import { getAllProjects, createProject, updateProject, deleteProject } from '@/lib/supabase';
 import { Project } from '@/lib/types';
+import toast from 'react-hot-toast';
 
-// Demo projects
-const initialProjects: Project[] = [
-  { id: '1', title: 'Landscapes', slug: 'landscapes', description: 'Nature photography from around the world', order_index: 1, is_visible: true, created_at: '', updated_at: '' },
-  { id: '2', title: 'Urban', slug: 'urban', description: 'City life and architecture', order_index: 2, is_visible: true, created_at: '', updated_at: '' },
-  { id: '3', title: 'Portraits', slug: 'portraits', description: 'People and their stories', order_index: 3, is_visible: false, created_at: '', updated_at: '' },
-];
+export default function ProjectsPage() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
 
-export default function AdminProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
-  const [isCreating, setIsCreating] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ title: '', description: '' });
+  // Form state
+  const [title, setTitle] = useState('');
+  const [slug, setSlug] = useState('');
+  const [description, setDescription] = useState('');
+  const [isVisible, setIsVisible] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  // Create project
-  const handleCreate = () => {
-    if (!formData.title.trim()) {
-      toast.error('Title is required');
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const loadProjects = async () => {
+    setLoading(true);
+    const data = await getAllProjects();
+    setProjects(data);
+    setLoading(false);
+  };
+
+  const generateSlug = (text: string) => {
+    return text
+      .toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+  };
+
+  const handleTitleChange = (value: string) => {
+    setTitle(value);
+    if (!editingProject) {
+      setSlug(generateSlug(value));
+    }
+  };
+
+  const openModal = (project?: Project) => {
+    if (project) {
+      setEditingProject(project);
+      setTitle(project.title);
+      setSlug(project.slug);
+      setDescription(project.description || '');
+      setIsVisible(project.is_visible);
+    } else {
+      setEditingProject(null);
+      setTitle('');
+      setSlug('');
+      setDescription('');
+      setIsVisible(true);
+    }
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingProject(null);
+  };
+
+  const handleSave = async () => {
+    if (!title || !slug) {
+      toast.error('Başlık ve slug gerekli!');
       return;
     }
 
-    const slug = formData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    
-    const newProject: Project = {
-      id: Date.now().toString(),
-      title: formData.title,
+    setSaving(true);
+
+    const projectData: Partial<Project> = {
+      title,
       slug,
-      description: formData.description,
-      order_index: projects.length + 1,
-      is_visible: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      description,
+      is_visible: isVisible,
+      order_index: editingProject?.order_index || projects.length,
     };
 
-    setProjects(prev => [...prev, newProject]);
-    setFormData({ title: '', description: '' });
-    setIsCreating(false);
-    toast.success('Project created');
-  };
-
-  // Update project
-  const startEditing = (project: Project) => {
-    setEditingId(project.id);
-    setFormData({ title: project.title, description: project.description || '' });
-  };
-
-  const handleUpdate = (id: string) => {
-    if (!formData.title.trim()) {
-      toast.error('Title is required');
-      return;
+    let result;
+    if (editingProject) {
+      result = await updateProject(editingProject.id, projectData);
+    } else {
+      result = await createProject(projectData);
     }
 
-    const slug = formData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    if (result) {
+      toast.success(editingProject ? 'Proje güncellendi!' : 'Proje oluşturuldu!');
+      closeModal();
+      loadProjects();
+    } else {
+      toast.error('Bir hata oluştu!');
+    }
 
-    setProjects(prev => prev.map(p => 
-      p.id === id 
-        ? { ...p, title: formData.title, slug, description: formData.description, updated_at: new Date().toISOString() }
-        : p
-    ));
-    setEditingId(null);
-    setFormData({ title: '', description: '' });
-    toast.success('Project updated');
+    setSaving(false);
   };
 
-  // Delete project
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure? This will not delete the photos, but they will be unassigned.')) {
-      setProjects(prev => prev.filter(p => p.id !== id));
-      toast.success('Project deleted');
+  const handleDelete = async (id: string) => {
+    if (!confirm('Bu projeyi silmek istediğinize emin misiniz?')) return;
+
+    const success = await deleteProject(id);
+    if (success) {
+      toast.success('Proje silindi!');
+      loadProjects();
+    } else {
+      toast.error('Silme işlemi başarısız!');
     }
   };
 
-  // Toggle visibility
-  const toggleVisibility = (id: string) => {
-    setProjects(prev => prev.map(p => 
-      p.id === id ? { ...p, is_visible: !p.is_visible } : p
-    ));
-    toast.success('Visibility updated');
+  const toggleVisibility = async (project: Project) => {
+    const result = await updateProject(project.id, { is_visible: !project.is_visible });
+    if (result) {
+      toast.success(project.is_visible ? 'Proje gizlendi' : 'Proje gösterildi');
+      loadProjects();
+    }
   };
 
-  // Cancel editing/creating
-  const handleCancel = () => {
-    setIsCreating(false);
-    setEditingId(null);
-    setFormData({ title: '', description: '' });
-  };
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-white" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-display text-white mb-2">Projects</h1>
-          <p className="text-neutral-400">Organize your photos into projects.</p>
+          <h1 className="text-3xl font-display text-white mb-2">Projeler</h1>
+          <p className="text-neutral-400">Fotoğraf projelerinizi/albümlerinizi yönetin.</p>
         </div>
         <button
-          onClick={() => setIsCreating(true)}
-          disabled={isCreating}
-          className="btn-primary flex items-center space-x-2 disabled:opacity-50"
+          onClick={() => openModal()}
+          className="flex items-center space-x-2 px-4 py-2 bg-white text-black rounded-lg hover:bg-neutral-200 transition-colors"
         >
-          <Plus className="w-4 h-4" />
-          <span>New Project</span>
+          <Plus className="w-5 h-5" />
+          <span>Yeni Proje</span>
         </button>
       </div>
 
-      {/* Create Form */}
-      {isCreating && (
-        <div className="admin-card mb-6">
-          <h3 className="text-lg font-display text-white mb-4">New Project</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm text-neutral-400 mb-2">Title *</label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                className="input-field"
-                placeholder="Project title"
-                autoFocus
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-neutral-400 mb-2">Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                className="input-field resize-none"
-                rows={3}
-                placeholder="Brief description (optional)"
-              />
-            </div>
-            <div className="flex justify-end space-x-3">
-              <button onClick={handleCancel} className="btn-ghost">
-                Cancel
-              </button>
-              <button onClick={handleCreate} className="btn-primary">
-                Create Project
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Projects List */}
-      {projects.length > 0 ? (
-        <div className="space-y-3">
+      {projects.length === 0 ? (
+        <div className="admin-card text-center py-12">
+          <p className="text-neutral-400 mb-4">Henüz proje eklenmemiş.</p>
+          <button
+            onClick={() => openModal()}
+            className="text-white hover:underline"
+          >
+            İlk projeyi oluştur →
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
           {projects.map((project) => (
-            <div
-              key={project.id}
-              className={`admin-card ${!project.is_visible ? 'opacity-60' : ''}`}
-            >
-              {editingId === project.id ? (
-                // Edit Mode
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm text-neutral-400 mb-2">Title *</label>
-                    <input
-                      type="text"
-                      value={formData.title}
-                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                      className="input-field"
-                      autoFocus
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-neutral-400 mb-2">Description</label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                      className="input-field resize-none"
-                      rows={2}
-                    />
-                  </div>
-                  <div className="flex justify-end space-x-3">
-                    <button onClick={handleCancel} className="btn-ghost flex items-center space-x-1">
-                      <X className="w-4 h-4" />
-                      <span>Cancel</span>
-                    </button>
-                    <button onClick={() => handleUpdate(project.id)} className="btn-primary flex items-center space-x-1">
-                      <Check className="w-4 h-4" />
-                      <span>Save</span>
-                    </button>
-                  </div>
+            <div key={project.id} className="admin-card flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-white font-medium">{project.title}</h3>
+                  {!project.is_visible && (
+                    <span className="text-xs bg-neutral-700 text-neutral-400 px-2 py-1 rounded">
+                      Gizli
+                    </span>
+                  )}
                 </div>
-              ) : (
-                // View Mode
-                <div className="flex items-center space-x-4">
-                  {/* Drag Handle */}
-                  <div className="text-neutral-600 cursor-move">
-                    <GripVertical className="w-5 h-5" />
-                  </div>
-
-                  {/* Order Number */}
-                  <div className="w-8 h-8 rounded bg-neutral-800 flex items-center justify-center text-neutral-500 font-mono text-sm">
-                    {project.order_index}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-3">
-                      <h3 className="text-white font-medium">{project.title}</h3>
-                      <span className="text-neutral-600 text-sm">/{project.slug}</span>
-                      {!project.is_visible && (
-                        <span className="px-2 py-0.5 bg-neutral-800 text-neutral-500 text-xs rounded">
-                          Hidden
-                        </span>
-                      )}
-                    </div>
-                    {project.description && (
-                      <p className="text-neutral-500 text-sm truncate">{project.description}</p>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => toggleVisibility(project.id)}
-                      className="p-2 text-neutral-500 hover:text-white transition-colors"
-                      title={project.is_visible ? 'Hide' : 'Show'}
-                    >
-                      {project.is_visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                    </button>
-                    <button
-                      onClick={() => startEditing(project)}
-                      className="p-2 text-neutral-500 hover:text-white transition-colors"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(project.id)}
-                      className="p-2 text-neutral-500 hover:text-red-400 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
+                <p className="text-neutral-500 text-sm mt-1">/{project.slug}</p>
+                {project.description && (
+                  <p className="text-neutral-400 text-sm mt-2">{project.description}</p>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => toggleVisibility(project)}
+                  className="p-2 text-neutral-400 hover:text-white transition-colors"
+                  title={project.is_visible ? 'Gizle' : 'Göster'}
+                >
+                  {project.is_visible ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                </button>
+                <button
+                  onClick={() => openModal(project)}
+                  className="p-2 text-neutral-400 hover:text-white transition-colors"
+                >
+                  <Edit2 className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => handleDelete(project.id)}
+                  className="p-2 text-neutral-400 hover:text-red-400 transition-colors"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           ))}
         </div>
-      ) : (
-        <div className="admin-card text-center py-20">
-          <FolderOpen className="w-16 h-16 text-neutral-700 mx-auto mb-4" />
-          <p className="text-neutral-400 mb-2">No projects yet</p>
-          <p className="text-neutral-500 text-sm">Create your first project to organize your photos</p>
+      )}
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-neutral-900 rounded-lg w-full max-w-lg">
+            <div className="flex items-center justify-between p-6 border-b border-neutral-800">
+              <h2 className="text-xl font-display text-white">
+                {editingProject ? 'Projeyi Düzenle' : 'Yeni Proje'}
+              </h2>
+              <button onClick={closeModal} className="text-neutral-400 hover:text-white">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Title */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  Proje Adı *
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => handleTitleChange(e.target.value)}
+                  placeholder="Örn: Doğa Fotoğrafları"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 rounded-lg focus:outline-none focus:border-neutral-500"
+                />
+              </div>
+
+              {/* Slug */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  URL Slug *
+                </label>
+                <div className="flex items-center">
+                  <span className="text-neutral-500 mr-2">/work/</span>
+                  <input
+                    type="text"
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value)}
+                    placeholder="doga-fotograflari"
+                    className="flex-1 px-4 py-3 bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 rounded-lg focus:outline-none focus:border-neutral-500"
+                  />
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  Açıklama
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Proje hakkında kısa açıklama..."
+                  rows={3}
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 rounded-lg focus:outline-none focus:border-neutral-500 resize-none"
+                />
+              </div>
+
+              {/* Visibility */}
+              <div>
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isVisible}
+                    onChange={(e) => setIsVisible(e.target.checked)}
+                    className="w-5 h-5 rounded"
+                  />
+                  <span className="text-white">Sitede göster</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex gap-4 p-6 border-t border-neutral-800">
+              <button
+                onClick={closeModal}
+                className="flex-1 px-4 py-3 border border-neutral-700 text-white rounded-lg hover:bg-neutral-800 transition-colors"
+              >
+                İptal
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex-1 px-4 py-3 bg-white text-black rounded-lg hover:bg-neutral-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                <span>Kaydet</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
