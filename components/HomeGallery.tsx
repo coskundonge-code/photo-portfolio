@@ -15,11 +15,6 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const getProject = (projectId?: string) => {
-    if (!projectId) return null;
-    return projects.find(p => p.id === projectId);
-  };
-
   // Keyboard navigation
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (!lightboxOpen) return;
@@ -38,7 +33,6 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  // Prevent body scroll when lightbox is open
   useEffect(() => {
     if (lightboxOpen) {
       document.body.style.overflow = 'hidden';
@@ -78,7 +72,6 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
   }
 
   const currentPhoto = photos[currentIndex];
-  const currentProject = getProject(currentPhoto?.project_id);
 
   return (
     <>
@@ -103,7 +96,6 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                   className="w-full h-auto transition-transform duration-700 group-hover:scale-[1.02]"
                   onLoad={() => setLoadedImages(prev => new Set(prev).add(photo.id))}
                 />
-                {/* Hover overlay */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300" />
               </div>
             </div>
@@ -111,19 +103,19 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
         </div>
       </div>
 
-      {/* Lightbox */}
+      {/* Lightbox - Clean, no text */}
       {lightboxOpen && currentPhoto && (
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center"
           onClick={closeLightbox}
         >
-          {/* Backdrop with blur */}
-          <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" />
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/95" />
           
           {/* Close button */}
           <button
             onClick={closeLightbox}
-            className="absolute top-4 right-4 z-50 p-2 text-white/70 hover:text-white transition-colors"
+            className="absolute top-6 right-6 z-50 p-2 text-white/50 hover:text-white transition-colors"
           >
             <X className="w-8 h-8" />
           </button>
@@ -133,46 +125,33 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
             <>
               <button
                 onClick={goToPrevious}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-50 p-2 text-white/70 hover:text-white transition-colors"
+                className="absolute left-6 top-1/2 -translate-y-1/2 z-50 p-2 text-white/50 hover:text-white transition-colors"
               >
-                <ChevronLeft className="w-10 h-10" />
+                <ChevronLeft className="w-12 h-12" />
               </button>
               <button
                 onClick={goToNext}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-50 p-2 text-white/70 hover:text-white transition-colors"
+                className="absolute right-6 top-1/2 -translate-y-1/2 z-50 p-2 text-white/50 hover:text-white transition-colors"
               >
-                <ChevronRight className="w-10 h-10" />
+                <ChevronRight className="w-12 h-12" />
               </button>
             </>
           )}
 
-          {/* Image container */}
+          {/* Image only - no text */}
           <div 
-            className="relative max-w-[90vw] max-h-[90vh] z-40"
+            className="relative z-40"
             onClick={(e) => e.stopPropagation()}
           >
             <Image
               src={currentPhoto.url}
-              alt={currentPhoto.title || 'Photo'}
+              alt=""
               width={1920}
               height={1280}
               quality={95}
-              className="max-w-full max-h-[85vh] w-auto h-auto object-contain"
+              className="max-w-[90vw] max-h-[90vh] w-auto h-auto object-contain"
               priority
             />
-            
-            {/* Photo info */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
-              {currentPhoto.title && (
-                <h3 className="text-white text-lg font-medium">{currentPhoto.title}</h3>
-              )}
-              {currentProject && (
-                <p className="text-white/70 text-sm">{currentProject.title}</p>
-              )}
-              <p className="text-white/50 text-xs mt-1">
-                {currentIndex + 1} / {photos.length}
-              </p>
-            </div>
           </div>
         </div>
       )}
