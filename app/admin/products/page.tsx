@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { 
   getProducts, 
-  getAllPhotos,
+  getPhotos,
   createProduct, 
   updateProduct, 
   deleteProduct 
@@ -61,7 +61,7 @@ export default function AdminProductsPage() {
   const loadData = async () => {
     const [productsData, photosData] = await Promise.all([
       getProducts(),
-      getAllPhotos()
+      getPhotos()
     ]);
     setProducts(productsData);
     setPhotos(photosData);

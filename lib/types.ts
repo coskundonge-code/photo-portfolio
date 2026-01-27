@@ -1,3 +1,7 @@
+// ================================================
+// TYPES - lib/types.ts
+// ================================================
+
 export interface Settings {
   id: string;
   site_name: string;
@@ -6,14 +10,14 @@ export interface Settings {
   linkedin: string;
   about_text: string;
   about_image: string;
+  footer_text: string;
   menu_overview: string;
   menu_work: string;
   menu_shop: string;
   menu_about: string;
   menu_contact: string;
-  footer_text: string;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Project {
@@ -24,8 +28,8 @@ export interface Project {
   cover_image?: string;
   order_index: number;
   is_visible: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Photo {
@@ -35,8 +39,9 @@ export interface Photo {
   project_id?: string;
   order_index: number;
   is_featured: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
+  projects?: Project;
 }
 
 export interface Product {
@@ -48,10 +53,9 @@ export interface Product {
   edition_type: 'open' | 'limited';
   edition_total?: number;
   edition_sold?: number;
-  sizes?: string[];
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  is_available: boolean;
+  created_at?: string;
+  updated_at?: string;
   photos?: Photo;
 }
 
@@ -62,11 +66,10 @@ export interface Order {
   customer_phone?: string;
   shipping_address?: string;
   total_amount: number;
-  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
+  status: string;
   notes?: string;
-  created_at: string;
-  updated_at: string;
-  items?: OrderItem[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface OrderItem {
@@ -78,6 +81,5 @@ export interface OrderItem {
   frame_option?: string;
   paper_type?: string;
   unit_price: number;
-  created_at: string;
-  product?: Product;
+  created_at?: string;
 }
