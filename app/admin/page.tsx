@@ -1,12 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { Image, FolderOpen, ShoppingBag, Eye, TrendingUp, DollarSign } from 'lucide-react';
+import { ImageIcon, FolderOpen, ShoppingBag, Eye } from 'lucide-react';
 
 export default function AdminDashboard() {
   // Demo stats
   const stats = [
-    { label: 'Total Photos', value: '24', icon: Images, href: '/admin/photos' },
+    { label: 'Total Photos', value: '24', icon: ImageIcon, href: '/admin/photos' },
     { label: 'Projects', value: '4', icon: FolderOpen, href: '/admin/projects' },
     { label: 'Products', value: '12', icon: ShoppingBag, href: '/admin/products' },
     { label: 'Site Views', value: '1,234', icon: Eye, href: '#' },
@@ -54,7 +54,7 @@ export default function AdminDashboard() {
           >
             <div className="flex items-center space-x-4">
               <div className="p-3 bg-accent/10 rounded-lg group-hover:bg-accent/20 transition-colors">
-                <Images className="w-6 h-6 text-accent" />
+                <ImageIcon className="w-6 h-6 text-accent" />
               </div>
               <div>
                 <p className="text-white font-medium">Upload Photos</p>
