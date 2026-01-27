@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader2, Package, ChevronDown } from 'lucide-react';
-import { getOrders, updateOrderStatus } from '@/lib/supabase';
-import { Order } from '@/lib/types';
+import { Loader2, Package, ChevronDown, Eye } from 'lucide-react';
+import { getOrders, updateOrderStatus, getOrderItems } from '@/lib/supabase';
+import { Order, OrderItem } from '@/lib/types';
 
 const statusOptions = [
   { value: 'pending', label: 'Beklemede', color: 'bg-yellow-500' },
@@ -13,10 +13,17 @@ const statusOptions = [
   { value: 'cancelled', label: 'İptal', color: 'bg-red-500' },
 ];
 
+// Fiyat formatlama
+const formatPrice = (price: number) => {
+  return price.toLocaleString('tr-TR');
+};
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 
   useEffect(() => {
     loadOrders();
@@ -49,8 +56,10 @@ export default function AdminOrdersPage() {
     });
   };
 
-  const formatPrice = (price: number) => {
-    return price.toLocaleString('tr-TR');
+  const viewOrderDetails = async (order: Order) => {
+    setSelectedOrder(order);
+    const items = await getOrderItems(order.id);
+    setOrderItems(items);
   };
 
   if (loading) {
@@ -87,6 +96,7 @@ export default function AdminOrdersPage() {
                 <th className="text-left p-4 text-sm font-medium text-neutral-400">Tarih</th>
                 <th className="text-left p-4 text-sm font-medium text-neutral-400">Tutar</th>
                 <th className="text-left p-4 text-sm font-medium text-neutral-400">Durum</th>
+                <th className="text-left p-4 text-sm font-medium text-neutral-400"></th>
               </tr>
             </thead>
             <tbody>
@@ -106,7 +116,7 @@ export default function AdminOrdersPage() {
                       </div>
                     </td>
                     <td className="p-4">
-                      <p className="text-sm text-neutral-500 mt-2">
+                      <p className="text-sm text-neutral-400">
                         {formatDate(order.created_at)}
                       </p>
                     </td>
@@ -148,11 +158,78 @@ export default function AdminOrdersPage() {
                         )}
                       </div>
                     </td>
+                    <td className="p-4">
+                      <button
+                        onClick={() => viewOrderDetails(order)}
+                        className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
+                      >
+                        <Eye className="w-5 h-5" />
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Sipariş Detay Modal */}
+      {selectedOrder && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-2xl">
+            <div className="flex items-center justify-between p-6 border-b border-neutral-800">
+              <h2 className="text-xl font-semibold text-white">
+                Sipariş #{selectedOrder.id.slice(0, 8).toUpperCase()}
+              </h2>
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="text-neutral-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Müşteri Bilgileri */}
+              <div>
+                <h3 className="text-sm font-medium text-neutral-400 mb-2">Müşteri</h3>
+                <p className="text-white">{selectedOrder.customer_name}</p>
+                <p className="text-neutral-400">{selectedOrder.customer_email}</p>
+                <p className="text-neutral-400">{selectedOrder.customer_phone}</p>
+              </div>
+
+              {/* Teslimat Adresi */}
+              <div>
+                <h3 className="text-sm font-medium text-neutral-400 mb-2">Teslimat Adresi</h3>
+                <p className="text-white">{selectedOrder.shipping_address || '-'}</p>
+              </div>
+
+              {/* Sipariş Kalemleri */}
+              <div>
+                <h3 className="text-sm font-medium text-neutral-400 mb-2">Ürünler</h3>
+                <div className="space-y-2">
+                  {orderItems.map((item) => (
+                    <div key={item.id} className="flex justify-between p-3 bg-neutral-800 rounded-lg">
+                      <div>
+                        <p className="text-white">{item.size_name} - {item.frame_name}</p>
+                        <p className="text-sm text-neutral-500">
+                          Stil: {item.style === 'mat' ? 'Mat' : 'Full Bleed'} • Adet: {item.quantity}
+                        </p>
+                      </div>
+                      <p className="text-white font-medium">₺{formatPrice(item.unit_price)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Toplam */}
+              <div className="flex justify-between pt-4 border-t border-neutral-800">
+                <span className="text-neutral-400">Toplam</span>
+                <span className="text-xl font-medium text-white">₺{formatPrice(selectedOrder.total_amount)}</span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

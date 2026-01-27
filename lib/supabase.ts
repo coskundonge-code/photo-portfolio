@@ -45,6 +45,9 @@ export interface Photo {
   project_id?: string;
   order_index: number;
   is_featured: boolean;
+  width?: number;
+  height?: number;
+  orientation?: string;
   created_at?: string;
   updated_at?: string;
   projects?: Project;
@@ -55,24 +58,65 @@ export interface Product {
   photo_id?: string;
   title: string;
   description?: string;
+  story?: string;
   base_price: number;
   edition_type: 'open' | 'limited';
   edition_total?: number;
   edition_sold?: number;
   is_available: boolean;
+  paper_type?: string;
+  print_method?: string;
   created_at?: string;
   updated_at?: string;
   photos?: Photo;
 }
 
+export interface ProductSize {
+  id: string;
+  product_id: string;
+  name: string;
+  dimensions: string;
+  price: number;
+  order_index: number;
+  created_at?: string;
+}
+
+export interface FrameOption {
+  id: string;
+  name: string;
+  color: string;
+  price: number;
+  order_index: number;
+  is_active: boolean;
+  created_at?: string;
+}
+
+export interface Customer {
+  id: string;
+  email: string;
+  name?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  postal_code?: string;
+  country?: string;
+  is_guest: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Order {
   id: string;
+  customer_id?: string;
   customer_name: string;
   customer_email: string;
   customer_phone?: string;
   shipping_address?: string;
   total_amount: number;
   status: string;
+  payment_method?: string;
+  payment_status?: string;
+  tracking_number?: string;
   notes?: string;
   created_at?: string;
   updated_at?: string;
@@ -84,10 +128,26 @@ export interface OrderItem {
   product_id?: string;
   quantity: number;
   size?: string;
+  size_name?: string;
   frame_option?: string;
+  frame_name?: string;
+  style?: string;
   paper_type?: string;
   unit_price: number;
   created_at?: string;
+}
+
+export interface CartItem {
+  id: string;
+  session_id: string;
+  customer_id?: string;
+  product_id: string;
+  size_id: string;
+  frame_id?: string;
+  style: string;
+  quantity: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // ================================================
@@ -343,7 +403,6 @@ export const getProducts = async (): Promise<Product[]> => {
     return [];
   }
 
-  // is_active -> is_available mapping
   return (data || []).map(p => ({ ...p, is_available: p.is_active }));
 };
 
@@ -377,12 +436,11 @@ export const getProductById = async (id: string): Promise<Product | null> => {
 };
 
 export const createProduct = async (product: Partial<Product>): Promise<Product | null> => {
-  // is_available -> is_active mapping
-  const dbProduct = {
-    ...product,
-    is_active: product.is_available ?? true,
-  };
-  delete (dbProduct as any).is_available;
+  const dbProduct: any = { ...product };
+  if ('is_available' in product) {
+    dbProduct.is_active = product.is_available;
+    delete dbProduct.is_available;
+  }
 
   const { data, error } = await supabase
     .from('products')
@@ -399,11 +457,7 @@ export const createProduct = async (product: Partial<Product>): Promise<Product 
 };
 
 export const updateProduct = async (id: string, product: Partial<Product>): Promise<Product | null> => {
-  // is_available -> is_active mapping
-  const dbProduct: any = {
-    ...product,
-    updated_at: new Date().toISOString(),
-  };
+  const dbProduct: any = { ...product, updated_at: new Date().toISOString() };
   
   if ('is_available' in product) {
     dbProduct.is_active = product.is_available;
@@ -437,6 +491,175 @@ export const deleteProduct = async (id: string): Promise<boolean> => {
   }
 
   return true;
+};
+
+// ================================================
+// PRODUCT SIZES
+// ================================================
+export const getProductSizes = async (productId: string): Promise<ProductSize[]> => {
+  const { data, error } = await supabase
+    .from('product_sizes')
+    .select('*')
+    .eq('product_id', productId)
+    .order('order_index', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching product sizes:', error);
+    return [];
+  }
+
+  return data || [];
+};
+
+export const createProductSize = async (size: Partial<ProductSize>): Promise<ProductSize | null> => {
+  const { data, error } = await supabase
+    .from('product_sizes')
+    .insert([size])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating product size:', error);
+    return null;
+  }
+
+  return data;
+};
+
+export const updateProductSize = async (id: string, size: Partial<ProductSize>): Promise<ProductSize | null> => {
+  const { data, error } = await supabase
+    .from('product_sizes')
+    .update(size)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating product size:', error);
+    return null;
+  }
+
+  return data;
+};
+
+export const deleteProductSize = async (id: string): Promise<boolean> => {
+  const { error } = await supabase
+    .from('product_sizes')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting product size:', error);
+    return false;
+  }
+
+  return true;
+};
+
+// ================================================
+// FRAME OPTIONS
+// ================================================
+export const getFrameOptions = async (): Promise<FrameOption[]> => {
+  const { data, error } = await supabase
+    .from('frame_options')
+    .select('*')
+    .eq('is_active', true)
+    .order('order_index', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching frame options:', error);
+    return [];
+  }
+
+  return data || [];
+};
+
+export const createFrameOption = async (frame: Partial<FrameOption>): Promise<FrameOption | null> => {
+  const { data, error } = await supabase
+    .from('frame_options')
+    .insert([frame])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating frame option:', error);
+    return null;
+  }
+
+  return data;
+};
+
+export const updateFrameOption = async (id: string, frame: Partial<FrameOption>): Promise<FrameOption | null> => {
+  const { data, error } = await supabase
+    .from('frame_options')
+    .update(frame)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating frame option:', error);
+    return null;
+  }
+
+  return data;
+};
+
+// ================================================
+// CUSTOMERS
+// ================================================
+export const createCustomer = async (customer: Partial<Customer>): Promise<Customer | null> => {
+  // Önce mevcut müşteriyi kontrol et
+  const { data: existing } = await supabase
+    .from('customers')
+    .select('*')
+    .eq('email', customer.email)
+    .single();
+
+  if (existing) {
+    // Mevcut müşteriyi güncelle
+    const { data, error } = await supabase
+      .from('customers')
+      .update({ ...customer, updated_at: new Date().toISOString() })
+      .eq('id', existing.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating customer:', error);
+      return null;
+    }
+    return data;
+  }
+
+  // Yeni müşteri oluştur
+  const { data, error } = await supabase
+    .from('customers')
+    .insert([customer])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating customer:', error);
+    return null;
+  }
+
+  return data;
+};
+
+export const getCustomerByEmail = async (email: string): Promise<Customer | null> => {
+  const { data, error } = await supabase
+    .from('customers')
+    .select('*')
+    .eq('email', email)
+    .single();
+
+  if (error) {
+    console.error('Error fetching customer:', error);
+    return null;
+  }
+
+  return data;
 };
 
 // ================================================
@@ -548,6 +771,66 @@ export const createOrderItem = async (item: Partial<OrderItem>): Promise<OrderIt
   }
 
   return data;
+};
+
+// ================================================
+// CART
+// ================================================
+export const getCartItems = async (sessionId: string): Promise<CartItem[]> => {
+  const { data, error } = await supabase
+    .from('cart_items')
+    .select('*, products(*), product_sizes(*), frame_options(*)')
+    .eq('session_id', sessionId);
+
+  if (error) {
+    console.error('Error fetching cart items:', error);
+    return [];
+  }
+
+  return data || [];
+};
+
+export const addToCart = async (item: Partial<CartItem>): Promise<CartItem | null> => {
+  const { data, error } = await supabase
+    .from('cart_items')
+    .insert([item])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error adding to cart:', error);
+    return null;
+  }
+
+  return data;
+};
+
+export const removeFromCart = async (id: string): Promise<boolean> => {
+  const { error } = await supabase
+    .from('cart_items')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error removing from cart:', error);
+    return false;
+  }
+
+  return true;
+};
+
+export const clearCart = async (sessionId: string): Promise<boolean> => {
+  const { error } = await supabase
+    .from('cart_items')
+    .delete()
+    .eq('session_id', sessionId);
+
+  if (error) {
+    console.error('Error clearing cart:', error);
+    return false;
+  }
+
+  return true;
 };
 
 // ================================================

@@ -9,7 +9,7 @@ import { getSettings, getProjects, getProducts } from '@/lib/supabase';
 import { Settings, Project, Product } from '@/lib/types';
 import { Loader2, SlidersHorizontal, ChevronDown, X } from 'lucide-react';
 
-// Tema kategorileri - TÜRKÇE
+// Tema filtreleri
 const themes = [
   { id: 'all', label: 'Tümü' },
   { id: 'adventure', label: 'Macera' },
@@ -21,7 +21,7 @@ const themes = [
   { id: 'nature', label: 'Doğa' },
 ];
 
-// Sıralama seçenekleri - TÜRKÇE
+// Sıralama seçenekleri
 const sortOptions = [
   { value: 'featured', label: 'Öne Çıkanlar' },
   { value: 'newest', label: 'En Yeni' },
@@ -32,7 +32,7 @@ const sortOptions = [
   { value: 'alpha-desc', label: 'Z-A' },
 ];
 
-// Fiyat formatı (nokta ile binlik ayracı)
+// Fiyat formatlama
 const formatPrice = (price: number) => {
   return price.toLocaleString('tr-TR');
 };
@@ -43,11 +43,14 @@ export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Filtreler
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  // Filtre & Sıralama
   const [selectedTheme, setSelectedTheme] = useState('all');
   const [sortBy, setSortBy] = useState('featured');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
+  
+  // Hover state
+  const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -64,25 +67,13 @@ export default function ShopPage() {
     loadData();
   }, []);
 
-  // Sıralama
-  const sortedProducts = [...products].sort((a, b) => {
-    switch (sortBy) {
-      case 'newest':
-        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
-      case 'oldest':
-        return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
-      case 'price-asc':
-        return a.base_price - b.base_price;
-      case 'price-desc':
-        return b.base_price - a.base_price;
-      case 'alpha-asc':
-        return a.title.localeCompare(b.title, 'tr');
-      case 'alpha-desc':
-        return b.title.localeCompare(a.title, 'tr');
-      default:
-        return 0;
+  // Fotoğraf orientation algılama (width/height veya aspect ratio)
+  const getOrientation = (photo: any) => {
+    if (photo?.width && photo?.height) {
+      return photo.width > photo.height ? 'landscape' : 'portrait';
     }
-  });
+    return photo?.orientation || 'landscape';
+  };
 
   if (loading) {
     return (
@@ -97,34 +88,33 @@ export default function ShopPage() {
       <Navigation projects={projects} settings={settings} />
       
       <section className="pt-24 pb-16">
-        <div className="max-w-[1600px] mx-auto px-4 lg:px-8">
+        <div className="max-w-[1800px] mx-auto px-4 lg:px-8">
           
-          {/* Üst Bar - Filtreler */}
-          <div className="flex items-center justify-between mb-8 py-4 border-b border-neutral-200">
-            {/* Sol: Tema Filtresi */}
-            <button
+          {/* Header with Filter & Sort */}
+          <div className="flex items-center justify-between mb-8 border-b border-neutral-200 pb-4">
+            {/* Sol: TEMALAR butonu */}
+            <button 
               onClick={() => setIsFilterOpen(true)}
-              className="flex items-center gap-2 text-sm text-neutral-700 hover:text-black transition-colors"
+              className="flex items-center gap-2 text-sm text-neutral-600 hover:text-black transition-colors"
             >
               <SlidersHorizontal className="w-4 h-4" />
-              <span className="font-medium">TEMALAR</span>
+              <span className="uppercase tracking-wider">Temalar</span>
             </button>
 
-            {/* Sağ: Sıralama Dropdown */}
+            {/* Sağ: Sıralama dropdown */}
             <div className="relative">
               <button
                 onClick={() => setIsSortOpen(!isSortOpen)}
-                className="flex items-center gap-2 text-sm text-neutral-700 hover:text-black transition-colors"
+                className="flex items-center gap-2 text-sm text-neutral-600 hover:text-black transition-colors"
               >
                 <span>{sortOptions.find(o => o.value === sortBy)?.label}</span>
                 <ChevronDown className={`w-4 h-4 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
               </button>
-
-              {/* Sıralama Menüsü */}
+              
               {isSortOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setIsSortOpen(false)} />
-                  <div className="absolute right-0 top-full mt-2 bg-white border border-neutral-200 shadow-lg z-50 min-w-[220px]">
+                  <div className="absolute right-0 top-full mt-2 bg-white border border-neutral-200 rounded-lg shadow-xl z-50 min-w-[200px]">
                     {sortOptions.map((option) => (
                       <button
                         key={option.value}
@@ -132,10 +122,8 @@ export default function ShopPage() {
                           setSortBy(option.value);
                           setIsSortOpen(false);
                         }}
-                        className={`block w-full text-left px-4 py-3 text-sm transition-colors ${
-                          sortBy === option.value
-                            ? 'bg-blue-500 text-white'
-                            : 'text-neutral-700 hover:bg-neutral-50'
+                        className={`block w-full text-left px-4 py-2 text-sm hover:bg-neutral-50 transition-colors ${
+                          sortBy === option.value ? 'text-black font-medium' : 'text-neutral-600'
                         }`}
                       >
                         {option.label}
@@ -149,147 +137,149 @@ export default function ShopPage() {
 
           {/* Ürün Sayısı */}
           <p className="text-sm text-neutral-500 mb-8">
-            {sortedProducts.length} ürün
+            {products.length} ürün gösteriliyor
           </p>
-          
-          {/* Ürün Grid - States Gallery Tarzı */}
-          {sortedProducts.length === 0 ? (
-            <div className="text-center py-16">
+
+          {/* Products Grid */}
+          {products.length === 0 ? (
+            <div className="text-center py-20">
               <p className="text-neutral-500">Henüz ürün eklenmemiş.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
-              {sortedProducts.map((product) => (
-                <Link
-                  key={product.id}
-                  href={`/shop/${product.id}`}
-                  className="group block"
-                >
-                  {/* Çerçeve Konteyneri - Gri Arka Plan */}
-                  <div className="bg-[#f0f0f0] p-10 lg:p-14 aspect-[4/5] flex items-center justify-center">
-                    {/* Gölgeli Çerçeve */}
-                    <div className="relative w-full max-w-[80%]">
-                      {/* Dış Çerçeve (Siyah) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-10">
+              {products.map((product) => {
+                const orientation = getOrientation(product.photos);
+                const isHovered = hoveredProduct === product.id;
+                
+                return (
+                  <Link
+                    key={product.id}
+                    href={`/shop/${product.id}`}
+                    className="group block"
+                    onMouseEnter={() => setHoveredProduct(product.id)}
+                    onMouseLeave={() => setHoveredProduct(null)}
+                  >
+                    {/* Çerçeveli Önizleme */}
+                    <div className="bg-[#f5f5f5] p-8 lg:p-12 flex items-center justify-center">
                       <div 
-                        className="relative bg-[#1a1a1a] p-[10px]"
-                        style={{
-                          boxShadow: '0 30px 60px -15px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0,0,0,0.1)'
-                        }}
+                        className={`relative transition-transform duration-500 ease-out ${
+                          isHovered ? 'scale-105' : 'scale-100'
+                        }`}
                       >
-                        {/* İç Mat / Passepartout (Beyaz) */}
-                        <div className="bg-white p-5 lg:p-7 relative">
-                          {/* Derinlik Çizgisi (3D Efekt) */}
-                          <div 
-                            className="absolute inset-4 lg:inset-5 pointer-events-none"
-                            style={{
-                              boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.12), inset 0 3px 6px rgba(0,0,0,0.06)'
-                            }}
-                          />
-                          
-                          {/* Fotoğraf - Kesilmeden Sığdırılmış */}
-                          <div className="relative aspect-[4/3] bg-white flex items-center justify-center">
-                            <Image
-                              src={product.photos?.url || 'https://via.placeholder.com/800x600'}
-                              alt={product.title}
-                              fill
-                              className="object-contain"
-                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        {/* Dış Çerçeve (Siyah) */}
+                        <div 
+                          className="relative bg-[#1a1a1a] p-[8px]"
+                          style={{
+                            boxShadow: isHovered 
+                              ? '0 35px 70px -15px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0,0,0,0.1)'
+                              : '0 25px 50px -15px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0,0,0,0.1)'
+                          }}
+                        >
+                          {/* İç Mat / Passepartout (Beyaz) */}
+                          <div className="bg-white p-3 lg:p-4 relative">
+                            {/* 3D Derinlik Çizgisi - Fotoğrafa çok yakın */}
+                            <div 
+                              className="absolute inset-[10px] lg:inset-[14px] pointer-events-none"
+                              style={{
+                                boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.08), inset 0 2px 4px rgba(0,0,0,0.04)'
+                              }}
                             />
+                            
+                            {/* Fotoğraf - Dikey/Yatay otomatik */}
+                            <div className={`relative overflow-hidden ${
+                              orientation === 'portrait' 
+                                ? 'aspect-[3/4] w-[180px] lg:w-[220px]' 
+                                : 'aspect-[4/3] w-[240px] lg:w-[300px]'
+                            }`}>
+                              <Image
+                                src={product.photos?.url || '/placeholder.jpg'}
+                                alt={product.title}
+                                fill
+                                className="object-cover"
+                                sizes="(max-width: 768px) 50vw, 33vw"
+                              />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      
-                      {/* Çerçeve Alt Gölgesi */}
-                      <div 
-                        className="absolute -bottom-4 left-[8%] right-[8%] h-8 -z-10"
-                        style={{
-                          background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, transparent 70%)'
-                        }}
-                      />
-                    </div>
-                  </div>
 
-                  {/* Ürün Bilgisi */}
-                  <div className="mt-5 text-center">
-                    <p className="text-xs text-neutral-400 uppercase tracking-wider mb-1">
-                      {product.edition_type === 'limited' ? 'Sınırlı Sayıda' : 'Açık Edisyon'}
-                    </p>
-                    <h3 className="text-base text-neutral-900 font-medium group-hover:text-neutral-600 transition-colors">
-                      {product.title}
-                    </h3>
-                    <p className="text-sm text-neutral-500 mt-1">
-                      ₺{formatPrice(product.base_price)}'dan başlayan
-                    </p>
-                  </div>
-                </Link>
-              ))}
+                        {/* Alt Gölge */}
+                        <div 
+                          className={`absolute -bottom-3 left-[10%] right-[10%] h-6 -z-10 transition-opacity duration-500 ${
+                            isHovered ? 'opacity-60' : 'opacity-40'
+                          }`}
+                          style={{
+                            background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, transparent 70%)'
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Ürün Bilgileri */}
+                    <div className="mt-4 text-center">
+                      <h3 className="text-base text-black font-medium group-hover:opacity-70 transition-opacity">
+                        {product.title}
+                      </h3>
+                      <p className="text-sm text-neutral-500 mt-1">
+                        {product.edition_type === 'limited' 
+                          ? `Sınırlı Sayıda ${product.edition_total} Adet`
+                          : 'Açık Edisyon'}
+                      </p>
+                      <p className="text-black font-medium mt-2">
+                        ₺{formatPrice(product.base_price)}'dan başlayan
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>
       </section>
 
-      {/* Filtre Paneli (Soldan Açılan) */}
+      {/* Tema Filtre Paneli (Sol'dan açılır) */}
       {isFilterOpen && (
         <>
-          {/* Arka Plan */}
           <div 
             className="fixed inset-0 bg-black/30 z-50"
             onClick={() => setIsFilterOpen(false)}
           />
-          
-          {/* Panel */}
-          <div className="fixed left-0 top-0 bottom-0 w-full max-w-md bg-white z-50 shadow-2xl overflow-y-auto">
+          <div className="fixed left-0 top-0 bottom-0 w-80 bg-white z-50 shadow-2xl">
             <div className="p-6">
-              {/* Başlık */}
               <div className="flex items-center justify-between mb-8">
-                <div>
-                  <h2 className="text-xl font-semibold">FİLTRELE VE SIRALA</h2>
-                  <p className="text-sm text-neutral-500 mt-1">{sortedProducts.length} ürün</p>
-                </div>
-                <button
-                  onClick={() => setIsFilterOpen(false)}
-                  className="p-2 hover:bg-neutral-100 rounded-full transition-colors"
-                >
-                  <X className="w-6 h-6" />
+                <h2 className="text-lg font-medium">Temalar</h2>
+                <button onClick={() => setIsFilterOpen(false)}>
+                  <X className="w-5 h-5" />
                 </button>
               </div>
-
-              {/* Temalar */}
-              <div className="mb-8">
-                <h3 className="text-sm font-semibold text-neutral-900 mb-4">TEMALAR</h3>
-                <div className="space-y-3">
-                  {themes.map((theme) => (
-                    <button
-                      key={theme.id}
-                      onClick={() => setSelectedTheme(theme.id)}
-                      className={`block w-full text-left py-2 text-sm transition-colors ${
-                        selectedTheme === theme.id
-                          ? 'text-black font-medium'
-                          : 'text-neutral-600 hover:text-black'
-                      }`}
-                    >
-                      {theme.label.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
+              
+              <div className="space-y-2">
+                {themes.map((theme) => (
+                  <button
+                    key={theme.id}
+                    onClick={() => {
+                      setSelectedTheme(theme.id);
+                    }}
+                    className={`block w-full text-left px-4 py-3 rounded-lg transition-colors ${
+                      selectedTheme === theme.id 
+                        ? 'bg-black text-white' 
+                        : 'hover:bg-neutral-100'
+                    }`}
+                  >
+                    {theme.label}
+                  </button>
+                ))}
               </div>
 
-              {/* Ayırıcı */}
-              <div className="border-t border-neutral-200 my-6" />
-
-              {/* Butonlar */}
-              <div className="flex gap-4">
+              <div className="mt-8 pt-6 border-t flex gap-3">
                 <button
-                  onClick={() => {
-                    setSelectedTheme('all');
-                  }}
-                  className="flex-1 py-3 text-sm font-medium text-neutral-700 hover:text-black transition-colors"
+                  onClick={() => setSelectedTheme('all')}
+                  className="flex-1 py-3 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors"
                 >
                   Temizle
                 </button>
                 <button
                   onClick={() => setIsFilterOpen(false)}
-                  className="flex-1 py-3 bg-black text-white text-sm font-medium hover:bg-neutral-800 transition-colors"
+                  className="flex-1 py-3 bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors"
                 >
                   Uygula
                 </button>
