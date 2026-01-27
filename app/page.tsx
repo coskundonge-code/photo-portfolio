@@ -1,10 +1,10 @@
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import MasonryGrid from '@/components/MasonryGrid';
-import { getProjects, getPhotos } from '@/lib/supabase';
+import { Photo, Project } from '@/lib/types';
 
 // Demo data (Supabase bağlanana kadar kullanılacak)
-const demoPhotos = [
+const demoPhotos: Photo[] = [
   { id: '1', title: 'Mountain Vista', url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800', project_id: '1', order_index: 1, created_at: '', updated_at: '' },
   { id: '2', title: 'Ocean Waves', url: 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=800', project_id: '1', order_index: 2, created_at: '', updated_at: '' },
   { id: '3', title: 'Forest Path', url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800', project_id: '2', order_index: 3, created_at: '', updated_at: '' },
@@ -15,24 +15,14 @@ const demoPhotos = [
   { id: '8', title: 'Autumn Colors', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800', project_id: '2', order_index: 8, created_at: '', updated_at: '' },
 ];
 
-const demoProjects = [
+const demoProjects: Project[] = [
   { id: '1', title: 'Landscapes', slug: 'landscapes', order_index: 1, is_visible: true, created_at: '', updated_at: '' },
   { id: '2', title: 'Urban', slug: 'urban', order_index: 2, is_visible: true, created_at: '', updated_at: '' },
 ];
 
-export default async function HomePage() {
-  // Supabase'den veri çek (bağlantı yoksa demo data kullan)
-  let photos = demoPhotos;
-  let projects = demoProjects;
-  
-  try {
-    const fetchedPhotos = await getPhotos();
-    const fetchedProjects = await getProjects();
-    if (fetchedPhotos.length > 0) photos = fetchedPhotos;
-    if (fetchedProjects.length > 0) projects = fetchedProjects;
-  } catch (error) {
-    console.log('Using demo data');
-  }
+export default function HomePage() {
+  const photos = demoPhotos;
+  const projects = demoProjects;
 
   return (
     <main className="min-h-screen bg-primary">
