@@ -5,13 +5,6 @@ import Image from 'next/image';
 import { Plus, Trash2, Loader2, Save, X, ImageIcon } from 'lucide-react';
 import { supabase, getPhotos } from '@/lib/supabase';
 
-interface Photo {
-  id: string;
-  title?: string;
-  url: string;
-  project_id?: string;
-}
-
 interface Product {
   id: string;
   photo_id: string;
@@ -23,7 +16,7 @@ interface Product {
   is_active: boolean;
   sizes: any[];
   frames: any[];
-  photos?: Photo;
+  photos?: any;
 }
 
 const defaultSizes = [
@@ -43,7 +36,7 @@ const formatPrice = (price: number) => price.toLocaleString('tr-TR');
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [photos, setPhotos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
