@@ -3,37 +3,41 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ImageIcon, FolderOpen, ShoppingBag, Package, Settings, ArrowRight, Loader2, Lock, Eye, EyeOff } from 'lucide-react';
+import { ImageIcon, FolderOpen, ShoppingBag, ArrowRight, Loader2 } from 'lucide-react';
 import { getPhotos, getProjects, getProducts } from '@/lib/supabase';
+import { useAdminStore } from '@/lib/store';
 
 export default function AdminPage() {
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null); // null = checking
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const { isAuthenticated, checkAuth, logout } = useAdminStore();
+  const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
   const [stats, setStats] = useState({ photos: 0, projects: 0, products: 0 });
 
-  // İlk yüklemede giriş kontrolü - HİÇ ŞİFRE SORMA
+  // Auth kontrolü - HEM Zustand HEM localStorage
   useEffect(() => {
-    const checkAuth = () => {
-      const adminAuth = localStorage.getItem('adminAuth');
-      if (adminAuth === 'true') {
-        setIsLoggedIn(true);
+    const verifyAuth = () => {
+      // Zustand store kontrolü
+      const zustandAuth = checkAuth();
+      // Legacy localStorage kontrolü
+      const legacyAuth = localStorage.getItem('adminAuth') === 'true';
+      
+      if (zustandAuth || legacyAuth) {
+        // Giriş yapılmış, dashboard'u göster
+        setAuthChecked(true);
         loadStats();
       } else {
-        setIsLoggedIn(false);
+        // Giriş yapılmamış, login sayfasına yönlendir
+        router.replace('/admin/login');
       }
     };
     
-    // Kısa gecikme ile kontrol et (localStorage'ın yüklenmesini bekle)
-    const timer = setTimeout(checkAuth, 50);
+    // Kısa gecikme ile kontrol et (hydration için)
+    const timer = setTimeout(verifyAuth, 100);
     return () => clearTimeout(timer);
-  }, []);
+  }, [checkAuth, router]);
 
   const loadStats = async () => {
-    setLoading(true);
     try {
       const [photos, projects, products] = await Promise.all([
         getPhotos(),
@@ -51,28 +55,14 @@ export default function AdminPage() {
     setLoading(false);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    
-    // Şifre kontrolü
-    if (password === 'admin123' || password === 'coskun2024') {
-      localStorage.setItem('adminAuth', 'true');
-      setIsLoggedIn(true);
-      loadStats();
-    } else {
-      setError('Şifre yanlış');
-    }
-  };
-
   const handleLogout = () => {
+    logout();
     localStorage.removeItem('adminAuth');
-    setIsLoggedIn(false);
-    setStats({ photos: 0, projects: 0, products: 0 });
+    router.push('/');
   };
 
-  // Henüz kontrol edilmedi - loading göster
-  if (isLoggedIn === null) {
+  // Auth kontrol edilirken loading göster
+  if (!authChecked) {
     return (
       <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-white" />
@@ -80,56 +70,7 @@ export default function AdminPage() {
     );
   }
 
-  // Login ekranı - SADECE giriş yapılmamışsa göster
-  if (isLoggedIn === false) {
-    return (
-      <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Lock className="w-8 h-8 text-neutral-400" />
-            </div>
-            <h1 className="text-2xl font-semibold text-white">Admin Panel</h1>
-            <p className="text-neutral-500 mt-2">Devam etmek için şifrenizi girin</p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Şifre"
-                className="w-full px-4 py-3 bg-neutral-900 border border-neutral-800 rounded-lg text-white placeholder:text-neutral-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none pr-12"
-                autoFocus
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
-
-            {error && (
-              <p className="text-red-500 text-sm text-center">{error}</p>
-            )}
-
-            <button
-              type="submit"
-              disabled={!password}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:bg-neutral-700 disabled:cursor-not-allowed"
-            >
-              Giriş Yap
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  // Dashboard - Giriş yapılmış
+  // Dashboard
   const cards = [
     { label: 'Fotoğraflar', value: stats.photos, icon: ImageIcon, href: '/admin/photos', color: 'bg-blue-500' },
     { label: 'Projeler', value: stats.projects, icon: FolderOpen, href: '/admin/projects', color: 'bg-green-500' },

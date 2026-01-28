@@ -9,15 +9,16 @@ import { getSettings, getProjects, getProducts } from '@/lib/supabase';
 import { Settings, Project, Product } from '@/lib/types';
 import { Loader2, SlidersHorizontal, ChevronDown, X } from 'lucide-react';
 
+// Tema tanımları - HEM İngilizce ID hem Türkçe label
 const themes = [
-  { id: 'all', label: 'Tümü' },
-  { id: 'portrait', label: 'Portre' },
-  { id: 'landscape', label: 'Manzara' },
-  { id: 'street', label: 'Sokak' },
-  { id: 'nature', label: 'Doğa' },
-  { id: 'blackwhite', label: 'Siyah Beyaz' },
-  { id: 'travel', label: 'Seyahat' },
-  { id: 'documentary', label: 'Belgesel' },
+  { id: 'all', label: 'Tümü', aliases: ['all', 'tümü', 'tumu', 'hepsi'] },
+  { id: 'portrait', label: 'Portre', aliases: ['portrait', 'portre'] },
+  { id: 'landscape', label: 'Manzara', aliases: ['landscape', 'manzara'] },
+  { id: 'street', label: 'Sokak', aliases: ['street', 'sokak'] },
+  { id: 'nature', label: 'Doğa', aliases: ['nature', 'doğa', 'doga'] },
+  { id: 'blackwhite', label: 'Siyah Beyaz', aliases: ['blackwhite', 'black-white', 'siyah beyaz', 'siyahbeyaz', 'siyah-beyaz', 'bw'] },
+  { id: 'travel', label: 'Seyahat', aliases: ['travel', 'seyahat'] },
+  { id: 'documentary', label: 'Belgesel', aliases: ['documentary', 'belgesel'] },
 ];
 
 const sortOptions = [
@@ -28,6 +29,19 @@ const sortOptions = [
 ];
 
 const formatPrice = (price: number) => price.toLocaleString('tr-TR');
+
+// Ürünün temasını normalize et (Türkçe/İngilizce farketmez)
+const normalizeTheme = (productTheme: string | undefined | null): string => {
+  if (!productTheme) return '';
+  const normalized = productTheme.toLowerCase().trim();
+  
+  for (const theme of themes) {
+    if (theme.aliases.some(alias => alias.toLowerCase() === normalized)) {
+      return theme.id;
+    }
+  }
+  return normalized;
+};
 
 export default function ShopPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -55,22 +69,34 @@ export default function ShopPage() {
     loadData();
   }, []);
 
-  // Her tema için ürün sayısını hesapla
+  // Her tema için ürün sayısını hesapla - TÜRKÇE/İNGİLİZCE FARKETMEZ
   const themeCounts = useMemo(() => {
     const counts: Record<string, number> = { all: products.length };
+    
     themes.forEach(theme => {
       if (theme.id !== 'all') {
-        counts[theme.id] = products.filter(p => (p as any).theme === theme.id).length;
+        counts[theme.id] = products.filter(p => {
+          const productTheme = (p as any).theme;
+          const normalizedProductTheme = normalizeTheme(productTheme);
+          return normalizedProductTheme === theme.id;
+        }).length;
       }
     });
+    
     return counts;
   }, [products]);
 
   useEffect(() => {
     let result = [...products];
+    
     if (selectedTheme !== 'all') {
-      result = result.filter(p => (p as any).theme === selectedTheme);
+      result = result.filter(p => {
+        const productTheme = (p as any).theme;
+        const normalizedProductTheme = normalizeTheme(productTheme);
+        return normalizedProductTheme === selectedTheme;
+      });
     }
+    
     switch (sortBy) {
       case 'newest':
         result.sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime());
@@ -105,7 +131,7 @@ export default function ShopPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white overflow-x-hidden">
+    <main className="min-h-screen bg-white">
       <Navigation projects={projects} settings={settings} />
       
       <section className="pt-24 pb-16">
@@ -168,7 +194,6 @@ export default function ShopPage() {
                 const photo = product.photos;
                 const isPortrait = isPhotoPortrait(product);
                 
-                // DİKEY/YATAY BOYUTLAR - States Gallery oranları (BÜYÜK)
                 const photoWidth = isPortrait ? 200 : 300;
                 const photoHeight = isPortrait ? 280 : 200;
                 const containerHeight = isPortrait ? 500 : 420;
@@ -181,18 +206,15 @@ export default function ShopPage() {
                     onMouseEnter={() => setHoveredProduct(product.id)}
                     onMouseLeave={() => setHoveredProduct(null)}
                   >
-                    {/* STATES GALLERY 3D ÇERÇEVE */}
                     <div 
                       className="bg-[#f5f5f5] flex items-center justify-center relative"
                       style={{ minHeight: `${containerHeight}px` }}
                     >
-                      {/* Ana Çerçeve Container */}
                       <div 
                         className={`relative transition-all duration-500 ease-out ${
                           isHovered ? 'scale-[1.02]' : 'scale-100'
                         }`}
                       >
-                        {/* ===== DIŞ ÇERÇEVE - Kalın Siyah ===== */}
                         <div 
                           style={{
                             background: '#1a1a1a',
@@ -208,7 +230,6 @@ export default function ShopPage() {
                             `
                           }}
                         >
-                          {/* ===== PASSEPARTOUT / MAT ===== */}
                           <div 
                             style={{ 
                               background: '#ffffff',
@@ -217,7 +238,6 @@ export default function ShopPage() {
                               boxShadow: 'inset 0 0 10px rgba(0,0,0,0.03)'
                             }}
                           >
-                            {/* ===== V-GROOVE / İÇ ÇİZGİ ===== */}
                             <div 
                               style={{
                                 position: 'absolute',
@@ -234,7 +254,6 @@ export default function ShopPage() {
                               }}
                             />
                             
-                            {/* ===== FOTOĞRAF ===== */}
                             <div 
                               style={{
                                 width: `${photoWidth}px`,
@@ -257,7 +276,6 @@ export default function ShopPage() {
                           </div>
                         </div>
 
-                        {/* ===== ALT GÖLGE ===== */}
                         <div 
                           style={{
                             position: 'absolute',
@@ -273,7 +291,6 @@ export default function ShopPage() {
                       </div>
                     </div>
 
-                    {/* Ürün Bilgileri - SOLDA */}
                     <div className="mt-6 text-left">
                       <p className="text-xs text-neutral-400 uppercase tracking-wider mb-1">
                         {product.edition_type === 'limited' ? 'Sınırlı Baskı' : 'Açık Edisyon'}
@@ -291,7 +308,7 @@ export default function ShopPage() {
         </div>
       </section>
 
-      {/* Tema Filtre Paneli - SAYILAR EKLENDİ */}
+      {/* Tema Filtre Paneli - SAYILAR ÇALIŞIYOR */}
       {isFilterOpen && (
         <>
           <div className="fixed inset-0 bg-black/30 z-50" onClick={() => setIsFilterOpen(false)} />
@@ -309,7 +326,7 @@ export default function ShopPage() {
                     <button
                       key={theme.id}
                       onClick={() => setSelectedTheme(theme.id)}
-                      className={`block w-full text-left px-4 py-3 text-sm flex items-center justify-between ${
+                      className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between ${
                         selectedTheme === theme.id ? 'bg-black text-white' : 'hover:bg-neutral-100'
                       }`}
                     >

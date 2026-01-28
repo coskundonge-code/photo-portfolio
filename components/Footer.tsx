@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Instagram, Mail, X, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Settings } from '@/lib/types';
+import { useAdminStore } from '@/lib/store';
 
 interface FooterProps {
   settings?: Settings | null;
@@ -12,6 +13,8 @@ interface FooterProps {
 
 export default function Footer({ settings }: FooterProps) {
   const router = useRouter();
+  const { login, checkAuth } = useAdminStore();
+  
   const siteName = settings?.site_name || 'COŞKUN DÖNGE';
   const email = settings?.email || 'info@coskundunge.com';
   const instagram = settings?.instagram;
@@ -24,12 +27,16 @@ export default function Footer({ settings }: FooterProps) {
 
   const handleAdminClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    // Zaten giriş yapmışsa direkt git
-    const adminAuth = localStorage.getItem('adminAuth');
-    if (adminAuth === 'true') {
+    
+    // Hem Zustand hem localStorage kontrolü
+    const zustandAuth = checkAuth();
+    const legacyAuth = localStorage.getItem('adminAuth') === 'true';
+    
+    if (zustandAuth || legacyAuth) {
       router.push('/admin');
       return;
     }
+    
     // Değilse modal aç
     setShowAdminModal(true);
     setPassword('');
@@ -41,8 +48,11 @@ export default function Footer({ settings }: FooterProps) {
     setLoading(true);
     setError('');
 
-    // Şifre kontrolü
-    if (password === 'admin123' || password === 'coskun2024') {
+    // Zustand store ile giriş (bu aynı zamanda localStorage'a da yazacak)
+    const success = login(password);
+    
+    if (success) {
+      // Ek olarak legacy auth'u da set et (eski kodlarla uyumluluk için)
       localStorage.setItem('adminAuth', 'true');
       setShowAdminModal(false);
       router.push('/admin');
