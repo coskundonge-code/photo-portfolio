@@ -9,6 +9,7 @@ import { Photo, Project } from '@/lib/types';
 // CLOUDINARY AYARLARI
 const CLOUDINARY_CLOUD_NAME = 'dgiak1uhc';
 const CLOUDINARY_UPLOAD_PRESET = 'portfolio_upload';
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB (Cloudinary free limit)
 
 const themeOptions = [
   { id: '', label: 'Tema Seçin...' },
@@ -29,6 +30,7 @@ export default function AdminPhotosPage() {
   const [editingPhoto, setEditingPhoto] = useState<Photo | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
@@ -74,6 +76,7 @@ export default function AdminPhotosPage() {
     setEditingPhoto(null);
     setError(null);
     setSuccess(null);
+    setUploadStatus('');
   };
 
   const openCreateModal = () => {
@@ -98,46 +101,112 @@ export default function AdminPhotosPage() {
     setIsModalOpen(true);
   };
 
-  // CLOUDINARY'E FOTOĞRAF YÜKLE - ORİJİNAL KALİTE
+  // AKILLI SIKISTIRMA - Sadece 10MB üstü dosyalar için, %99 kaliteden başlar
+  const smartCompress = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      // 10MB altındaysa sıkıştırma yapma
+      if (file.size <= MAX_FILE_SIZE) {
+        resolve(file);
+        return;
+      }
+
+      setUploadStatus('Dosya optimize ediliyor (kalite korunuyor)...');
+
+      const img = document.createElement('img');
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      img.onload = async () => {
+        // Orijinal boyutları koru
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx?.drawImage(img, 0, 0);
+
+        // %99'dan başla, 10MB altına düşene kadar yavaşça düşür
+        let quality = 0.99;
+        let blob: Blob | null = null;
+        
+        while (quality >= 0.85) {
+          blob = await new Promise<Blob | null>((res) => {
+            canvas.toBlob(res, 'image/jpeg', quality);
+          });
+          
+          if (blob && blob.size <= MAX_FILE_SIZE) {
+            setUploadStatus(`Optimize edildi (kalite: ${Math.round(quality * 100)}%)`);
+            break;
+          }
+          
+          quality -= 0.02; // %2 azalt
+        }
+
+        // Hala büyükse boyutu küçült (son çare)
+        if (!blob || blob.size > MAX_FILE_SIZE) {
+          let scale = 0.95;
+          while (scale >= 0.7) {
+            const newWidth = Math.round(img.width * scale);
+            const newHeight = Math.round(img.height * scale);
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            ctx?.drawImage(img, 0, 0, newWidth, newHeight);
+            
+            blob = await new Promise<Blob | null>((res) => {
+              canvas.toBlob(res, 'image/jpeg', 0.92);
+            });
+            
+            if (blob && blob.size <= MAX_FILE_SIZE) {
+              setUploadStatus(`Optimize edildi (${newWidth}x${newHeight})`);
+              break;
+            }
+            scale -= 0.05;
+          }
+        }
+
+        if (blob) {
+          const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          });
+          resolve(compressedFile);
+        } else {
+          reject(new Error('Optimizasyon başarısız'));
+        }
+      };
+
+      img.onerror = () => reject(new Error('Fotoğraf okunamadı'));
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  // CLOUDINARY'E YÜKLE
   const uploadToCloudinary = async (file: File): Promise<{url: string; width: number; height: number} | null> => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
     formData.append('folder', 'portfolio');
 
-    try {
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        {
-          method: 'POST',
-          body: formData,
-        }
-      );
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+      { method: 'POST', body: formData }
+    );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Cloudinary error:', errorData);
-        throw new Error(errorData.error?.message || 'Yükleme başarısız');
-      }
-
-      const data = await response.json();
-      return {
-        url: data.secure_url,
-        width: data.width,
-        height: data.height,
-      };
-    } catch (err: any) {
-      console.error('Cloudinary upload error:', err);
-      throw err;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || 'Yükleme başarısız');
     }
+
+    const data = await response.json();
+    return {
+      url: data.secure_url,
+      width: data.width,
+      height: data.height,
+    };
   };
 
-  // DOSYA YÜKLEME - SIKISTIRMA YOK
+  // DOSYA YÜKLEME
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Dosya tipi kontrolü
     if (!file.type.startsWith('image/')) {
       setError('Lütfen geçerli bir görsel dosyası seçin.');
       return;
@@ -147,50 +216,60 @@ export default function AdminPhotosPage() {
     setUploadProgress(10);
     setError(null);
     setSuccess(null);
+    
+    const originalSizeMB = (file.size / 1024 / 1024).toFixed(1);
 
     try {
-      const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
-      setUploadProgress(30);
+      let fileToUpload = file;
       
-      // Cloudinary'e orijinal dosyayı yükle - HİÇ SIKISTIRMA YOK
-      const result = await uploadToCloudinary(file);
-      
-      if (!result) {
-        throw new Error('Yükleme başarısız oldu');
+      // 10MB üstüyse akıllı sıkıştırma yap
+      if (file.size > MAX_FILE_SIZE) {
+        setUploadProgress(20);
+        setUploadStatus(`Büyük dosya (${originalSizeMB}MB), optimize ediliyor...`);
+        fileToUpload = await smartCompress(file);
       }
 
-      setUploadProgress(90);
+      setUploadProgress(50);
+      setUploadStatus('Cloudinary\'e yükleniyor...');
+      
+      const result = await uploadToCloudinary(fileToUpload);
+      
+      if (!result) throw new Error('Yükleme başarısız');
 
-      // Orientation belirle
+      setUploadProgress(100);
+
       const orientation = result.height > result.width ? 'portrait' : 'landscape';
+      const finalSizeMB = (fileToUpload.size / 1024 / 1024).toFixed(1);
 
       setFormData(prev => ({
         ...prev,
         url: result.url,
         width: result.width,
         height: result.height,
-        orientation: orientation,
+        orientation,
       }));
 
-      setUploadProgress(100);
-      setSuccess(`Fotoğraf yüklendi! (${fileSizeMB}MB, ${result.width}x${result.height}px)`);
+      // Başarı mesajı
+      if (file.size > MAX_FILE_SIZE) {
+        setSuccess(`Yüklendi! (${originalSizeMB}MB → ${finalSizeMB}MB, ${result.width}x${result.height}px)`);
+      } else {
+        setSuccess(`Yüklendi! (${originalSizeMB}MB, ${result.width}x${result.height}px, orijinal kalite)`);
+      }
 
       setTimeout(() => {
         setUploading(false);
         setUploadProgress(0);
+        setUploadStatus('');
       }, 500);
 
     } catch (err: any) {
-      console.error('Upload error:', err);
-      setError(`Yükleme hatası: ${err.message || 'Bilinmeyen hata'}`);
+      setError(`Yükleme hatası: ${err.message}`);
       setUploading(false);
       setUploadProgress(0);
+      setUploadStatus('');
     }
 
-    // Input'u sıfırla
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -224,7 +303,7 @@ export default function AdminPhotosPage() {
       resetForm();
       await loadData();
     } catch (err: any) {
-      setError(err.message || 'Kaydetme başarısız oldu.');
+      setError(err.message || 'Kaydetme başarısız.');
     }
   };
 
@@ -277,16 +356,10 @@ export default function AdminPhotosPage() {
                 <Image src={photo.url} alt={photo.title || ''} fill className="object-cover" />
                 
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <button
-                    onClick={() => openEditModal(photo)}
-                    className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors"
-                  >
+                  <button onClick={() => openEditModal(photo)} className="p-2 bg-white/20 hover:bg-white/30 rounded-full">
                     <Edit2 className="w-5 h-5 text-white" />
                   </button>
-                  <button
-                    onClick={() => handleDelete(photo.id)}
-                    className="p-2 bg-white/20 hover:bg-red-500/50 rounded-full transition-colors"
-                  >
+                  <button onClick={() => handleDelete(photo.id)} className="p-2 bg-white/20 hover:bg-red-500/50 rounded-full">
                     <Trash2 className="w-5 h-5 text-white" />
                   </button>
                 </div>
@@ -300,12 +373,6 @@ export default function AdminPhotosPage() {
                 {(photo as any).orientation && (
                   <div className="absolute top-2 right-2 px-2 py-1 bg-black/60 rounded text-xs text-white">
                     {(photo as any).orientation === 'portrait' ? 'Dikey' : 'Yatay'}
-                  </div>
-                )}
-
-                {(photo as any).theme && (
-                  <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 rounded text-xs text-white">
-                    {themeOptions.find(t => t.id === (photo as any).theme)?.label}
                   </div>
                 )}
               </div>
@@ -336,18 +403,16 @@ export default function AdminPhotosPage() {
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               
-              {/* Hata Mesajı */}
               {error && (
                 <div className="flex items-start gap-3 p-4 bg-red-900/30 border border-red-800 rounded-lg">
-                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
                   <p className="text-red-400 text-sm">{error}</p>
                 </div>
               )}
 
-              {/* Başarı Mesajı */}
               {success && (
                 <div className="flex items-start gap-3 p-4 bg-green-900/30 border border-green-800 rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
                   <p className="text-green-400 text-sm">{success}</p>
                 </div>
               )}
@@ -368,11 +433,9 @@ export default function AdminPhotosPage() {
                     >
                       <X className="w-4 h-4" />
                     </button>
-                    <div className="mt-2 flex items-center gap-4 text-xs text-neutral-500">
-                      <span className="text-green-400">✓ Orijinal kalite</span>
-                      {formData.width > 0 && (
-                        <span>{formData.width} x {formData.height}px</span>
-                      )}
+                    <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-neutral-500">
+                      <span className="text-green-400">✓ Yüklendi</span>
+                      {formData.width > 0 && <span>{formData.width}x{formData.height}px</span>}
                       <span className={formData.orientation === 'portrait' ? 'text-purple-400' : 'text-blue-400'}>
                         {formData.orientation === 'portrait' ? '↕ Dikey' : '↔ Yatay'}
                       </span>
@@ -382,41 +445,30 @@ export default function AdminPhotosPage() {
                   <div
                     onClick={() => !uploading && fileInputRef.current?.click()}
                     className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                      uploading 
-                        ? 'border-blue-500 bg-blue-500/10' 
-                        : 'border-neutral-700 hover:border-neutral-500'
+                      uploading ? 'border-blue-500 bg-blue-500/10' : 'border-neutral-700 hover:border-neutral-500'
                     }`}
                   >
                     {uploading ? (
                       <div className="space-y-3">
                         <Loader2 className="w-10 h-10 text-blue-500 mx-auto animate-spin" />
-                        <p className="text-sm text-neutral-400">Yükleniyor... %{uploadProgress}</p>
+                        <p className="text-sm text-neutral-400">{uploadStatus || 'Yükleniyor...'}</p>
                         <div className="w-full bg-neutral-700 rounded-full h-2 max-w-xs mx-auto">
-                          <div 
-                            className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${uploadProgress}%` }}
-                          />
+                          <div className="bg-blue-500 h-2 rounded-full transition-all" style={{ width: `${uploadProgress}%` }} />
                         </div>
                       </div>
                     ) : (
                       <>
                         <Upload className="w-10 h-10 text-neutral-600 mx-auto mb-3" />
                         <p className="text-neutral-400">Fotoğraf seçmek için tıklayın</p>
-                        <p className="text-xs text-neutral-600 mt-1">JPG, PNG, WebP</p>
-                        <p className="text-xs text-green-600 mt-2">✓ Orijinal kalite korunur</p>
-                        <p className="text-xs text-green-600">✓ Sıkıştırma yapılmaz</p>
+                        <p className="text-xs text-neutral-600 mt-1">JPG, PNG, WebP • Sınırsız boyut</p>
+                        <p className="text-xs text-green-600 mt-2">✓ 10MB altı: Orijinal kalite</p>
+                        <p className="text-xs text-yellow-600">✓ 10MB üstü: Akıllı optimizasyon (%99 kalite)</p>
                       </>
                     )}
                   </div>
                 )}
                 
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
               </div>
 
               {/* Başlık */}
@@ -426,7 +478,7 @@ export default function AdminPhotosPage() {
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Fotoğraf başlığı"
                 />
               </div>
@@ -437,7 +489,7 @@ export default function AdminPhotosPage() {
                 <select
                   value={formData.project_id}
                   onChange={(e) => setFormData({ ...formData, project_id: e.target.value })}
-                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Proje seçin...</option>
                   {projects.map((project) => (
@@ -452,7 +504,7 @@ export default function AdminPhotosPage() {
                 <select
                   value={formData.theme}
                   onChange={(e) => setFormData({ ...formData, theme: e.target.value })}
-                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {themeOptions.map((theme) => (
                     <option key={theme.id} value={theme.id}>{theme.label}</option>
@@ -462,31 +514,14 @@ export default function AdminPhotosPage() {
 
               {/* Yön */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Yön 
-                  <span className="text-neutral-500 font-normal ml-1">(otomatik algılandı)</span>
-                </label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Yön <span className="text-neutral-500 font-normal">(otomatik)</span></label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="orientation"
-                      value="landscape"
-                      checked={formData.orientation === 'landscape'}
-                      onChange={() => setFormData({ ...formData, orientation: 'landscape' })}
-                      className="w-4 h-4 text-blue-500"
-                    />
+                    <input type="radio" name="orientation" checked={formData.orientation === 'landscape'} onChange={() => setFormData({ ...formData, orientation: 'landscape' })} className="w-4 h-4" />
                     <span className="text-neutral-300">↔ Yatay</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="orientation"
-                      value="portrait"
-                      checked={formData.orientation === 'portrait'}
-                      onChange={() => setFormData({ ...formData, orientation: 'portrait' })}
-                      className="w-4 h-4 text-blue-500"
-                    />
+                    <input type="radio" name="orientation" checked={formData.orientation === 'portrait'} onChange={() => setFormData({ ...formData, orientation: 'portrait' })} className="w-4 h-4" />
                     <span className="text-neutral-300">↕ Dikey</span>
                   </label>
                 </div>
@@ -499,24 +534,20 @@ export default function AdminPhotosPage() {
                   id="is_featured"
                   checked={formData.is_featured}
                   onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
-                  className="w-5 h-5 rounded bg-neutral-800 border-neutral-700 text-blue-500"
+                  className="w-5 h-5 rounded"
                 />
                 <label htmlFor="is_featured" className="text-neutral-300">Öne çıkan fotoğraf</label>
               </div>
 
               {/* Butonlar */}
               <div className="flex justify-end gap-3 pt-4 border-t border-neutral-800">
-                <button
-                  type="button"
-                  onClick={() => { setIsModalOpen(false); resetForm(); }}
-                  className="px-6 py-2 text-neutral-400 hover:text-white transition-colors"
-                >
+                <button type="button" onClick={() => { setIsModalOpen(false); resetForm(); }} className="px-6 py-2 text-neutral-400 hover:text-white">
                   İptal
                 </button>
                 <button
                   type="submit"
                   disabled={!formData.url || uploading}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:bg-neutral-600 disabled:cursor-not-allowed"
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:bg-neutral-600 disabled:cursor-not-allowed"
                 >
                   {editingPhoto ? 'Güncelle' : 'Kaydet'}
                 </button>
