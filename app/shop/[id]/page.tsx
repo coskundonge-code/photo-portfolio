@@ -144,13 +144,13 @@ export default function ProductPage() {
             <span>Mağazaya Dön</span>
           </Link>
 
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-start">
             
-            {/* Sol: Ürün Önizleme */}
-            <div className="relative">
+            {/* Sol: Ürün Önizleme - Sticky */}
+            <div className="lg:sticky lg:top-28">
               <div 
                 className="bg-[#e8e8e8] flex items-center justify-center cursor-pointer relative group"
-                style={{ minHeight: '500px' }}
+                style={{ minHeight: '450px' }}
                 onClick={() => setLightboxOpen(true)}
               >
                 {/* Zoom icon */}
@@ -232,7 +232,7 @@ export default function ProductPage() {
               <p className="text-center text-sm text-neutral-400 mt-4">{selectedSize.dimensions}</p>
             </div>
 
-            {/* Sağ: Satın Alma */}
+            {/* Sağ: Satın Alma - Scroll edilebilir */}
             <div>
               <h1 className="text-2xl lg:text-3xl font-light mb-2 tracking-wide">
                 {product.title.toUpperCase()}
