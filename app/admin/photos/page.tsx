@@ -98,7 +98,7 @@ export default function AdminPhotosPage() {
     setIsModalOpen(true);
   };
 
-  // CLOUDINARY'E FOTOĞRAF YÜKLE
+  // CLOUDINARY'E FOTOĞRAF YÜKLE - ORİJİNAL KALİTE
   const uploadToCloudinary = async (file: File): Promise<{url: string; width: number; height: number} | null> => {
     const formData = new FormData();
     formData.append('file', file);
@@ -116,6 +116,7 @@ export default function AdminPhotosPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Cloudinary error:', errorData);
         throw new Error(errorData.error?.message || 'Yükleme başarısız');
       }
 
@@ -131,16 +132,10 @@ export default function AdminPhotosPage() {
     }
   };
 
-  // DOSYA YÜKLEME
+  // DOSYA YÜKLEME - SIKISTIRMA YOK
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Dosya boyutu kontrolü (10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      setError('Dosya boyutu 10MB\'dan küçük olmalıdır.');
-      return;
-    }
 
     // Dosya tipi kontrolü
     if (!file.type.startsWith('image/')) {
@@ -149,14 +144,15 @@ export default function AdminPhotosPage() {
     }
 
     setUploading(true);
-    setUploadProgress(20);
+    setUploadProgress(10);
     setError(null);
     setSuccess(null);
 
     try {
-      setUploadProgress(50);
+      const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
+      setUploadProgress(30);
       
-      // Cloudinary'e yükle
+      // Cloudinary'e orijinal dosyayı yükle - HİÇ SIKISTIRMA YOK
       const result = await uploadToCloudinary(file);
       
       if (!result) {
@@ -177,7 +173,7 @@ export default function AdminPhotosPage() {
       }));
 
       setUploadProgress(100);
-      setSuccess('Fotoğraf başarıyla yüklendi!');
+      setSuccess(`Fotoğraf yüklendi! (${fileSizeMB}MB, ${result.width}x${result.height}px)`);
 
       setTimeout(() => {
         setUploading(false);
@@ -191,7 +187,7 @@ export default function AdminPhotosPage() {
       setUploadProgress(0);
     }
 
-    // Input'u sıfırla (aynı dosyayı tekrar seçebilmek için)
+    // Input'u sıfırla
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -373,7 +369,7 @@ export default function AdminPhotosPage() {
                       <X className="w-4 h-4" />
                     </button>
                     <div className="mt-2 flex items-center gap-4 text-xs text-neutral-500">
-                      <span>✓ Yüklendi</span>
+                      <span className="text-green-400">✓ Orijinal kalite</span>
                       {formData.width > 0 && (
                         <span>{formData.width} x {formData.height}px</span>
                       )}
@@ -394,7 +390,7 @@ export default function AdminPhotosPage() {
                     {uploading ? (
                       <div className="space-y-3">
                         <Loader2 className="w-10 h-10 text-blue-500 mx-auto animate-spin" />
-                        <p className="text-sm text-neutral-400">Cloudinary'e yükleniyor... {uploadProgress}%</p>
+                        <p className="text-sm text-neutral-400">Yükleniyor... %{uploadProgress}</p>
                         <div className="w-full bg-neutral-700 rounded-full h-2 max-w-xs mx-auto">
                           <div 
                             className="bg-blue-500 h-2 rounded-full transition-all duration-300"
@@ -406,8 +402,9 @@ export default function AdminPhotosPage() {
                       <>
                         <Upload className="w-10 h-10 text-neutral-600 mx-auto mb-3" />
                         <p className="text-neutral-400">Fotoğraf seçmek için tıklayın</p>
-                        <p className="text-xs text-neutral-600 mt-1">JPG, PNG, WebP • Max 10MB</p>
-                        <p className="text-xs text-green-600 mt-2">☁️ Cloudinary ile ücretsiz yükleme</p>
+                        <p className="text-xs text-neutral-600 mt-1">JPG, PNG, WebP</p>
+                        <p className="text-xs text-green-600 mt-2">✓ Orijinal kalite korunur</p>
+                        <p className="text-xs text-green-600">✓ Sıkıştırma yapılmaz</p>
                       </>
                     )}
                   </div>
@@ -463,7 +460,7 @@ export default function AdminPhotosPage() {
                 </select>
               </div>
 
-              {/* Yön (Otomatik algılanır ama manuel değiştirilebilir) */}
+              {/* Yön */}
               <div>
                 <label className="block text-sm font-medium text-neutral-300 mb-2">
                   Yön 
