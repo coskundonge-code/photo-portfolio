@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Menu, X, User, ShoppingBag, ChevronDown } from 'lucide-react';
 import { Settings as SettingsType, Project } from '@/lib/types';
 import CartDrawer from './CartDrawer';
@@ -15,6 +15,7 @@ interface NavigationProps {
 
 export default function Navigation({ projects = [], settings }: NavigationProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -50,6 +51,18 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
   if (isAdminPage) return null;
 
   const siteName = settings?.site_name || 'COŞKUN DÖNGE';
+
+  // Proje tıklama - dropdown içinden
+  const handleProjectClick = (projectId: string) => {
+    setIsWorkDropdownOpen(false);
+    router.push(`/work?project=${projectId}`);
+  };
+
+  // Tümü tıklama
+  const handleAllClick = () => {
+    setIsWorkDropdownOpen(false);
+    router.push('/work');
+  };
 
   return (
     <>
@@ -96,21 +109,21 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
                 {/* Dropdown Menu */}
                 {isWorkDropdownOpen && projects.length > 0 && (
                   <div className="absolute top-full left-0 pt-2">
-                    <div className="bg-white border border-neutral-200 shadow-lg min-w-[200px]">
-                      <Link
-                        href="/work"
-                        className="block px-4 py-3 text-sm hover:bg-neutral-50 border-b border-neutral-100"
+                    <div className="bg-white border border-neutral-200 shadow-lg min-w-[200px] rounded-lg overflow-hidden">
+                      <button
+                        onClick={handleAllClick}
+                        className="block w-full text-left px-4 py-3 text-sm hover:bg-neutral-50 border-b border-neutral-100"
                       >
                         Tümü
-                      </Link>
+                      </button>
                       {projects.map((project) => (
-                        <Link
+                        <button
                           key={project.id}
-                          href={`/work?project=${project.id}`}
-                          className="block px-4 py-3 text-sm hover:bg-neutral-50 text-neutral-600 hover:text-black"
+                          onClick={() => handleProjectClick(project.id)}
+                          className="block w-full text-left px-4 py-3 text-sm hover:bg-neutral-50 text-neutral-600 hover:text-black"
                         >
                           {project.title}
-                        </Link>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -183,14 +196,16 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
               <Link href="/" className="block text-lg" onClick={() => setIsMenuOpen(false)}>Ana Sayfa</Link>
               <Link href="/work" className="block text-lg" onClick={() => setIsMenuOpen(false)}>Çalışmalar</Link>
               {projects.map((project) => (
-                <Link 
+                <button 
                   key={project.id}
-                  href={`/work?project=${project.id}`} 
-                  className="block text-base pl-4 text-neutral-500" 
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    router.push(`/work?project=${project.id}`);
+                  }}
+                  className="block text-base pl-4 text-neutral-500 text-left w-full"
                 >
                   {project.title}
-                </Link>
+                </button>
               ))}
               <Link href="/shop" className="block text-lg" onClick={() => setIsMenuOpen(false)}>Mağaza</Link>
               <Link href="/about" className="block text-lg" onClick={() => setIsMenuOpen(false)}>Hakkında</Link>

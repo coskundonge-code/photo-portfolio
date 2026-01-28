@@ -1,94 +1,97 @@
-# Photography Portfolio & Print Shop
+# Düzeltme Paketi V2
 
-A professional photography portfolio website with an integrated print shop, inspired by Levon Biss and States Gallery.
+Tüm bildirilen sorunlar düzeltildi.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Next.js](https://img.shields.io/badge/Next.js-14-black)
-![Supabase](https://img.shields.io/badge/Supabase-Database-green)
+## ✅ Düzeltilen Sorunlar
 
-## ✨ Features
+| # | Sorun | Çözüm |
+|---|-------|-------|
+| 1 | Siparişler dropdown okunamıyor | Renkler ve stiller düzeltildi |
+| 2 | Sipariş detayında ödeme bilgisi yok | Ödeme yöntemi ve durumu eklendi |
+| 3 | Ürün eklerken çerçeve fiyatı belirlenemiyor | Her çerçeve için fiyat alanı eklendi |
+| 4 | Çalışmalar dropdown tıklanınca fotoğraflar açılmıyor | router.push ile düzeltildi |
+| 5 | Ödeme sayfasında üye girişi yok | Üye girişi ve misafir devam eklendi |
+| 6 | Üye bilgileri otomatik dolmuyor | Giriş yapınca bilgiler doluyor |
+| 7 | Admin linki direkt şifre sormuyor | Footer'da modal ile şifre soruyor |
+| 8 | Kargo ücretsiz gösterilmiyor | "Ücretsiz" olarak gösteriliyor |
 
-- **Stunning Gallery** - Masonry grid layout for showcasing your work
-- **Project Organization** - Group photos into meaningful collections
-- **Print Shop** - Sell your photos with customizable options
-- **Admin Panel** - Easy management of photos, projects, and products
-- **Responsive Design** - Looks great on all devices
-- **Dark Theme** - Elegant, photography-focused aesthetic
+## ⚠️ E-posta Doğrulama Hakkında
 
-## 🚀 Quick Start
+E-posta doğrulama linki gelmiyorsa, Supabase SMTP ayarları yapılmalı:
 
-1. Clone this repository
-2. Install dependencies: `npm install`
-3. Set up environment variables (see `.env.local.example`)
-4. Run development server: `npm run dev`
+1. Supabase Dashboard → Settings → Auth
+2. SMTP Settings bölümü
+3. Bir SMTP sağlayıcı (SendGrid, Mailgun, vb.) bilgilerini girin
 
-For detailed setup instructions, see [KURULUM-REHBERI.md](./KURULUM-REHBERI.md)
+Alternatif: E-posta doğrulamayı kapatabilirsiniz:
+- Settings → Auth → "Enable email confirmations" kapatın
 
-## 🛠️ Tech Stack
-
-- **Framework**: Next.js 14 (App Router)
-- **Styling**: Tailwind CSS
-- **Database**: Supabase (PostgreSQL)
-- **Storage**: Supabase Storage
-- **Deployment**: Vercel
-- **State Management**: Zustand
-
-## 📁 Project Structure
+## 📁 Değişen Dosyalar
 
 ```
-photo-portfolio/
-├── app/
-│   ├── admin/           # Admin panel pages
-│   │   ├── photos/      # Photo management
-│   │   ├── projects/    # Project management
-│   │   └── products/    # Product/pricing management
-│   ├── work/[project]/  # Individual project pages
-│   ├── shop/[id]/       # Product detail pages
-│   ├── about/           # About page
-│   ├── contact/         # Contact page
-│   └── page.tsx         # Homepage
-├── components/          # Reusable UI components
-├── lib/                 # Utilities and Supabase client
-└── public/              # Static assets
+app/admin/page.tsx              → Admin giriş + dashboard
+app/admin/orders/page.tsx       → Siparişler - ödeme detaylı
+app/admin/products/page.tsx     → Ürünler - çerçeve fiyatları
+app/checkout/page.tsx           → Ödeme - üye girişi + misafir
+app/work/page.tsx               → Çalışmalar - proje filtresi
+app/shop/page.tsx               → Mağaza - büyük çerçeve, sol yazı
+app/shop/[id]/page.tsx          → Ürün detay - geri butonu
+components/Navigation.tsx       → Dropdown düzeltildi
+components/Footer.tsx           → Admin şifre modal
+components/AuthModal.tsx        → Supabase Auth
+components/CartDrawer.tsx       → Sepet
 ```
 
-## ⚙️ Environment Variables
+## 🚀 Kurulum
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-ADMIN_PASSWORD=your-admin-password
-NEXT_PUBLIC_SITE_NAME=Your Portfolio
+### 1. ZIP'i İndir ve Aç
+
+### 2. Dosyaları Kopyala
+
+**Önemli:** Tüm dosyaları projenize kopyalayın (üzerine yazın)
+
+| Klasör | Açıklama |
+|--------|----------|
+| `app/admin/` | Admin sayfaları |
+| `app/checkout/` | Ödeme sayfası |
+| `app/work/` | Çalışmalar sayfası |
+| `app/shop/` | Mağaza sayfaları |
+| `components/` | Bileşenler |
+
+### 3. GitHub Desktop
+
+```
+git add .
+git commit -m "V2 düzeltmeleri"
+git push
 ```
 
-## 🎨 Customization
+## 🔐 Admin Şifreleri
 
-### Colors
+- `admin123`
+- `coskun2024`
 
-Edit `tailwind.config.js` to change the color scheme:
+## 📝 Özellik Detayları
 
-```javascript
-colors: {
-  accent: {
-    DEFAULT: '#C9A962', // Gold accent color
-  }
-}
-```
+### Sipariş Yönetimi
+- Ödeme yöntemi gösteriliyor (Havale/EFT veya Kredi Kartı)
+- Ödeme durumu gösteriliyor (Bekleniyor, Ödendi, vb.)
+- Havale için uyarı mesajı
+- Durum güncellenebilir
 
-### Typography
+### Ürün Ekleme
+- Her boyut için ayrı fiyat
+- Her çerçeve için ek ücret belirlenebilir
+- 0 girilirse ek ücret yok
 
-The site uses:
-- **Display**: Playfair Display
-- **Body**: DM Sans
-- **Mono**: JetBrains Mono
+### Ödeme Sayfası
+- Üye girişi yapılabilir
+- Kayıt olunabilir
+- Misafir olarak devam edilebilir
+- Üye girişinde bilgiler otomatik doluyor
+- Kargo ücretsiz
 
-## 📄 License
-
-MIT License - feel free to use for your own portfolio!
-
-## 🙏 Credits
-
-Design inspired by:
-- [Levon Biss](https://www.levonbiss.com)
-- [States Gallery](https://www.states-gallery.com)
-- [Mathijs Hanenkamp](https://mathijshanenkamp.com)
+### Admin Girişi
+- Footer'daki Admin linkine tıklayınca modal açılır
+- Şifre girilince admin paneline yönlendirilir
+- Zaten giriş yapmışsa direkt gider

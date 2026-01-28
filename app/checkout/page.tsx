@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Loader2, Check, Copy, CreditCard, Building2, ChevronLeft } from 'lucide-react';
+import { ArrowLeft, Loader2, CreditCard, Banknote, CheckCircle, User, UserX, LogIn } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface CartItem {
   productId: string;
@@ -17,12 +18,6 @@ interface CartItem {
   quantity: number;
 }
 
-const bankInfo = {
-  name: 'Coşkun Dönge',
-  bank: 'Akbank',
-  iban: 'TR 04 0004 6002 8788 8000 1937 83',
-};
-
 const formatPrice = (price: number) => price.toLocaleString('tr-TR');
 
 export default function CheckoutPage() {
@@ -30,405 +25,534 @@ export default function CheckoutPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [orderComplete, setOrderComplete] = useState(false);
-  const [orderId, setOrderId] = useState('');
+  const [step, setStep] = useState<'auth' | 'form' | 'payment' | 'success'>('auth');
+  const [user, setUser] = useState<any>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   
-  // Ödeme yöntemi
-  const [paymentMethod, setPaymentMethod] = useState<'transfer' | 'card'>('transfer');
-  
-  // Müşteri bilgileri
+  // Auth states
+  const [authMode, setAuthMode] = useState<'login' | 'register' | 'guest'>('login');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     address: '',
+    district: '',
     city: '',
     postalCode: '',
-    // Kart bilgileri
-    cardNumber: '',
-    cardExpiry: '',
-    cardCvv: '',
+    notes: '',
   });
+  
+  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'credit_card'>('bank_transfer');
 
-  // Kopyalama durumu
-  const [copiedField, setCopiedField] = useState<string | null>(null);
-
+  // Kullanıcı ve sepet kontrolü
   useEffect(() => {
-    const cartData = JSON.parse(localStorage.getItem('cart') || '[]');
-    setCart(cartData);
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+        // Kullanıcı bilgilerini doldur
+        setFormData(prev => ({
+          ...prev,
+          name: session.user.user_metadata?.name || '',
+          email: session.user.email || '',
+        }));
+        setStep('form');
+      }
+      setCheckingAuth(false);
+    };
+    
+    checkAuth();
+    
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+      const parsedCart = JSON.parse(savedCart);
+      setCart(parsedCart);
+      if (parsedCart.length === 0) {
+        router.push('/shop');
+      }
+    } else {
+      router.push('/shop');
+    }
     setLoading(false);
-  }, []);
+  }, [router]);
 
-  // TOPLAM TUTAR HESAPLAMA - DÜZELTİLDİ
-  const calculateTotal = () => {
-    return cart.reduce((total, item) => {
-      // Her ürün için fiyat: boyut fiyatı + çerçeve fiyatı
-      const itemPrice = (item.size?.price || 0) + (item.frame?.price || 0);
-      return total + (itemPrice * item.quantity);
-    }, 0);
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  // Üye Girişi
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: authEmail,
+        password: authPassword,
+      });
+
+      if (error) throw error;
+
+      setUser(data.user);
+      setFormData(prev => ({
+        ...prev,
+        name: data.user?.user_metadata?.name || '',
+        email: data.user?.email || '',
+      }));
+      setStep('form');
+    } catch (error: any) {
+      setAuthError(error.message === 'Invalid login credentials' 
+        ? 'E-posta veya şifre yanlış' 
+        : error.message);
+    }
+    setAuthLoading(false);
   };
 
-  const copyToClipboard = (text: string, field: string) => {
-    navigator.clipboard.writeText(text.replace(/\s/g, ''));
-    setCopiedField(field);
-    setTimeout(() => setCopiedField(null), 2000);
+  // Kayıt
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: authEmail,
+        password: authPassword,
+      });
+
+      if (error) throw error;
+
+      // Direkt devam et (e-posta doğrulama zorunlu değilse)
+      if (data.user) {
+        setUser(data.user);
+        setFormData(prev => ({
+          ...prev,
+          email: data.user?.email || '',
+        }));
+        setStep('form');
+      }
+    } catch (error: any) {
+      setAuthError(error.message);
+    }
+    setAuthLoading(false);
   };
 
+  // Misafir devam
+  const handleGuestContinue = () => {
+    setStep('form');
+  };
+
+  // Sipariş gönder
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
 
-    // Sipariş numarası oluştur
-    const newOrderId = Math.random().toString(36).substring(2, 10).toUpperCase();
-    setOrderId(newOrderId);
+    try {
+      const orderNumber = Math.random().toString(36).substring(2, 10).toUpperCase();
+      
+      const orderData = {
+        order_number: orderNumber,
+        user_id: user?.id || null,
+        customer_name: formData.name,
+        customer_email: formData.email,
+        customer_phone: formData.phone,
+        shipping_address: {
+          address: formData.address,
+          district: formData.district,
+          city: formData.city,
+          postal_code: formData.postalCode,
+        },
+        items: cart,
+        total_amount: total,
+        payment_method: paymentMethod,
+        payment_status: 'pending',
+        status: 'pending',
+        notes: formData.notes,
+      };
 
-    // Simülasyon - gerçekte Supabase'e kayıt yapılacak
-    await new Promise(resolve => setTimeout(resolve, 1500));
+      const { error } = await supabase.from('orders').insert([orderData]);
 
-    // Sepeti temizle
-    localStorage.removeItem('cart');
-    window.dispatchEvent(new Event('cartUpdated'));
+      if (error) throw error;
 
+      // Sepeti temizle
+      localStorage.removeItem('cart');
+      window.dispatchEvent(new Event('cartUpdated'));
+      
+      setStep('success');
+    } catch (err: any) {
+      console.error('Sipariş hatası:', err);
+      alert('Sipariş oluşturulamadı: ' + err.message);
+    }
     setSubmitting(false);
-    setOrderComplete(true);
   };
 
-  if (loading) {
+  if (loading || checkingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
       </div>
     );
   }
 
-  // Sipariş tamamlandı
-  if (orderComplete) {
+  // Başarılı sipariş
+  if (step === 'success') {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-4">
-        <div className="max-w-md w-full text-center">
-          <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Check className="w-10 h-10 text-white" />
+      <main className="min-h-screen bg-white">
+        <div className="max-w-lg mx-auto px-4 py-16 text-center">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="w-10 h-10 text-green-600" />
           </div>
-          
-          <h1 className="text-2xl font-semibold mb-2">Siparişiniz Alındı!</h1>
-          <p className="text-neutral-600 mb-6">
-            Sipariş numaranız: <span className="font-mono font-semibold">#{orderId}</span>
+          <h1 className="text-2xl font-semibold mb-4">Siparişiniz Alındı!</h1>
+          <p className="text-neutral-600 mb-8">
+            Siparişiniz başarıyla oluşturuldu. 
+            {paymentMethod === 'bank_transfer' && ' Havale/EFT bilgileri e-posta adresinize gönderilecek.'}
           </p>
-
-          {paymentMethod === 'transfer' && (
-            <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-6 mb-6 text-left">
-              <h3 className="font-semibold mb-4">Havale Bilgileri</h3>
-              
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-neutral-500">Ad Soyad:</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{bankInfo.name}</span>
-                    <button onClick={() => copyToClipboard(bankInfo.name, 'name')} className="text-neutral-400 hover:text-black">
-                      {copiedField === 'name' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-neutral-500">Banka:</span>
-                  <span className="font-medium">{bankInfo.bank}</span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-neutral-500">IBAN:</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs">{bankInfo.iban}</span>
-                    <button onClick={() => copyToClipboard(bankInfo.iban, 'iban')} className="text-neutral-400 hover:text-black">
-                      {copiedField === 'iban' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-center pt-2 border-t">
-                  <span className="text-neutral-500">Tutar:</span>
-                  <span className="font-semibold text-lg">₺{formatPrice(calculateTotal())}</span>
-                </div>
-              </div>
-              
-              <p className="text-xs text-neutral-500 mt-4">
-                Açıklama kısmına sipariş numaranızı yazınız.
-              </p>
-            </div>
-          )}
-
-          <p className="text-sm text-neutral-500 mb-6">
-            Sipariş detaylarını <strong>{formData.email}</strong> adresine gönderdik.
-          </p>
-
           <Link
             href="/shop"
-            className="inline-block w-full py-4 bg-black text-white text-sm tracking-wide hover:bg-neutral-800 transition-colors"
+            className="inline-block px-8 py-3 bg-black text-white hover:bg-neutral-800 transition-colors"
           >
             Alışverişe Devam Et
           </Link>
         </div>
-      </div>
-    );
-  }
-
-  // Sepet boş
-  if (cart.length === 0) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-4">
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold mb-4">Sepetiniz Boş</h1>
-          <Link href="/shop" className="text-black underline">Mağazaya Git</Link>
-        </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white">
       {/* Header */}
-      <header className="border-b">
+      <div className="border-b">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/shop" className="flex items-center gap-2 text-sm text-neutral-600 hover:text-black">
-            <ChevronLeft className="w-4 h-4" />
-            Mağazaya Dön
+          <Link href="/shop" className="flex items-center gap-2 text-neutral-500 hover:text-black">
+            <ArrowLeft className="w-4 h-4" />
+            <span>Mağazaya Dön</span>
           </Link>
-          <span className="font-semibold">Ödeme</span>
-          <div className="w-24" />
+          <h1 className="text-lg font-semibold">Ödeme</h1>
+          <div className="w-24"></div>
         </div>
-      </header>
+      </div>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-2 gap-12">
+        <div className="grid lg:grid-cols-3 gap-12">
           
           {/* Sol: Form */}
-          <div>
-            <form onSubmit={handleSubmit} className="space-y-8">
-              
-              {/* İletişim Bilgileri */}
-              <div>
-                <h2 className="text-lg font-semibold mb-4">İletişim Bilgileri</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm mb-1">Ad Soyad</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-3 border border-neutral-300 focus:border-black outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1">E-posta</label>
-                    <input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3 border border-neutral-300 focus:border-black outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1">Telefon</label>
-                    <input
-                      type="tel"
-                      required
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-4 py-3 border border-neutral-300 focus:border-black outline-none"
-                    />
-                  </div>
+          <div className="lg:col-span-2">
+            
+            {/* ADIM 1: Auth */}
+            {step === 'auth' && (
+              <div className="max-w-md mx-auto">
+                <h2 className="text-xl font-semibold mb-6">Devam Et</h2>
+                
+                {/* Üye Girişi */}
+                {authMode === 'login' && (
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+                      <User className="w-5 h-5 text-blue-600 mt-0.5" />
+                      <div>
+                        <p className="text-blue-900 font-medium">Üye Girişi</p>
+                        <p className="text-blue-700 text-sm">Kayıtlı bilgilerinizle hızlı ödeme yapın</p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-neutral-600 mb-1">E-posta</label>
+                      <input
+                        type="email"
+                        value={authEmail}
+                        onChange={(e) => setAuthEmail(e.target.value)}
+                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-neutral-600 mb-1">Şifre</label>
+                      <input
+                        type="password"
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
+                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                        required
+                      />
+                    </div>
+
+                    {authError && (
+                      <p className="text-red-500 text-sm">{authError}</p>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={authLoading}
+                      className="w-full py-3 bg-black text-white rounded-lg hover:bg-neutral-800 flex items-center justify-center gap-2"
+                    >
+                      {authLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <LogIn className="w-5 h-5" />}
+                      Giriş Yap ve Devam Et
+                    </button>
+                  </form>
+                )}
+
+                {/* Kayıt */}
+                {authMode === 'register' && (
+                  <form onSubmit={handleRegister} className="space-y-4">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
+                      <User className="w-5 h-5 text-green-600 mt-0.5" />
+                      <div>
+                        <p className="text-green-900 font-medium">Hesap Oluştur</p>
+                        <p className="text-green-700 text-sm">Siparişlerinizi takip edin</p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-neutral-600 mb-1">E-posta</label>
+                      <input
+                        type="email"
+                        value={authEmail}
+                        onChange={(e) => setAuthEmail(e.target.value)}
+                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-neutral-600 mb-1">Şifre (en az 6 karakter)</label>
+                      <input
+                        type="password"
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
+                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+
+                    {authError && (
+                      <p className="text-red-500 text-sm">{authError}</p>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={authLoading}
+                      className="w-full py-3 bg-black text-white rounded-lg hover:bg-neutral-800 flex items-center justify-center gap-2"
+                    >
+                      {authLoading && <Loader2 className="w-5 h-5 animate-spin" />}
+                      Kayıt Ol ve Devam Et
+                    </button>
+                  </form>
+                )}
+
+                {/* Geçiş linkleri */}
+                <div className="mt-6 pt-6 border-t space-y-3">
+                  {authMode === 'login' ? (
+                    <>
+                      <button
+                        onClick={() => setAuthMode('register')}
+                        className="w-full py-3 border border-neutral-300 rounded-lg hover:bg-neutral-50 text-neutral-700"
+                      >
+                        Hesap Oluştur
+                      </button>
+                      <button
+                        onClick={handleGuestContinue}
+                        className="w-full py-3 text-neutral-500 hover:text-black flex items-center justify-center gap-2"
+                      >
+                        <UserX className="w-5 h-5" />
+                        Üye Olmadan Devam Et
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => setAuthMode('login')}
+                        className="w-full py-3 border border-neutral-300 rounded-lg hover:bg-neutral-50 text-neutral-700"
+                      >
+                        Zaten Hesabım Var
+                      </button>
+                      <button
+                        onClick={handleGuestContinue}
+                        className="w-full py-3 text-neutral-500 hover:text-black flex items-center justify-center gap-2"
+                      >
+                        <UserX className="w-5 h-5" />
+                        Üye Olmadan Devam Et
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
+            )}
 
-              {/* Teslimat Adresi */}
-              <div>
-                <h2 className="text-lg font-semibold mb-4">Teslimat Adresi</h2>
-                <div className="space-y-4">
+            {/* ADIM 2: İletişim ve Teslimat */}
+            {step === 'form' && (
+              <form onSubmit={handleSubmit}>
+                {user && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <div>
+                      <p className="text-green-900 font-medium">Hoş geldiniz, {user.user_metadata?.name || user.email}</p>
+                      <p className="text-green-700 text-sm">Kayıtlı bilgileriniz otomatik dolduruldu</p>
+                    </div>
+                  </div>
+                )}
+
+                <h2 className="text-lg font-semibold mb-4">İletişim Bilgileri</h2>
+                <div className="space-y-4 mb-8">
                   <div>
-                    <label className="block text-sm mb-1">Adres</label>
-                    <textarea
+                    <label className="block text-sm text-neutral-600 mb-1">Ad Soyad</label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
                       required
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      className="w-full px-4 py-3 border border-neutral-300 focus:border-black outline-none resize-none"
-                      rows={3}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm mb-1">Şehir</label>
+                      <label className="block text-sm text-neutral-600 mb-1">E-posta</label>
                       <input
-                        type="text"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
                         required
-                        value={formData.city}
-                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                        className="w-full px-4 py-3 border border-neutral-300 focus:border-black outline-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm mb-1">Posta Kodu</label>
+                      <label className="block text-sm text-neutral-600 mb-1">Telefon</label>
+                      <input
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <h2 className="text-lg font-semibold mb-4">Teslimat Adresi</h2>
+                <div className="space-y-4 mb-8">
+                  <div>
+                    <label className="block text-sm text-neutral-600 mb-1">Adres</label>
+                    <textarea
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      rows={3}
+                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent resize-none"
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm text-neutral-600 mb-1">İlçe</label>
+                      <input
+                        type="text"
+                        value={formData.district}
+                        onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-neutral-600 mb-1">Şehir</label>
+                      <input
+                        type="text"
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-neutral-600 mb-1">Posta Kodu</label>
                       <input
                         type="text"
                         value={formData.postalCode}
                         onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
-                        className="w-full px-4 py-3 border border-neutral-300 focus:border-black outline-none"
+                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
                       />
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Ödeme Yöntemi */}
-              <div>
                 <h2 className="text-lg font-semibold mb-4">Ödeme Yöntemi</h2>
-                <div className="space-y-3">
-                  {/* Havale */}
-                  <label 
-                    className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${
-                      paymentMethod === 'transfer' ? 'border-black bg-neutral-50' : 'border-neutral-200'
-                    }`}
-                  >
+                <div className="space-y-3 mb-8">
+                  <label className={`flex items-center gap-4 p-4 border rounded-lg cursor-pointer ${
+                    paymentMethod === 'bank_transfer' ? 'border-black bg-neutral-50' : 'hover:bg-neutral-50'
+                  }`}>
                     <input
                       type="radio"
                       name="payment"
-                      checked={paymentMethod === 'transfer'}
-                      onChange={() => setPaymentMethod('transfer')}
+                      checked={paymentMethod === 'bank_transfer'}
+                      onChange={() => setPaymentMethod('bank_transfer')}
                       className="w-5 h-5"
                     />
-                    <Building2 className="w-5 h-5" />
+                    <Banknote className="w-6 h-6 text-neutral-600" />
                     <div>
                       <p className="font-medium">Havale / EFT</p>
-                      <p className="text-sm text-neutral-500">Banka havalesi ile ödeme</p>
+                      <p className="text-sm text-neutral-500">Sipariş sonrası banka bilgileri paylaşılacaktır</p>
                     </div>
                   </label>
-
-                  {/* Kredi Kartı */}
-                  <label 
-                    className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${
-                      paymentMethod === 'card' ? 'border-black bg-neutral-50' : 'border-neutral-200'
-                    }`}
-                  >
+                  <label className={`flex items-center gap-4 p-4 border rounded-lg cursor-pointer opacity-50`}>
                     <input
                       type="radio"
                       name="payment"
-                      checked={paymentMethod === 'card'}
-                      onChange={() => setPaymentMethod('card')}
+                      disabled
                       className="w-5 h-5"
                     />
-                    <CreditCard className="w-5 h-5" />
+                    <CreditCard className="w-6 h-6 text-neutral-600" />
                     <div>
-                      <p className="font-medium">Kredi / Banka Kartı</p>
-                      <p className="text-sm text-neutral-500">Güvenli online ödeme</p>
+                      <p className="font-medium">Kredi Kartı</p>
+                      <p className="text-sm text-neutral-500">Yakında aktif olacak</p>
                     </div>
                   </label>
                 </div>
 
-                {/* Havale Bilgileri */}
-                {paymentMethod === 'transfer' && (
-                  <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p className="text-sm text-blue-800 mb-3">
-                      Sipariş onaylandıktan sonra aşağıdaki hesaba havale yapabilirsiniz:
-                    </p>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-blue-600">Ad Soyad:</span>
-                        <span className="font-medium text-blue-900">{bankInfo.name}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-600">Banka:</span>
-                        <span className="font-medium text-blue-900">{bankInfo.bank}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-600">IBAN:</span>
-                        <span className="font-mono text-xs text-blue-900">{bankInfo.iban}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <div className="mb-8">
+                  <label className="block text-sm text-neutral-600 mb-1">Sipariş Notu (Opsiyonel)</label>
+                  <textarea
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    rows={2}
+                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent resize-none"
+                    placeholder="Varsa eklemek istediğiniz notlar..."
+                  />
+                </div>
 
-                {/* Kart Bilgileri */}
-                {paymentMethod === 'card' && (
-                  <div className="mt-4 space-y-4">
-                    <div>
-                      <label className="block text-sm mb-1">Kart Numarası</label>
-                      <input
-                        type="text"
-                        placeholder="0000 0000 0000 0000"
-                        value={formData.cardNumber}
-                        onChange={(e) => setFormData({ ...formData, cardNumber: e.target.value })}
-                        className="w-full px-4 py-3 border border-neutral-300 focus:border-black outline-none"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm mb-1">Son Kullanma</label>
-                        <input
-                          type="text"
-                          placeholder="AA/YY"
-                          value={formData.cardExpiry}
-                          onChange={(e) => setFormData({ ...formData, cardExpiry: e.target.value })}
-                          className="w-full px-4 py-3 border border-neutral-300 focus:border-black outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm mb-1">CVV</label>
-                        <input
-                          type="text"
-                          placeholder="000"
-                          value={formData.cardCvv}
-                          onChange={(e) => setFormData({ ...formData, cardCvv: e.target.value })}
-                          className="w-full px-4 py-3 border border-neutral-300 focus:border-black outline-none"
-                        />
-                      </div>
-                    </div>
-                    <p className="text-xs text-neutral-500 flex items-center gap-1">
-                      🔒 256-bit SSL ile korunmaktadır
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Sipariş Ver Butonu */}
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full py-4 bg-black text-white text-sm tracking-wide hover:bg-neutral-800 transition-colors disabled:bg-neutral-400 flex items-center justify-center gap-2"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    İşleniyor...
-                  </>
-                ) : (
-                  `Siparişi Tamamla — ₺${formatPrice(calculateTotal())}`
-                )}
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full py-4 bg-black text-white text-lg hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
+                >
+                  {submitting && <Loader2 className="w-5 h-5 animate-spin" />}
+                  Siparişi Tamamla
+                </button>
+              </form>
+            )}
           </div>
 
           {/* Sağ: Sipariş Özeti */}
-          <div>
-            <div className="bg-neutral-50 p-6 sticky top-8">
-              <h2 className="text-lg font-semibold mb-6">Sipariş Özeti</h2>
+          <div className="lg:col-span-1">
+            <div className="bg-neutral-50 rounded-xl p-6 sticky top-8">
+              <h2 className="text-lg font-semibold mb-4">Sipariş Özeti</h2>
               
               <div className="space-y-4 mb-6">
                 {cart.map((item, index) => (
                   <div key={index} className="flex gap-4">
-                    <div className="w-20 h-20 bg-neutral-200 relative flex-shrink-0">
-                      {item.photoUrl && (
-                        <Image src={item.photoUrl} alt={item.productTitle} fill className="object-cover" />
-                      )}
+                    <div className="w-16 h-16 bg-neutral-200 rounded-lg overflow-hidden relative flex-shrink-0">
+                      <Image
+                        src={item.photoUrl || '/placeholder.jpg'}
+                        alt={item.productTitle}
+                        fill
+                        className="object-cover"
+                      />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-sm">{item.productTitle}</h3>
-                      <p className="text-xs text-neutral-500 mt-1">
-                        {item.size?.name} • {item.frame?.name} • {item.style === 'mat' ? 'Mat' : 'Full Bleed'}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{item.productTitle}</p>
+                      <p className="text-xs text-neutral-500">
+                        {item.size.name} • {item.frame.name} • {item.style === 'mat' ? 'Mat' : 'Full Bleed'}
                       </p>
-                      <p className="text-sm mt-1">
-                        ₺{formatPrice((item.size?.price || 0) + (item.frame?.price || 0))}
-                      </p>
+                      <p className="text-sm mt-1">₺{formatPrice(item.price)}</p>
                     </div>
                   </div>
                 ))}
@@ -436,22 +560,22 @@ export default function CheckoutPage() {
 
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-neutral-600">Ara Toplam</span>
-                  <span>₺{formatPrice(calculateTotal())}</span>
+                  <span className="text-neutral-500">Ara Toplam</span>
+                  <span>₺{formatPrice(total)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-neutral-600">Kargo</span>
+                  <span className="text-neutral-500">Kargo</span>
                   <span className="text-green-600">Ücretsiz</span>
                 </div>
                 <div className="flex justify-between text-lg font-semibold pt-2 border-t">
                   <span>Toplam</span>
-                  <span>₺{formatPrice(calculateTotal())}</span>
+                  <span>₺{formatPrice(total)}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
