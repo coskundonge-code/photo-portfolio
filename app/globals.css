@@ -1,0 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  body {
+    @apply bg-white text-black font-sans;
+    font-feature-settings: "kern" 1;
+  }
+  
+  ::selection {
+    @apply bg-black text-white;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-6 py-3 bg-black text-white text-sm tracking-wide transition-all hover:bg-neutral-800;
+  }
+  
+  .btn-secondary {
+    @apply px-6 py-3 border border-black text-black text-sm tracking-wide transition-all hover:bg-black hover:text-white;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 bg-white border border-neutral-200 text-black placeholder-neutral-400 focus:outline-none focus:border-black transition-colors;
+  }
+  
+  .admin-card {
+    @apply bg-neutral-900 border border-neutral-800 rounded-lg p-6;
+  }
+}
