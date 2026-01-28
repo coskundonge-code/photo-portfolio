@@ -2,311 +2,402 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { getPhotos, getProducts, getProjects } from '@/lib/supabase';
-import { Photo, Product, Project } from '@/lib/types';
-import { Loader2, ArrowLeft, ShoppingBag, Check } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import Navigation from '@/components/Navigation';
+import Footer from '@/components/Footer';
+import Lightbox from '@/components/Lightbox';
+import RoomPreview from '@/components/RoomPreview';
+import { getSettings, getProjects, getProductById } from '@/lib/supabase';
+import { Settings, Project, Product } from '@/lib/types';
+import { Loader2, Check, Ruler, ZoomIn, ArrowLeft } from 'lucide-react';
 
-const sizeOptions = [
-  { id: 'small', label: '30x40 cm', price: 0 },
-  { id: 'medium', label: '50x70 cm', price: 1500 },
-  { id: 'large', label: '70x100 cm', price: 3000 },
+const defaultSizes = [
+  { id: 'compact', name: 'Compact', dimensions: '42x37cm', price: 1500, scale: 0.7 },
+  { id: 'regular', name: 'Regular', dimensions: '52x42cm', price: 2500, scale: 0.85 },
+  { id: 'classical', name: 'Classical', dimensions: '63x52cm', price: 3500, scale: 1 },
 ];
 
-const frameOptions = [
-  { id: 'black', label: 'Siyah', color: '#1a1a1a' },
-  { id: 'white', label: 'Beyaz', color: '#f5f5f5' },
-  { id: 'natural', label: 'Doğal Ahşap', color: '#8B7355' },
+const defaultFrames = [
+  { id: 'black', name: 'Siyah', color: '#1a1a1a', price: 0 },
+  { id: 'white', name: 'Beyaz', color: '#ffffff', price: 0 },
+  { id: 'natural', name: 'Doğal Meşe', color: '#c4a574', price: 200 },
+  { id: 'walnut', name: 'Ceviz', color: '#5c4033', price: 200 },
 ];
 
-export default function ShopDetailPage() {
+const formatPrice = (price: number) => price.toLocaleString('tr-TR');
+
+export default function ProductPage() {
   const params = useParams();
-  const photoId = params?.id as string;
-
-  const [photo, setPhoto] = useState<Photo | null>(null);
+  const router = useRouter();
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [product, setProduct] = useState<Product | null>(null);
-  const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   
-  const [selectedSize, setSelectedSize] = useState('small');
-  const [selectedFrame, setSelectedFrame] = useState('black');
-  const [addedToCart, setAddedToCart] = useState(false);
+  const [selectedStyle, setSelectedStyle] = useState<'mat' | 'fullbleed'>('mat');
+  const [selectedSize, setSelectedSize] = useState(defaultSizes[1]);
+  const [selectedFrame, setSelectedFrame] = useState(defaultFrames[0]);
+  
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [roomPreviewOpen, setRoomPreviewOpen] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
-      try {
-        const [photosData, productsData, projectsData] = await Promise.all([
-          getPhotos(),
-          getProducts(),
-          getProjects()
-        ]);
-        
-        const foundPhoto = photosData.find(p => p.id === photoId);
-        const foundProduct = productsData.find(p => p.photo_id === photoId);
-        
-        if (foundPhoto) {
-          setPhoto(foundPhoto);
-          const foundProject = projectsData.find(p => p.id === foundPhoto.project_id);
-          setProject(foundProject || null);
-        }
-        
-        setProduct(foundProduct || null);
-      } catch (error) {
-        console.error('Error loading data:', error);
-      }
+      const [settingsData, projectsData, productData] = await Promise.all([
+        getSettings(), getProjects(), getProductById(params.id as string)
+      ]);
+      setSettings(settingsData);
+      setProjects(projectsData);
+      setProduct(productData);
       setLoading(false);
     };
-    
     loadData();
-  }, [photoId]);
+  }, [params.id]);
 
-  const calculatePrice = () => {
-    const basePrice = (product as any)?.price || 2950;
-    const sizePrice = sizeOptions.find(s => s.id === selectedSize)?.price || 0;
-    return basePrice + sizePrice;
+  const isPhotoPortrait = () => {
+    const photo = product?.photos;
+    if (!photo) return false;
+    if ((photo as any).orientation === 'portrait') return true;
+    if ((photo as any).orientation === 'landscape') return false;
+    if ((photo as any).width && (photo as any).height) {
+      return (photo as any).height > (photo as any).width;
+    }
+    return false;
   };
 
-  const addToCart = () => {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const item = {
-      id: `${photoId}-${selectedSize}-${selectedFrame}`,
-      photoId,
-      photoUrl: photo?.url,
-      title: photo?.title || product?.title || 'İsimsiz',
+  const isPortrait = isPhotoPortrait();
+  const photoWidth = isPortrait ? 180 : 280;
+  const photoHeight = isPortrait ? 260 : 180;
+
+  const calculatePrice = () => {
+    return (selectedSize.price || product?.base_price || 0) + (selectedFrame.price || 0);
+  };
+
+  // Çerçeve rengi için 3D efekt
+  const getFrameStyle = (color: string) => {
+    const isWhite = color === '#ffffff';
+    const isLight = color === '#c4a574';
+    
+    return {
+      background: color,
+      boxShadow: `
+        inset 1px 1px 0 0 ${isWhite ? '#ffffff' : isLight ? '#d4b584' : '#3a3a3a'},
+        inset 2px 2px 0 0 ${isWhite ? '#f8f8f8' : isLight ? '#c4a574' : '#2a2a2a'},
+        inset -1px -1px 0 0 ${isWhite ? '#e8e8e8' : isLight ? '#a48854' : '#0a0a0a'},
+        inset -2px -2px 0 0 ${isWhite ? '#e0e0e0' : isLight ? '#8a7044' : '#000000'},
+        0 25px 50px -15px rgba(0,0,0,0.35)
+      `
+    };
+  };
+
+  const handleAddToCart = () => {
+    const cartItem = {
+      productId: product?.id,
+      productTitle: product?.title,
+      photoUrl: product?.photos?.url,
+      style: selectedStyle,
       size: selectedSize,
-      sizeLabel: sizeOptions.find(s => s.id === selectedSize)?.label,
       frame: selectedFrame,
-      frameLabel: frameOptions.find(f => f.id === selectedFrame)?.label,
       price: calculatePrice(),
       quantity: 1,
     };
     
-    const existingIndex = cart.findIndex((i: any) => i.id === item.id);
-    if (existingIndex >= 0) {
-      cart[existingIndex].quantity += 1;
-    } else {
-      cart.push(item);
-    }
-    
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    cart.push(cartItem);
     localStorage.setItem('cart', JSON.stringify(cart));
     window.dispatchEvent(new Event('cartUpdated'));
-    
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 2000);
+    router.push('/checkout');
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
       </div>
     );
   }
 
-  if (!photo) {
+  if (!product) {
     return (
-      <div className="min-h-screen pt-20 flex flex-col items-center justify-center">
-        <p className="text-neutral-500 mb-4">Fotoğraf bulunamadı</p>
-        <Link href="/shop" className="text-blue-500 hover:underline">
-          Mağazaya Dön
-        </Link>
-      </div>
+      <main className="min-h-screen bg-white">
+        <Navigation projects={projects} settings={settings} />
+        <div className="pt-32 pb-16 px-6 text-center">
+          <h1 className="text-2xl">Ürün bulunamadı</h1>
+        </div>
+        <Footer settings={settings} />
+      </main>
     );
   }
 
-  const isPortrait = (photo as any).orientation === 'portrait';
-  const frameColor = frameOptions.find(f => f.id === selectedFrame)?.color || '#1a1a1a';
-
   return (
-    <div className="min-h-screen pt-20 lg:pt-24 bg-white">
-      <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-8">
-        
-        {/* Geri Butonu */}
-        <Link href="/shop" className="inline-flex items-center gap-2 text-neutral-500 hover:text-black mb-8 transition-colors">
-          <ArrowLeft className="w-4 h-4" />
-          Mağazaya Dön
-        </Link>
+    <main className="min-h-screen bg-white">
+      <Navigation projects={projects} settings={settings} />
+      
+      <section className="pt-24 pb-16">
+        <div className="max-w-7xl mx-auto px-4 lg:px-8">
+          {/* Geri Butonu */}
+          <Link 
+            href="/shop" 
+            className="inline-flex items-center gap-2 text-neutral-500 hover:text-black transition-colors mb-8"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Mağazaya Dön</span>
+          </Link>
 
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
-          
-          {/* Sol: Fotoğraf Önizleme */}
-          <div>
-            {/* Ana Çerçeve Görseli */}
-            <div className="bg-neutral-100 flex items-center justify-center p-8 lg:p-12 rounded-lg">
-              
-              {/* Çerçeve - States Gallery Stili */}
-              <div 
-                className="relative"
-                style={{
-                  padding: '10px',
-                  backgroundColor: frameColor,
-                  boxShadow: `
-                    inset 2px 2px 0 0 rgba(255,255,255,0.15),
-                    inset -2px -2px 0 0 rgba(0,0,0,0.2),
-                    0 30px 60px -15px rgba(0,0,0,0.4),
-                    0 15px 30px -10px rgba(0,0,0,0.25)
-                  `,
-                }}
-              >
-                {/* Beyaz Passepartout */}
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
+            
+            {/* Sol: STATES GALLERY 3D ÇERÇEVE */}
+            <div className="relative">
+              <div className="sticky top-24">
                 <div 
-                  style={{
-                    padding: isPortrait ? '28px 22px' : '22px 28px',
-                    backgroundColor: '#fafafa',
-                    boxShadow: `
-                      inset 1px 1px 0 0 rgba(0,0,0,0.06),
-                      inset -1px -1px 0 0 rgba(255,255,255,0.95),
-                      inset 3px 3px 6px 0 rgba(0,0,0,0.03)
-                    `,
-                  }}
+                  className="bg-[#f5f5f5] flex items-center justify-center cursor-pointer relative group"
+                  style={{ minHeight: '550px' }}
+                  onClick={() => setLightboxOpen(true)}
                 >
-                  {/* Fotoğraf */}
+                  {/* Zoom icon */}
+                  <div className="absolute top-4 right-4 p-2 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <ZoomIn className="w-5 h-5" />
+                  </div>
+
                   <div 
-                    className="relative overflow-hidden"
-                    style={{
-                      width: isPortrait ? '280px' : '380px',
-                      height: isPortrait ? '380px' : '280px',
-                    }}
+                    className="relative transition-all duration-500"
+                    style={{ transform: `scale(${selectedSize.scale || 1})` }}
                   >
-                    <Image
-                      src={photo.url}
-                      alt={photo.title || ''}
-                      fill
-                      className="object-cover"
+                    {/* ===== DIŞ ÇERÇEVE ===== */}
+                    <div 
+                      style={{
+                        ...getFrameStyle(selectedFrame.color),
+                        padding: '12px',
+                        position: 'relative',
+                      }}
+                    >
+                      {/* ===== PASSEPARTOUT / MAT ===== */}
+                      <div 
+                        style={{ 
+                          background: selectedStyle === 'mat' ? '#ffffff' : 'transparent',
+                          padding: selectedStyle === 'mat' 
+                            ? (isPortrait ? '40px 35px' : '35px 40px') 
+                            : '0',
+                          position: 'relative',
+                          boxShadow: selectedStyle === 'mat' ? 'inset 0 0 15px rgba(0,0,0,0.04)' : 'none'
+                        }}
+                      >
+                        {/* ===== V-GROOVE / İÇ ÇİZGİ ===== */}
+                        {selectedStyle === 'mat' && (
+                          <div 
+                            style={{
+                              position: 'absolute',
+                              top: isPortrait ? '35px' : '30px',
+                              left: isPortrait ? '30px' : '35px',
+                              right: isPortrait ? '30px' : '35px',
+                              bottom: isPortrait ? '35px' : '30px',
+                              boxShadow: `
+                                inset 1px 1px 0 0 rgba(0,0,0,0.12),
+                                inset -1px -1px 0 0 rgba(255,255,255,0.9),
+                                inset 2px 2px 4px 0 rgba(0,0,0,0.06)
+                              `,
+                              pointerEvents: 'none'
+                            }}
+                          />
+                        )}
+                        
+                        {/* ===== FOTOĞRAF ===== */}
+                        <div 
+                          style={{
+                            width: `${photoWidth}px`,
+                            height: `${photoHeight}px`,
+                            position: 'relative',
+                            overflow: 'hidden',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                          }}
+                        >
+                          {product.photos?.url && (
+                            <Image
+                              src={product.photos.url}
+                              alt={product.title}
+                              fill
+                              className="object-cover"
+                              priority
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ===== ALT GÖLGE ===== */}
+                    <div 
+                      style={{
+                        position: 'absolute',
+                        bottom: '-18px',
+                        left: '8%',
+                        right: '8%',
+                        height: '25px',
+                        background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, transparent 70%)',
+                        filter: 'blur(4px)',
+                        zIndex: -1
+                      }}
                     />
                   </div>
                 </div>
+                
+                <p className="text-center text-sm text-neutral-400 mt-4">{selectedSize.dimensions}</p>
+              </div>
+            </div>
+
+            {/* Sağ: Satın Alma */}
+            <div className="lg:pt-4">
+              <h1 className="text-2xl lg:text-3xl font-light mb-2 tracking-wide">
+                {product.title.toUpperCase()}
+              </h1>
+              
+              <p className="text-neutral-500 mb-4">
+                {product.edition_type === 'limited' 
+                  ? `Sınırlı Baskı • ${product.edition_total} Adet`
+                  : 'Açık Edisyon'}
+              </p>
+
+              <div className="mb-8">
+                <p className="text-3xl font-medium">₺{formatPrice(calculatePrice())}</p>
+                <p className="text-sm text-neutral-400 mt-1">KDV dahil</p>
               </div>
 
-              {/* Alt Gölge */}
-              <div 
-                className="absolute bottom-4 left-1/2 -translate-x-1/2 w-2/3 h-6"
-                style={{
-                  background: 'radial-gradient(ellipse, rgba(0,0,0,0.15) 0%, transparent 70%)',
-                  filter: 'blur(5px)',
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Sağ: Ürün Bilgileri */}
-          <div>
-            {/* Sanatçı / Proje */}
-            <p className="text-xs text-neutral-400 uppercase tracking-wider mb-2">
-              {project?.title || 'Coşkun Dönge'}
-            </p>
-
-            {/* Başlık */}
-            <h1 className="text-3xl lg:text-4xl font-light mb-4">
-              {photo.title || product?.title || 'İsimsiz'}
-            </h1>
-
-            {/* Fiyat */}
-            <p className="text-2xl font-semibold mb-6">
-              ₺{calculatePrice().toLocaleString('tr-TR')}
-            </p>
-
-            {/* Açıklama */}
-            {product?.description && (
-              <p className="text-neutral-600 mb-8 leading-relaxed">
-                {product.description}
-              </p>
-            )}
-
-            {/* Boyut Seçimi */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium mb-3">Boyut</h3>
-              <div className="flex flex-wrap gap-2">
-                {sizeOptions.map((size) => (
+              {/* Stil */}
+              <div className="mb-8">
+                <h3 className="text-sm font-medium mb-3">
+                  Stil: <span className="font-normal text-neutral-500">{selectedStyle === 'mat' ? 'Mat' : 'Full Bleed'}</span>
+                </h3>
+                <div className="flex gap-3">
                   <button
-                    key={size.id}
-                    onClick={() => setSelectedSize(size.id)}
-                    className={`px-4 py-3 border rounded-lg transition-all ${
-                      selectedSize === size.id
-                        ? 'border-black bg-black text-white'
-                        : 'border-neutral-300 hover:border-neutral-400'
+                    onClick={() => setSelectedStyle('mat')}
+                    className={`px-6 py-2.5 border text-sm transition-all ${
+                      selectedStyle === 'mat' ? 'border-black bg-black text-white' : 'border-neutral-300 hover:border-black'
                     }`}
                   >
-                    <span className="block text-sm font-medium">{size.label}</span>
-                    {size.price > 0 && (
-                      <span className="block text-xs opacity-70">+₺{size.price.toLocaleString('tr-TR')}</span>
-                    )}
+                    Mat
                   </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Çerçeve Seçimi */}
-            <div className="mb-8">
-              <h3 className="text-sm font-medium mb-3">Çerçeve</h3>
-              <div className="flex gap-3">
-                {frameOptions.map((frame) => (
                   <button
-                    key={frame.id}
-                    onClick={() => setSelectedFrame(frame.id)}
-                    className={`flex flex-col items-center gap-2 p-3 border rounded-lg transition-all ${
-                      selectedFrame === frame.id
-                        ? 'border-black ring-1 ring-black'
-                        : 'border-neutral-300 hover:border-neutral-400'
+                    onClick={() => setSelectedStyle('fullbleed')}
+                    className={`px-6 py-2.5 border text-sm transition-all ${
+                      selectedStyle === 'fullbleed' ? 'border-black bg-black text-white' : 'border-neutral-300 hover:border-black'
                     }`}
                   >
-                    <div 
-                      className="w-10 h-10 rounded border border-neutral-200"
-                      style={{ backgroundColor: frame.color }}
-                    />
-                    <span className="text-xs">{frame.label}</span>
+                    Full Bleed
                   </button>
-                ))}
+                </div>
               </div>
-            </div>
 
-            {/* Sepete Ekle */}
-            <button
-              onClick={addToCart}
-              disabled={addedToCart}
-              className={`w-full py-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-                addedToCart
-                  ? 'bg-green-600 text-white'
-                  : 'bg-black hover:bg-neutral-800 text-white'
-              }`}
-            >
-              {addedToCart ? (
-                <>
-                  <Check className="w-5 h-5" />
-                  Sepete Eklendi!
-                </>
-              ) : (
-                <>
-                  <ShoppingBag className="w-5 h-5" />
-                  Sepete Ekle
-                </>
-              )}
-            </button>
+              {/* Boyut */}
+              <div className="mb-8">
+                <h3 className="text-sm font-medium mb-3">
+                  Boyut: <span className="font-normal text-neutral-500">{selectedSize.name}</span>
+                </h3>
+                <div className="space-y-2">
+                  {defaultSizes.map((size) => (
+                    <button
+                      key={size.id}
+                      onClick={() => setSelectedSize(size)}
+                      className={`w-full flex items-center justify-between px-4 py-3 border transition-all ${
+                        selectedSize.id === size.id ? 'border-black' : 'border-neutral-200 hover:border-neutral-400'
+                      }`}
+                    >
+                      <span className="font-medium text-sm">{size.name}</span>
+                      <span className="text-neutral-500 text-sm">{size.dimensions} — ₺{formatPrice(size.price)}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            {/* Ürün Detayları */}
-            <div className="mt-10 pt-8 border-t border-neutral-200">
-              <h3 className="text-sm font-medium mb-4">Ürün Detayları</h3>
-              <ul className="space-y-2 text-sm text-neutral-600">
-                <li>• Müze kalitesinde Giclée baskı</li>
-                <li>• Premium artist-grade kağıt</li>
-                <li>• Tru Vue Museum cam</li>
-                <li>• El yapımı çerçeve</li>
-                <li>• Asılmaya hazır teslim</li>
-                <li>• Sertifikalı orijinallik belgesi</li>
-              </ul>
-            </div>
+              {/* Çerçeve */}
+              <div className="mb-8">
+                <h3 className="text-sm font-medium mb-3">
+                  Çerçeve: <span className="font-normal text-neutral-500">{selectedFrame.name}</span>
+                  {selectedFrame.price > 0 && <span className="text-neutral-400"> (+₺{selectedFrame.price})</span>}
+                </h3>
+                <div className="flex gap-3">
+                  {defaultFrames.map((frame) => (
+                    <button
+                      key={frame.id}
+                      onClick={() => setSelectedFrame(frame)}
+                      className={`relative w-12 h-12 rounded-full transition-all ${
+                        selectedFrame.id === frame.id ? 'ring-2 ring-offset-2 ring-black scale-110' : 'hover:scale-105'
+                      }`}
+                      style={{ 
+                        backgroundColor: frame.color,
+                        border: frame.color === '#ffffff' ? '1px solid #e0e0e0' : 'none',
+                        boxShadow: '0 3px 10px rgba(0,0,0,0.15)'
+                      }}
+                    >
+                      {selectedFrame.id === frame.id && (
+                        <Check className={`absolute inset-0 m-auto w-5 h-5 ${
+                          frame.color === '#ffffff' || frame.color === '#c4a574' ? 'text-black' : 'text-white'
+                        }`} />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            {/* Kargo Bilgisi */}
-            <div className="mt-6 p-4 bg-neutral-50 rounded-lg">
-              <p className="text-sm text-neutral-600">
-                🚚 Ücretsiz kargo (2-3 iş günü) • 14 gün iade garantisi
-              </p>
+              <button className="flex items-center gap-2 text-sm text-neutral-600 hover:text-black mb-8">
+                <Ruler className="w-4 h-4" />
+                <span className="underline">Boyut Rehberi</span>
+              </button>
+
+              <button
+                onClick={handleAddToCart}
+                className="w-full py-4 bg-black text-white text-sm tracking-wide hover:bg-neutral-800 transition-colors mb-4"
+              >
+                Sepete Ekle — ₺{formatPrice(calculatePrice())}
+              </button>
+
+              <button 
+                onClick={() => setRoomPreviewOpen(true)}
+                className="w-full py-4 bg-neutral-100 text-sm hover:bg-neutral-200 transition-colors mb-4"
+              >
+                Odanda Görüntüle
+              </button>
+
+              <div className="mt-8 pt-8 border-t">
+                <h3 className="font-medium mb-4">Teknik Özellikler</h3>
+                <dl className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <dt className="text-neutral-500">Kağıt</dt>
+                    <dd>Hahnemühle Photo Rag 308gsm</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-neutral-500">Baskı</dt>
+                    <dd>Giclée (Arşivsel Pigment)</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-neutral-500">Çerçeve</dt>
+                    <dd>Masif Ahşap</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-neutral-500">Cam</dt>
+                    <dd>Müze Camı (UV Korumalı)</dd>
+                  </div>
+                </dl>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-    </div>
+      <Lightbox
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        imageUrl={product.photos?.url || ''}
+        title={product.title}
+      />
+
+      <RoomPreview
+        isOpen={roomPreviewOpen}
+        onClose={() => setRoomPreviewOpen(false)}
+        imageUrl={product.photos?.url || ''}
+        frameColor={selectedFrame.color}
+        size={selectedSize}
+      />
+
+      <Footer settings={settings} />
+    </main>
   );
 }

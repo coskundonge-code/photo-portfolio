@@ -200,8 +200,6 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
         )}
       </nav>
 
-      {/* Admin butonu kaldırıldı - Footer'da "Admin" linki var */}
-
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </>
