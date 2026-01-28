@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
@@ -55,6 +55,17 @@ export default function ShopPage() {
     loadData();
   }, []);
 
+  // Her tema için ürün sayısını hesapla
+  const themeCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: products.length };
+    themes.forEach(theme => {
+      if (theme.id !== 'all') {
+        counts[theme.id] = products.filter(p => (p as any).theme === theme.id).length;
+      }
+    });
+    return counts;
+  }, [products]);
+
   useEffect(() => {
     let result = [...products];
     if (selectedTheme !== 'all') {
@@ -94,7 +105,7 @@ export default function ShopPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white overflow-x-hidden">
       <Navigation projects={projects} settings={settings} />
       
       <section className="pt-24 pb-16">
@@ -187,7 +198,6 @@ export default function ShopPage() {
                             background: '#1a1a1a',
                             padding: '10px',
                             position: 'relative',
-                            // 3D Çerçeve efekti - üst ve sol kenar açık, alt ve sağ koyu
                             boxShadow: `
                               inset 1px 1px 0 0 #3a3a3a,
                               inset 2px 2px 0 0 #2a2a2a,
@@ -204,11 +214,10 @@ export default function ShopPage() {
                               background: '#ffffff',
                               padding: isPortrait ? '35px 30px' : '30px 35px',
                               position: 'relative',
-                              // Mat üzerinde hafif gölge
                               boxShadow: 'inset 0 0 10px rgba(0,0,0,0.03)'
                             }}
                           >
-                            {/* ===== V-GROOVE / İÇ ÇİZGİ - 3D Derinlik ===== */}
+                            {/* ===== V-GROOVE / İÇ ÇİZGİ ===== */}
                             <div 
                               style={{
                                 position: 'absolute',
@@ -216,7 +225,6 @@ export default function ShopPage() {
                                 left: isPortrait ? '25px' : '30px',
                                 right: isPortrait ? '25px' : '30px',
                                 bottom: isPortrait ? '30px' : '25px',
-                                // Çift çizgi ile 3D efekt - üst/sol gölge, alt/sağ highlight
                                 boxShadow: `
                                   inset 1px 1px 0 0 rgba(0,0,0,0.15),
                                   inset -1px -1px 0 0 rgba(255,255,255,0.8),
@@ -233,7 +241,6 @@ export default function ShopPage() {
                                 height: `${photoHeight}px`,
                                 position: 'relative',
                                 overflow: 'hidden',
-                                // Fotoğraf etrafında ince gölge
                                 boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
                               }}
                             >
@@ -284,11 +291,11 @@ export default function ShopPage() {
         </div>
       </section>
 
-      {/* Tema Filtre Paneli */}
+      {/* Tema Filtre Paneli - SAYILAR EKLENDİ */}
       {isFilterOpen && (
         <>
           <div className="fixed inset-0 bg-black/30 z-50" onClick={() => setIsFilterOpen(false)} />
-          <div className="fixed left-0 top-0 bottom-0 w-80 bg-white z-50 shadow-2xl">
+          <div className="fixed left-0 top-0 bottom-0 w-80 bg-white z-50 shadow-2xl overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-sm font-medium">TEMALAR</h2>
@@ -296,17 +303,25 @@ export default function ShopPage() {
               </div>
               
               <div className="space-y-1">
-                {themes.map((theme) => (
-                  <button
-                    key={theme.id}
-                    onClick={() => setSelectedTheme(theme.id)}
-                    className={`block w-full text-left px-4 py-3 text-sm ${
-                      selectedTheme === theme.id ? 'bg-black text-white' : 'hover:bg-neutral-100'
-                    }`}
-                  >
-                    {theme.label}
-                  </button>
-                ))}
+                {themes.map((theme) => {
+                  const count = themeCounts[theme.id] || 0;
+                  return (
+                    <button
+                      key={theme.id}
+                      onClick={() => setSelectedTheme(theme.id)}
+                      className={`block w-full text-left px-4 py-3 text-sm flex items-center justify-between ${
+                        selectedTheme === theme.id ? 'bg-black text-white' : 'hover:bg-neutral-100'
+                      }`}
+                    >
+                      <span>{theme.label}</span>
+                      <span className={`text-xs ${
+                        selectedTheme === theme.id ? 'text-white/70' : 'text-neutral-400'
+                      }`}>
+                        ({count})
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="mt-8 pt-6 border-t flex gap-3">

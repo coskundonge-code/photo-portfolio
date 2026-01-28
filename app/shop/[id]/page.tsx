@@ -74,7 +74,6 @@ export default function ProductPage() {
     return (selectedSize.price || product?.base_price || 0) + (selectedFrame.price || 0);
   };
 
-  // Çerçeve rengi için 3D efekt
   const getFrameStyle = (color: string) => {
     const isWhite = color === '#ffffff';
     const isLight = color === '#c4a574';
@@ -145,108 +144,106 @@ export default function ProductPage() {
             <span>Mağazaya Dön</span>
           </Link>
 
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-start">
             
-            {/* Sol: STATES GALLERY 3D ÇERÇEVE */}
-            <div className="relative">
-              <div className="sticky top-24">
-                <div 
-                  className="bg-[#f5f5f5] flex items-center justify-center cursor-pointer relative group"
-                  style={{ minHeight: '550px' }}
-                  onClick={() => setLightboxOpen(true)}
-                >
-                  {/* Zoom icon */}
-                  <div className="absolute top-4 right-4 p-2 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    <ZoomIn className="w-5 h-5" />
-                  </div>
+            {/* Sol: STATES GALLERY 3D ÇERÇEVE - sticky kaldırıldı, normal flow */}
+            <div className="relative lg:sticky lg:top-28 lg:self-start">
+              <div 
+                className="bg-[#f5f5f5] flex items-center justify-center cursor-pointer relative group"
+                style={{ minHeight: '450px' }}
+                onClick={() => setLightboxOpen(true)}
+              >
+                {/* Zoom icon */}
+                <div className="absolute top-4 right-4 p-2 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  <ZoomIn className="w-5 h-5" />
+                </div>
 
+                <div 
+                  className="relative transition-all duration-500"
+                  style={{ transform: `scale(${selectedSize.scale || 1})` }}
+                >
+                  {/* ===== DIŞ ÇERÇEVE ===== */}
                   <div 
-                    className="relative transition-all duration-500"
-                    style={{ transform: `scale(${selectedSize.scale || 1})` }}
+                    style={{
+                      ...getFrameStyle(selectedFrame.color),
+                      padding: '12px',
+                      position: 'relative',
+                    }}
                   >
-                    {/* ===== DIŞ ÇERÇEVE ===== */}
+                    {/* ===== PASSEPARTOUT / MAT ===== */}
                     <div 
-                      style={{
-                        ...getFrameStyle(selectedFrame.color),
-                        padding: '12px',
+                      style={{ 
+                        background: selectedStyle === 'mat' ? '#ffffff' : 'transparent',
+                        padding: selectedStyle === 'mat' 
+                          ? (isPortrait ? '40px 35px' : '35px 40px') 
+                          : '0',
                         position: 'relative',
+                        boxShadow: selectedStyle === 'mat' ? 'inset 0 0 15px rgba(0,0,0,0.04)' : 'none'
                       }}
                     >
-                      {/* ===== PASSEPARTOUT / MAT ===== */}
-                      <div 
-                        style={{ 
-                          background: selectedStyle === 'mat' ? '#ffffff' : 'transparent',
-                          padding: selectedStyle === 'mat' 
-                            ? (isPortrait ? '40px 35px' : '35px 40px') 
-                            : '0',
-                          position: 'relative',
-                          boxShadow: selectedStyle === 'mat' ? 'inset 0 0 15px rgba(0,0,0,0.04)' : 'none'
-                        }}
-                      >
-                        {/* ===== V-GROOVE / İÇ ÇİZGİ ===== */}
-                        {selectedStyle === 'mat' && (
-                          <div 
-                            style={{
-                              position: 'absolute',
-                              top: isPortrait ? '35px' : '30px',
-                              left: isPortrait ? '30px' : '35px',
-                              right: isPortrait ? '30px' : '35px',
-                              bottom: isPortrait ? '35px' : '30px',
-                              boxShadow: `
-                                inset 1px 1px 0 0 rgba(0,0,0,0.12),
-                                inset -1px -1px 0 0 rgba(255,255,255,0.9),
-                                inset 2px 2px 4px 0 rgba(0,0,0,0.06)
-                              `,
-                              pointerEvents: 'none'
-                            }}
-                          />
-                        )}
-                        
-                        {/* ===== FOTOĞRAF ===== */}
+                      {/* ===== V-GROOVE / İÇ ÇİZGİ ===== */}
+                      {selectedStyle === 'mat' && (
                         <div 
                           style={{
-                            width: `${photoWidth}px`,
-                            height: `${photoHeight}px`,
-                            position: 'relative',
-                            overflow: 'hidden',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                            position: 'absolute',
+                            top: isPortrait ? '35px' : '30px',
+                            left: isPortrait ? '30px' : '35px',
+                            right: isPortrait ? '30px' : '35px',
+                            bottom: isPortrait ? '35px' : '30px',
+                            boxShadow: `
+                              inset 1px 1px 0 0 rgba(0,0,0,0.12),
+                              inset -1px -1px 0 0 rgba(255,255,255,0.9),
+                              inset 2px 2px 4px 0 rgba(0,0,0,0.06)
+                            `,
+                            pointerEvents: 'none'
                           }}
-                        >
-                          {product.photos?.url && (
-                            <Image
-                              src={product.photos.url}
-                              alt={product.title}
-                              fill
-                              className="object-cover"
-                              priority
-                            />
-                          )}
-                        </div>
+                        />
+                      )}
+                      
+                      {/* ===== FOTOĞRAF ===== */}
+                      <div 
+                        style={{
+                          width: `${photoWidth}px`,
+                          height: `${photoHeight}px`,
+                          position: 'relative',
+                          overflow: 'hidden',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                        }}
+                      >
+                        {product.photos?.url && (
+                          <Image
+                            src={product.photos.url}
+                            alt={product.title}
+                            fill
+                            className="object-cover"
+                            priority
+                          />
+                        )}
                       </div>
                     </div>
-
-                    {/* ===== ALT GÖLGE ===== */}
-                    <div 
-                      style={{
-                        position: 'absolute',
-                        bottom: '-18px',
-                        left: '8%',
-                        right: '8%',
-                        height: '25px',
-                        background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, transparent 70%)',
-                        filter: 'blur(4px)',
-                        zIndex: -1
-                      }}
-                    />
                   </div>
+
+                  {/* ===== ALT GÖLGE ===== */}
+                  <div 
+                    style={{
+                      position: 'absolute',
+                      bottom: '-18px',
+                      left: '8%',
+                      right: '8%',
+                      height: '25px',
+                      background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, transparent 70%)',
+                      filter: 'blur(4px)',
+                      zIndex: -1
+                    }}
+                  />
                 </div>
-                
-                <p className="text-center text-sm text-neutral-400 mt-4">{selectedSize.dimensions}</p>
               </div>
+              
+              <p className="text-center text-sm text-neutral-400 mt-4">{selectedSize.dimensions}</p>
             </div>
 
-            {/* Sağ: Satın Alma */}
-            <div className="lg:pt-4">
+            {/* Sağ: Satın Alma - scroll edilebilir */}
+            <div className="lg:pt-0">
               <h1 className="text-2xl lg:text-3xl font-light mb-2 tracking-wide">
                 {product.title.toUpperCase()}
               </h1>
@@ -343,21 +340,22 @@ export default function ProductPage() {
                 <span className="underline">Boyut Rehberi</span>
               </button>
 
+              {/* SEPETE EKLE - Daha belirgin */}
               <button
                 onClick={handleAddToCart}
-                className="w-full py-4 bg-black text-white text-sm tracking-wide hover:bg-neutral-800 transition-colors mb-4"
+                className="w-full py-4 bg-black text-white text-sm tracking-wide hover:bg-neutral-800 transition-colors mb-4 font-medium"
               >
-                Sepete Ekle — ₺{formatPrice(calculatePrice())}
+                SEPETE EKLE — ₺{formatPrice(calculatePrice())}
               </button>
 
               <button 
                 onClick={() => setRoomPreviewOpen(true)}
-                className="w-full py-4 bg-neutral-100 text-sm hover:bg-neutral-200 transition-colors mb-4"
+                className="w-full py-4 bg-neutral-100 text-sm hover:bg-neutral-200 transition-colors mb-8"
               >
                 Odanda Görüntüle
               </button>
 
-              <div className="mt-8 pt-8 border-t">
+              <div className="pt-8 border-t">
                 <h3 className="font-medium mb-4">Teknik Özellikler</h3>
                 <dl className="space-y-3 text-sm">
                   <div className="flex justify-between">
@@ -383,6 +381,9 @@ export default function ProductPage() {
         </div>
       </section>
 
+      <Footer settings={settings} />
+
+      {/* Lightbox */}
       <Lightbox
         isOpen={lightboxOpen}
         onClose={() => setLightboxOpen(false)}
@@ -390,6 +391,7 @@ export default function ProductPage() {
         title={product.title}
       />
 
+      {/* Room Preview */}
       <RoomPreview
         isOpen={roomPreviewOpen}
         onClose={() => setRoomPreviewOpen(false)}
@@ -397,8 +399,6 @@ export default function ProductPage() {
         frameColor={selectedFrame.color}
         size={selectedSize}
       />
-
-      <Footer settings={settings} />
     </main>
   );
 }
