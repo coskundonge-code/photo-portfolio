@@ -135,7 +135,6 @@ export default function ProductPage() {
       
       <section className="pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
-          {/* Geri Butonu */}
           <Link 
             href="/shop" 
             className="inline-flex items-center gap-2 text-neutral-500 hover:text-black transition-colors mb-8"
@@ -153,12 +152,10 @@ export default function ProductPage() {
                 style={{ minHeight: '450px' }}
                 onClick={() => setLightboxOpen(true)}
               >
-                {/* Zoom icon */}
                 <div className="absolute top-4 right-4 p-2 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
                   <ZoomIn className="w-5 h-5" />
                 </div>
 
-                {/* Çerçeve */}
                 <div className="relative">
                   <div 
                     style={{
@@ -167,7 +164,6 @@ export default function ProductPage() {
                       position: 'relative',
                     }}
                   >
-                    {/* Dış Çerçeve */}
                     <div 
                       style={{ 
                         backgroundColor: selectedFrame.color,
@@ -176,7 +172,6 @@ export default function ProductPage() {
                         border: selectedFrame.color === '#ffffff' ? '1px solid #e5e5e5' : 'none'
                       }}
                     >
-                      {/* Mat */}
                       <div 
                         className={selectedStyle === 'mat' ? 'bg-white relative' : 'relative'}
                         style={{ 
@@ -185,7 +180,6 @@ export default function ProductPage() {
                             : '0' 
                         }}
                       >
-                        {/* 3D Çizgi */}
                         {selectedStyle === 'mat' && (
                           <div 
                             className="absolute pointer-events-none"
@@ -199,7 +193,6 @@ export default function ProductPage() {
                           />
                         )}
                         
-                        {/* Fotoğraf */}
                         <div 
                           className="relative overflow-hidden bg-neutral-100"
                           style={{
@@ -221,7 +214,6 @@ export default function ProductPage() {
                     </div>
                   </div>
 
-                  {/* Gölge */}
                   <div 
                     className="absolute -bottom-4 left-[10%] right-[10%] h-8 -z-10"
                     style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, transparent 70%)' }}
@@ -249,7 +241,6 @@ export default function ProductPage() {
                 <p className="text-sm text-neutral-400 mt-1">KDV dahil</p>
               </div>
 
-              {/* Stil */}
               <div className="mb-8">
                 <h3 className="text-sm font-medium mb-3">
                   Stil: <span className="font-normal text-neutral-500">{selectedStyle === 'mat' ? 'Mat' : 'Full Bleed'}</span>
@@ -274,7 +265,6 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              {/* Boyut */}
               <div className="mb-8">
                 <h3 className="text-sm font-medium mb-3">
                   Boyut: <span className="font-normal text-neutral-500">{selectedSize.name}</span>
@@ -295,7 +285,6 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              {/* Çerçeve */}
               <div className="mb-8">
                 <h3 className="text-sm font-medium mb-3">
                   Çerçeve: <span className="font-normal text-neutral-500">{selectedFrame.name}</span>
@@ -329,7 +318,6 @@ export default function ProductPage() {
                 <span className="underline">Boyut Rehberi</span>
               </button>
 
-              {/* SEPETE EKLE */}
               <button
                 onClick={handleAddToCart}
                 className="w-full py-4 bg-black text-white text-sm tracking-wide hover:bg-neutral-800 mb-4"
@@ -381,7 +369,6 @@ export default function ProductPage() {
 
       <Footer settings={settings} />
 
-      {/* Lightbox */}
       <Lightbox
         isOpen={lightboxOpen}
         onClose={() => setLightboxOpen(false)}
@@ -389,7 +376,6 @@ export default function ProductPage() {
         title={product.title}
       />
 
-      {/* Room Preview */}
       <RoomPreview
         isOpen={roomPreviewOpen}
         onClose={() => setRoomPreviewOpen(false)}

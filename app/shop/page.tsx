@@ -9,7 +9,6 @@ import { getSettings, getProjects, getProducts } from '@/lib/supabase';
 import { Settings, Project, Product } from '@/lib/types';
 import { Loader2, SlidersHorizontal, ChevronDown, X } from 'lucide-react';
 
-// Tema tanımları - HEM İngilizce ID hem Türkçe label
 const themes = [
   { id: 'all', label: 'Tümü', aliases: ['all', 'tümü', 'tumu', 'hepsi'] },
   { id: 'portrait', label: 'Portre', aliases: ['portrait', 'portre'] },
@@ -30,7 +29,6 @@ const sortOptions = [
 
 const formatPrice = (price: number) => price.toLocaleString('tr-TR');
 
-// Ürünün temasını normalize et (Türkçe/İngilizce farketmez)
 const normalizeTheme = (productTheme: string | undefined | null): string => {
   if (!productTheme) return '';
   const normalized = productTheme.toLowerCase().trim();
@@ -69,7 +67,6 @@ export default function ShopPage() {
     loadData();
   }, []);
 
-  // Her tema için ürün sayısını hesapla - TÜRKÇE/İNGİLİZCE FARKETMEZ
   const themeCounts = useMemo(() => {
     const counts: Record<string, number> = { all: products.length };
     
@@ -111,21 +108,14 @@ export default function ShopPage() {
     setFilteredProducts(result);
   }, [products, selectedTheme, sortBy]);
 
-  // FOTOĞRAF DİKEY Mİ KONTROL - KESİN ÇALIŞIYOR
   const isPhotoPortrait = (product: Product) => {
     const photo = product.photos;
     if (!photo) return false;
-    
-    // 1. Önce orientation field'ına bak
     if ((photo as any).orientation === 'portrait') return true;
     if ((photo as any).orientation === 'landscape') return false;
-    
-    // 2. Width/height varsa ona bak
     if ((photo as any).width && (photo as any).height) {
       return (photo as any).height > (photo as any).width;
     }
-    
-    // 3. Varsayılan yatay
     return false;
   };
 
@@ -144,7 +134,6 @@ export default function ShopPage() {
       <section className="pt-24 pb-16">
         <div className="max-w-[1800px] mx-auto px-4 lg:px-8">
           
-          {/* Header */}
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-neutral-200">
             <button 
               onClick={() => setIsFilterOpen(true)}
@@ -189,7 +178,6 @@ export default function ShopPage() {
 
           <p className="text-sm text-neutral-400 mb-8">{filteredProducts.length} eser gösteriliyor</p>
 
-          {/* Products Grid */}
           {filteredProducts.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-neutral-500">Bu kategoride eser bulunamadı.</p>
@@ -201,16 +189,9 @@ export default function ShopPage() {
                 const photo = product.photos;
                 const isPortrait = isPhotoPortrait(product);
                 
-<<<<<<< HEAD
-                const photoWidth = isPortrait ? 200 : 300;
-                const photoHeight = isPortrait ? 280 : 200;
-                const containerHeight = isPortrait ? 500 : 420;
-=======
-                // DİKEY FOTO İÇİN DİKEY ÇERÇEVE BOYUTLARI
                 const frameWidth = isPortrait ? 200 : 280;
                 const frameHeight = isPortrait ? 280 : 200;
                 const containerHeight = isPortrait ? 520 : 420;
->>>>>>> parent of b5b053e (3D çerçeve efekti + URL ile fotoğraf ekleme" git push)
                 
                 return (
                   <Link
@@ -220,85 +201,29 @@ export default function ShopPage() {
                     onMouseEnter={() => setHoveredProduct(product.id)}
                     onMouseLeave={() => setHoveredProduct(null)}
                   >
-<<<<<<< HEAD
-=======
-                    {/* Çerçeveli Önizleme */}
->>>>>>> parent of b5b053e (3D çerçeve efekti + URL ile fotoğraf ekleme" git push)
                     <div 
                       className="bg-[#e8e8e8] flex items-center justify-center"
                       style={{ minHeight: `${containerHeight}px` }}
                     >
-<<<<<<< HEAD
-                      <div 
-                        className={`relative transition-all duration-500 ease-out ${
-                          isHovered ? 'scale-[1.02]' : 'scale-100'
-                        }`}
-                      >
-=======
                       <div className={`relative transition-all duration-500 ${isHovered ? 'scale-[1.03]' : 'scale-100'}`}>
-                        {/* Dış Çerçeve - Siyah */}
->>>>>>> parent of b5b053e (3D çerçeve efekti + URL ile fotoğraf ekleme" git push)
                         <div 
                           className="relative bg-[#1a1a1a]"
                           style={{
-<<<<<<< HEAD
-                            background: '#1a1a1a',
-                            padding: '10px',
-                            position: 'relative',
-                            boxShadow: `
-                              inset 1px 1px 0 0 #3a3a3a,
-                              inset 2px 2px 0 0 #2a2a2a,
-                              inset -1px -1px 0 0 #0a0a0a,
-                              inset -2px -2px 0 0 #000000,
-                              0 20px 40px -10px rgba(0,0,0,0.4),
-                              0 10px 20px -5px rgba(0,0,0,0.2)
-                            `
-                          }}
-                        >
-=======
                             padding: '6px',
                             boxShadow: isHovered 
                               ? '0 30px 60px -10px rgba(0,0,0,0.5)'
                               : '0 20px 40px -10px rgba(0,0,0,0.4)'
                           }}
                         >
-                          {/* Mat - Beyaz (dikey için farklı padding) */}
->>>>>>> parent of b5b053e (3D çerçeve efekti + URL ile fotoğraf ekleme" git push)
                           <div 
                             className="bg-white relative"
                             style={{ 
-<<<<<<< HEAD
-                              background: '#ffffff',
-                              padding: isPortrait ? '35px 30px' : '30px 35px',
-                              position: 'relative',
-                              boxShadow: 'inset 0 0 10px rgba(0,0,0,0.03)'
-                            }}
-                          >
-=======
                               padding: isPortrait ? '20px 16px' : '16px 20px'
                             }}
                           >
-                            {/* 3D Derinlik Çizgisi */}
->>>>>>> parent of b5b053e (3D çerçeve efekti + URL ile fotoğraf ekleme" git push)
                             <div 
                               className="absolute pointer-events-none"
                               style={{
-<<<<<<< HEAD
-                                position: 'absolute',
-                                top: isPortrait ? '30px' : '25px',
-                                left: isPortrait ? '25px' : '30px',
-                                right: isPortrait ? '25px' : '30px',
-                                bottom: isPortrait ? '30px' : '25px',
-                                boxShadow: `
-                                  inset 1px 1px 0 0 rgba(0,0,0,0.15),
-                                  inset -1px -1px 0 0 rgba(255,255,255,0.8),
-                                  inset 2px 2px 3px 0 rgba(0,0,0,0.08)
-                                `,
-                                pointerEvents: 'none'
-                              }}
-                            />
-                            
-=======
                                 top: isPortrait ? '18px' : '14px',
                                 left: isPortrait ? '14px' : '18px',
                                 right: isPortrait ? '14px' : '18px',
@@ -307,21 +232,11 @@ export default function ShopPage() {
                               }}
                             />
                             
-                            {/* Fotoğraf - DİKEY İSE DİKEY, YATAY İSE YATAY */}
->>>>>>> parent of b5b053e (3D çerçeve efekti + URL ile fotoğraf ekleme" git push)
                             <div 
                               className="relative overflow-hidden bg-neutral-100"
                               style={{
-<<<<<<< HEAD
-                                width: `${photoWidth}px`,
-                                height: `${photoHeight}px`,
-                                position: 'relative',
-                                overflow: 'hidden',
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-=======
                                 width: `${frameWidth}px`,
                                 height: `${frameHeight}px`,
->>>>>>> parent of b5b053e (3D çerçeve efekti + URL ile fotoğraf ekleme" git push)
                               }}
                             >
                               {photo?.url && (
@@ -337,10 +252,6 @@ export default function ShopPage() {
                           </div>
                         </div>
 
-<<<<<<< HEAD
-=======
-                        {/* Alt Gölge */}
->>>>>>> parent of b5b053e (3D çerçeve efekti + URL ile fotoğraf ekleme" git push)
                         <div 
                           className={`absolute -bottom-3 left-[15%] right-[15%] h-6 -z-10 transition-opacity ${
                             isHovered ? 'opacity-50' : 'opacity-30'
@@ -350,17 +261,8 @@ export default function ShopPage() {
                       </div>
                     </div>
 
-<<<<<<< HEAD
-                    <div className="mt-6 text-left">
-                      <p className="text-xs text-neutral-400 uppercase tracking-wider mb-1">
-                        {product.edition_type === 'limited' ? 'Sınırlı Baskı' : 'Açık Edisyon'}
-                      </p>
-                      <h3 className="text-sm font-medium tracking-wide group-hover:opacity-70 transition-opacity">
-=======
-                    {/* Ürün Bilgileri */}
                     <div className="mt-5 text-center">
                       <h3 className="text-sm font-medium tracking-wide group-hover:opacity-70">
->>>>>>> parent of b5b053e (3D çerçeve efekti + URL ile fotoğraf ekleme" git push)
                         {product.title.toUpperCase()}
                       </h3>
                       <p className="text-sm mt-2">₺{formatPrice(product.base_price)}'den başlayan</p>
@@ -373,7 +275,6 @@ export default function ShopPage() {
         </div>
       </section>
 
-      {/* Tema Filtre Paneli - SAYILAR ÇALIŞIYOR */}
       {isFilterOpen && (
         <>
           <div className="fixed inset-0 bg-black/30 z-50" onClick={() => setIsFilterOpen(false)} />
