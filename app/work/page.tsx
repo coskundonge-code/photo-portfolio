@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -11,7 +11,8 @@ import { getSettings, getProjects, getPhotos } from '@/lib/supabase';
 import { Settings, Project, Photo } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 
-export default function WorkPage() {
+// Ana içerik bileşeni - useSearchParams burada
+function WorkContent() {
   const searchParams = useSearchParams();
   const projectParam = searchParams.get('project');
   
@@ -168,5 +169,23 @@ export default function WorkPage() {
         />
       )}
     </main>
+  );
+}
+
+// Loading fallback
+function WorkLoading() {
+  return (
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
+    </div>
+  );
+}
+
+// Ana sayfa bileşeni - Suspense boundary ile sarılı
+export default function WorkPage() {
+  return (
+    <Suspense fallback={<WorkLoading />}>
+      <WorkContent />
+    </Suspense>
   );
 }
