@@ -97,10 +97,10 @@ export default function AdminProductsPage() {
       photo_id: product.photo_id || '',
       title: product.title || '',
       description: product.description || '',
-      price: product.price,
+      price: (product as any).price || 2950,
       sizes: (product as any).sizes || ['small', 'medium', 'large'],
       frames: (product as any).frames || ['black', 'white', 'natural'],
-      in_stock: product.in_stock,
+      in_stock: (product as any).in_stock ?? true,
       project_id: photo?.project_id || '',
       theme: (photo as any)?.theme || '',
       orientation: (photo as any)?.orientation || 'landscape',
@@ -250,9 +250,9 @@ export default function AdminProductsPage() {
 
                 {/* Fiyat */}
                 <div className="text-right">
-                  <p className="text-white font-semibold">₺{product.price.toLocaleString('tr-TR')}</p>
-                  <p className={`text-xs ${product.in_stock ? 'text-green-500' : 'text-red-500'}`}>
-                    {product.in_stock ? 'Stokta' : 'Tükendi'}
+                  <p className="text-white font-semibold">₺{((product as any).price || 0).toLocaleString('tr-TR')}</p>
+                  <p className={`text-xs ${(product as any).in_stock !== false ? 'text-green-500' : 'text-red-500'}`}>
+                    {(product as any).in_stock !== false ? 'Stokta' : 'Tükendi'}
                   </p>
                 </div>
 

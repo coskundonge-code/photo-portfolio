@@ -54,7 +54,7 @@ export default function ShopPage() {
   // Fotoğrafın fiyatını bul
   const getPhotoPrice = (photoId: string) => {
     const product = products.find(p => p.photo_id === photoId);
-    return product?.price || 2950;
+    return (product as any)?.price || 2950;
   };
 
   // Fotoğrafın sanatçı adını bul (proje adı kullan)

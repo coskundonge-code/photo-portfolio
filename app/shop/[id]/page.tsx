@@ -64,7 +64,7 @@ export default function ShopDetailPage() {
   }, [photoId]);
 
   const calculatePrice = () => {
-    const basePrice = product?.price || 2950;
+    const basePrice = (product as any)?.price || 2950;
     const sizePrice = sizeOptions.find(s => s.id === selectedSize)?.price || 0;
     return basePrice + sizePrice;
   };
