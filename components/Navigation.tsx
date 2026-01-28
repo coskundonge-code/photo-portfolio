@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, User, ShoppingBag, ChevronDown, Settings } from 'lucide-react';
+import { Menu, X, User, ShoppingBag, ChevronDown } from 'lucide-react';
 import { Settings as SettingsType, Project } from '@/lib/types';
 import CartDrawer from './CartDrawer';
 import AuthModal from './AuthModal';
@@ -200,14 +200,7 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
         )}
       </nav>
 
-      {/* Admin Butonu - Sağ Alt */}
-      <Link
-        href="/admin"
-        className="fixed bottom-6 right-6 z-50 p-3 bg-black text-white rounded-full shadow-lg hover:bg-neutral-800 transition-colors"
-        title="Admin Panel"
-      >
-        <Settings className="w-5 h-5" />
-      </Link>
+      {/* Admin butonu kaldırıldı - Footer'da "Admin" linki var */}
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />

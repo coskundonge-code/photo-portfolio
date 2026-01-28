@@ -2,68 +2,46 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { 
-  Loader2, Plus, Edit2, Trash2, X, Check, 
-  ImageIcon, DollarSign, Package 
-} from 'lucide-react';
-import { 
-  getProducts, 
-  getPhotos,
-  createProduct, 
-  updateProduct, 
-  deleteProduct 
-} from '@/lib/supabase';
-import { Product, Photo } from '@/lib/types';
+import { Loader2, Plus, Edit2, Trash2, X, Package, AlertCircle, CheckCircle } from 'lucide-react';
+import { getPhotos, getProducts, getProjects, createProduct, updateProduct, deleteProduct } from '@/lib/supabase';
+import { Photo, Product, Project } from '@/lib/types';
 
-// Tema seçenekleri
-const themeOptions = [
-  { id: 'portrait', label: 'Portre' },
-  { id: 'landscape', label: 'Manzara' },
-  { id: 'street', label: 'Sokak' },
-  { id: 'nature', label: 'Doğa' },
-  { id: 'blackwhite', label: 'Siyah Beyaz' },
-  { id: 'travel', label: 'Seyahat' },
-  { id: 'documentary', label: 'Belgesel' },
+const sizeOptions = [
+  { id: 'small', label: 'Küçük (30x40cm)', priceMultiplier: 1 },
+  { id: 'medium', label: 'Orta (50x70cm)', priceMultiplier: 1.5 },
+  { id: 'large', label: 'Büyük (70x100cm)', priceMultiplier: 2 },
 ];
 
-// Varsayılan boyutlar
-const defaultSizes = [
-  { name: 'Compact', dimensions: '42x37cm', price: 1500 },
-  { name: 'Regular', dimensions: '52x42cm', price: 2500 },
-  { name: 'Classical', dimensions: '63x52cm', price: 3500 },
+const frameOptions = [
+  { id: 'black', label: 'Siyah Çerçeve' },
+  { id: 'white', label: 'Beyaz Çerçeve' },
+  { id: 'natural', label: 'Doğal Ahşap' },
+  { id: 'none', label: 'Çerçevesiz' },
 ];
-
-const formatPrice = (price: number) => {
-  return price.toLocaleString('tr-TR');
-};
-
-const parsePrice = (value: string) => {
-  return parseInt(value.replace(/\./g, '').replace(/,/g, '')) || 0;
-};
 
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [isPhotoPickerOpen, setIsPhotoPickerOpen] = useState(false);
-  
-  // Form state
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     photo_id: '',
     title: '',
     description: '',
-    story: '',
+    price: 2950,
+    sizes: ['small', 'medium', 'large'],
+    frames: ['black', 'white', 'natural'],
+    in_stock: true,
+    // Fotoğraftan gelen bilgiler
+    project_id: '',
     theme: '',
-    base_price: 1500,
-    edition_type: 'open' as 'open' | 'limited',
-    edition_total: 50,
-    edition_sold: 0,
-    is_available: true,
-    paper_type: 'Hahnemühle Photo Rag 308gsm',
-    print_method: 'Giclée (Arşivsel Pigment)',
-    sizes: defaultSizes,
+    orientation: 'landscape',
   });
 
   useEffect(() => {
@@ -71,12 +49,18 @@ export default function AdminProductsPage() {
   }, []);
 
   const loadData = async () => {
-    const [productsData, photosData] = await Promise.all([
-      getProducts(),
-      getPhotos()
-    ]);
-    setProducts(productsData);
-    setPhotos(photosData);
+    try {
+      const [photosData, productsData, projectsData] = await Promise.all([
+        getPhotos(),
+        getProducts(),
+        getProjects()
+      ]);
+      setPhotos(photosData);
+      setProducts(productsData);
+      setProjects(projectsData);
+    } catch (err) {
+      console.error('Veri yükleme hatası:', err);
+    }
     setLoading(false);
   };
 
@@ -85,18 +69,17 @@ export default function AdminProductsPage() {
       photo_id: '',
       title: '',
       description: '',
-      story: '',
+      price: 2950,
+      sizes: ['small', 'medium', 'large'],
+      frames: ['black', 'white', 'natural'],
+      in_stock: true,
+      project_id: '',
       theme: '',
-      base_price: 1500,
-      edition_type: 'open',
-      edition_total: 50,
-      edition_sold: 0,
-      is_available: true,
-      paper_type: 'Hahnemühle Photo Rag 308gsm',
-      print_method: 'Giclée (Arşivsel Pigment)',
-      sizes: defaultSizes,
+      orientation: 'landscape',
     });
     setEditingProduct(null);
+    setError(null);
+    setSuccess(null);
   };
 
   const openCreateModal = () => {
@@ -106,54 +89,85 @@ export default function AdminProductsPage() {
 
   const openEditModal = (product: Product) => {
     setEditingProduct(product);
+    
+    // Fotoğraftan bilgileri al
+    const photo = photos.find(p => p.id === product.photo_id);
+    
     setFormData({
       photo_id: product.photo_id || '',
-      title: product.title,
+      title: product.title || '',
       description: product.description || '',
-      story: (product as any).story || '',
-      theme: (product as any).theme || '',
-      base_price: product.base_price,
-      edition_type: product.edition_type,
-      edition_total: product.edition_total || 50,
-      edition_sold: product.edition_sold || 0,
-      is_available: product.is_available,
-      paper_type: (product as any).paper_type || 'Hahnemühle Photo Rag 308gsm',
-      print_method: (product as any).print_method || 'Giclée (Arşivsel Pigment)',
-      sizes: defaultSizes,
+      price: product.price,
+      sizes: (product as any).sizes || ['small', 'medium', 'large'],
+      frames: (product as any).frames || ['black', 'white', 'natural'],
+      in_stock: product.in_stock,
+      project_id: photo?.project_id || '',
+      theme: (photo as any)?.theme || '',
+      orientation: (photo as any)?.orientation || 'landscape',
     });
+    setError(null);
     setIsModalOpen(true);
+  };
+
+  // FOTOĞRAF SEÇİLDİĞİNDE BİLGİLERİ OTOMATİK GETİR
+  const handlePhotoSelect = (photoId: string) => {
+    const photo = photos.find(p => p.id === photoId);
+    
+    if (photo) {
+      setFormData(prev => ({
+        ...prev,
+        photo_id: photoId,
+        title: photo.title || prev.title,
+        project_id: photo.project_id || '',
+        theme: (photo as any).theme || '',
+        orientation: (photo as any).orientation || 'landscape',
+      }));
+      setSuccess('Fotoğraf bilgileri otomatik yüklendi!');
+      setTimeout(() => setSuccess(null), 2000);
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        photo_id: photoId,
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const productData: any = {
-      title: formData.title,
-      description: formData.description,
-      story: formData.story,
-      theme: formData.theme,
-      base_price: formData.base_price,
-      edition_type: formData.edition_type,
-      edition_total: formData.edition_type === 'limited' ? formData.edition_total : null,
-      edition_sold: formData.edition_sold,
-      is_available: formData.is_available,
-      paper_type: formData.paper_type,
-      print_method: formData.print_method,
-    };
+    setError(null);
+    setSaving(true);
 
-    if (formData.photo_id) {
-      productData.photo_id = formData.photo_id;
+    if (!formData.photo_id) {
+      setError('Lütfen bir fotoğraf seçin.');
+      setSaving(false);
+      return;
     }
 
-    if (editingProduct) {
-      await updateProduct(editingProduct.id, productData);
-    } else {
-      await createProduct(productData);
+    try {
+      const productData: any = {
+        photo_id: formData.photo_id,
+        title: formData.title,
+        description: formData.description,
+        price: formData.price,
+        sizes: formData.sizes,
+        frames: formData.frames,
+        in_stock: formData.in_stock,
+      };
+
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, productData);
+      } else {
+        await createProduct(productData);
+      }
+
+      setIsModalOpen(false);
+      resetForm();
+      await loadData();
+    } catch (err: any) {
+      setError(err.message || 'Kaydetme başarısız oldu.');
     }
 
-    setIsModalOpen(false);
-    resetForm();
-    await loadData();
+    setSaving(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -163,13 +177,18 @@ export default function AdminProductsPage() {
     }
   };
 
-  const updateSizePrice = (index: number, price: number) => {
-    const newSizes = [...formData.sizes];
-    newSizes[index].price = price;
-    setFormData({ ...formData, sizes: newSizes });
+  // Fotoğrafın proje adını bul
+  const getProjectName = (projectId: string) => {
+    return projects.find(p => p.id === projectId)?.title || '-';
   };
 
-  const selectedPhoto = photos.find(p => p.id === formData.photo_id);
+  // Zaten ürün olan fotoğrafları filtrele
+  const availablePhotos = photos.filter(photo => {
+    if (editingProduct) {
+      return !products.some(p => p.photo_id === photo.id && p.id !== editingProduct.id);
+    }
+    return !products.some(p => p.photo_id === photo.id);
+  });
 
   if (loading) {
     return (
@@ -192,7 +211,7 @@ export default function AdminProductsPage() {
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
         >
           <Plus className="w-5 h-5" />
-          <span>Yeni Ürün</span>
+          <span>Ürün Ekle</span>
         </button>
       </div>
 
@@ -207,75 +226,61 @@ export default function AdminProductsPage() {
         </div>
       ) : (
         <div className="grid gap-4">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 flex items-center gap-4"
-            >
-              {/* Görsel */}
-              <div className="relative w-20 h-20 bg-neutral-800 rounded-lg overflow-hidden flex-shrink-0">
-                {product.photos?.url ? (
-                  <Image src={product.photos.url} alt={product.title} fill className="object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ImageIcon className="w-8 h-8 text-neutral-600" />
+          {products.map((product) => {
+            const photo = photos.find(p => p.id === product.photo_id);
+            
+            return (
+              <div key={product.id} className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 flex items-center gap-4">
+                {/* Fotoğraf */}
+                {photo && (
+                  <div className="w-20 h-20 relative rounded-lg overflow-hidden flex-shrink-0">
+                    <Image src={photo.url} alt={product.title || ''} fill className="object-cover" />
                   </div>
                 )}
-              </div>
 
-              {/* Bilgiler */}
-              <div className="flex-1 min-w-0">
-                <h3 className="text-white font-medium truncate">{product.title}</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  {(product as any).theme && (
-                    <span className="px-2 py-0.5 bg-neutral-800 text-xs text-neutral-400 rounded">
-                      {themeOptions.find(t => t.id === (product as any).theme)?.label || (product as any).theme}
-                    </span>
-                  )}
-                  <span className="text-sm text-neutral-500">
-                    {product.edition_type === 'limited' 
-                      ? `Sınırlı ${product.edition_total}`
-                      : 'Açık Edisyon'}
-                  </span>
+                {/* Bilgiler */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-white font-medium truncate">{product.title || 'İsimsiz'}</h3>
+                  <p className="text-neutral-500 text-sm truncate">{product.description || '-'}</p>
+                  <div className="flex items-center gap-4 mt-1 text-xs text-neutral-400">
+                    <span>Proje: {photo?.project_id ? getProjectName(photo.project_id) : '-'}</span>
+                    <span>Tema: {(photo as any)?.theme || '-'}</span>
+                  </div>
                 </div>
-                <p className="text-blue-400 font-medium mt-1">
-                  ₺{formatPrice(product.base_price)}'dan
-                </p>
-              </div>
 
-              {/* Durum */}
-              <div className="flex items-center gap-2 px-3 py-1 bg-neutral-800 rounded-full">
-                <span className={`w-2 h-2 rounded-full ${product.is_available ? 'bg-green-500' : 'bg-red-500'}`} />
-                <span className="text-sm text-neutral-400">
-                  {product.is_available ? 'Satışta' : 'Pasif'}
-                </span>
-              </div>
+                {/* Fiyat */}
+                <div className="text-right">
+                  <p className="text-white font-semibold">₺{product.price.toLocaleString('tr-TR')}</p>
+                  <p className={`text-xs ${product.in_stock ? 'text-green-500' : 'text-red-500'}`}>
+                    {product.in_stock ? 'Stokta' : 'Tükendi'}
+                  </p>
+                </div>
 
-              {/* Aksiyonlar */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => openEditModal(product)}
-                  className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
-                >
-                  <Edit2 className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => handleDelete(product.id)}
-                  className="p-2 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition-colors"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
+                {/* Aksiyonlar */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => openEditModal(product)}
+                    className="p-2 hover:bg-neutral-800 rounded-lg transition-colors"
+                  >
+                    <Edit2 className="w-5 h-5 text-neutral-400" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(product.id)}
+                    className="p-2 hover:bg-red-900/30 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* Modal */}
+      {/* MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-start justify-center overflow-y-auto py-8">
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-3xl mx-4">
-            {/* Header */}
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-neutral-800">
               <h2 className="text-xl font-semibold text-white">
                 {editingProduct ? 'Ürün Düzenle' : 'Yeni Ürün'}
@@ -285,150 +290,161 @@ export default function AdminProductsPage() {
               </button>
             </div>
 
-            {/* Form */}
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               
+              {/* Hata Mesajı */}
+              {error && (
+                <div className="flex items-start gap-3 p-4 bg-red-900/30 border border-red-800 rounded-lg">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                  <p className="text-red-400 text-sm">{error}</p>
+                </div>
+              )}
+
+              {/* Başarı Mesajı */}
+              {success && (
+                <div className="flex items-start gap-3 p-4 bg-green-900/30 border border-green-800 rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                  <p className="text-green-400 text-sm">{success}</p>
+                </div>
+              )}
+
               {/* Fotoğraf Seçimi */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">Fotoğraf</label>
-                <button
-                  type="button"
-                  onClick={() => setIsPhotoPickerOpen(true)}
-                  className="w-full border-2 border-dashed border-neutral-700 rounded-lg p-4 hover:border-neutral-600 transition-colors"
-                >
-                  {selectedPhoto ? (
-                    <div className="flex items-center gap-4">
-                      <div className="relative w-24 h-24 rounded-lg overflow-hidden">
-                        <Image src={selectedPhoto.url} alt="" fill className="object-cover" />
-                      </div>
-                      <div className="text-left">
-                        <p className="text-white">{selectedPhoto.title || 'Başlıksız'}</p>
-                        <p className="text-sm text-neutral-500">Değiştirmek için tıkla</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-4">
-                      <ImageIcon className="w-10 h-10 text-neutral-600 mx-auto mb-2" />
-                      <p className="text-neutral-500">Fotoğraf seçmek için tıkla</p>
-                    </div>
-                  )}
-                </button>
-              </div>
-
-              {/* Ürün Adı */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">Ürün Adı</label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  required
-                />
-              </div>
-
-              {/* Tema Seçimi */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">Tema (Filtre için)</label>
-                <select
-                  value={formData.theme}
-                  onChange={(e) => setFormData({ ...formData, theme: e.target.value })}
-                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                >
-                  <option value="">Tema seçin...</option>
-                  {themeOptions.map((theme) => (
-                    <option key={theme.id} value={theme.id}>{theme.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Açıklama */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">Kısa Açıklama</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  rows={2}
-                />
-              </div>
-
-              {/* Hikaye */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">Hikaye / Sanatçı Notu</label>
-                <textarea
-                  value={formData.story}
-                  onChange={(e) => setFormData({ ...formData, story: e.target.value })}
-                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  rows={4}
-                  placeholder="Bu fotoğrafın hikayesini anlatın..."
-                />
-              </div>
-
-              {/* Boyut & Fiyatlar */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-4">
-                  <DollarSign className="w-4 h-4 inline mr-1" />
-                  Boyut & Fiyatlar
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  Fotoğraf Seç
+                  <span className="text-neutral-500 ml-2 font-normal">(Çalışma ve Tema otomatik gelir)</span>
                 </label>
-                <div className="space-y-3">
-                  {formData.sizes.map((size, index) => (
-                    <div key={index} className="flex items-center gap-4 p-4 bg-neutral-800 rounded-lg">
-                      <div className="flex-1">
-                        <p className="text-white font-medium">{size.name}</p>
-                        <p className="text-sm text-neutral-500">{size.dimensions}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-neutral-400">₺</span>
-                        <input
-                          type="text"
-                          value={formatPrice(size.price)}
-                          onChange={(e) => updateSizePrice(index, parsePrice(e.target.value))}
-                          className="w-28 px-3 py-2 bg-neutral-700 border border-neutral-600 rounded text-white text-right"
-                        />
-                      </div>
-                    </div>
+                <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 bg-neutral-800 rounded-lg">
+                  {availablePhotos.map((photo) => (
+                    <button
+                      key={photo.id}
+                      type="button"
+                      onClick={() => handlePhotoSelect(photo.id)}
+                      className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                        formData.photo_id === photo.id 
+                          ? 'border-blue-500 ring-2 ring-blue-500/50' 
+                          : 'border-transparent hover:border-neutral-600'
+                      }`}
+                    >
+                      <Image src={photo.url} alt={photo.title || ''} fill className="object-cover" />
+                    </button>
                   ))}
                 </div>
-              </div>
-
-              {/* Edisyon */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-300 mb-2">Edisyon Tipi</label>
-                  <select
-                    value={formData.edition_type}
-                    onChange={(e) => setFormData({ ...formData, edition_type: e.target.value as 'open' | 'limited' })}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white"
-                  >
-                    <option value="open">Açık Edisyon</option>
-                    <option value="limited">Sınırlı Sayıda</option>
-                  </select>
-                </div>
-                {formData.edition_type === 'limited' && (
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-300 mb-2">Toplam Adet</label>
-                    <input
-                      type="number"
-                      value={formData.edition_total}
-                      onChange={(e) => setFormData({ ...formData, edition_total: parseInt(e.target.value) || 0 })}
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white"
-                      min={1}
-                    />
+                
+                {/* Seçilen fotoğrafın bilgileri */}
+                {formData.photo_id && (
+                  <div className="mt-3 p-3 bg-neutral-800/50 rounded-lg">
+                    <p className="text-xs text-neutral-500 mb-2">Fotoğraftan gelen bilgiler:</p>
+                    <div className="flex flex-wrap gap-3 text-sm">
+                      <span className="px-2 py-1 bg-neutral-700 rounded text-neutral-300">
+                        Çalışma: {formData.project_id ? getProjectName(formData.project_id) : 'Yok'}
+                      </span>
+                      <span className="px-2 py-1 bg-neutral-700 rounded text-neutral-300">
+                        Tema: {formData.theme || 'Yok'}
+                      </span>
+                      <span className="px-2 py-1 bg-neutral-700 rounded text-neutral-300">
+                        Yön: {formData.orientation === 'portrait' ? 'Dikey' : 'Yatay'}
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* Satışta */}
+              {/* Başlık */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Ürün Başlığı</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="Ürün adı"
+                />
+              </div>
+
+              {/* Açıklama */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Açıklama</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                  placeholder="Ürün açıklaması"
+                />
+              </div>
+
+              {/* Fiyat */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Başlangıç Fiyatı (₺)</label>
+                <input
+                  type="number"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) || 0 })}
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  min="0"
+                  step="50"
+                />
+              </div>
+
+              {/* Boyutlar */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Mevcut Boyutlar</label>
+                <div className="flex flex-wrap gap-2">
+                  {sizeOptions.map((size) => (
+                    <label key={size.id} className="flex items-center gap-2 px-3 py-2 bg-neutral-800 rounded-lg cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.sizes.includes(size.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData({ ...formData, sizes: [...formData.sizes, size.id] });
+                          } else {
+                            setFormData({ ...formData, sizes: formData.sizes.filter(s => s !== size.id) });
+                          }
+                        }}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm text-neutral-300">{size.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Çerçeveler */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Mevcut Çerçeveler</label>
+                <div className="flex flex-wrap gap-2">
+                  {frameOptions.map((frame) => (
+                    <label key={frame.id} className="flex items-center gap-2 px-3 py-2 bg-neutral-800 rounded-lg cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.frames.includes(frame.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData({ ...formData, frames: [...formData.frames, frame.id] });
+                          } else {
+                            setFormData({ ...formData, frames: formData.frames.filter(f => f !== frame.id) });
+                          }
+                        }}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm text-neutral-300">{frame.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Stok Durumu */}
               <div className="flex items-center gap-3">
                 <input
                   type="checkbox"
-                  id="is_available"
-                  checked={formData.is_available}
-                  onChange={(e) => setFormData({ ...formData, is_available: e.target.checked })}
-                  className="w-5 h-5 rounded bg-neutral-800 border-neutral-700"
+                  id="in_stock"
+                  checked={formData.in_stock}
+                  onChange={(e) => setFormData({ ...formData, in_stock: e.target.checked })}
+                  className="w-5 h-5 rounded"
                 />
-                <label htmlFor="is_available" className="text-neutral-300">Satışta</label>
+                <label htmlFor="in_stock" className="text-neutral-300">Stokta mevcut</label>
               </div>
 
               {/* Butonlar */}
@@ -442,49 +458,14 @@ export default function AdminProductsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  disabled={saving || !formData.photo_id}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:bg-neutral-600 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  {editingProduct ? 'Güncelle' : 'Oluştur'}
+                  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {editingProduct ? 'Güncelle' : 'Kaydet'}
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Fotoğraf Seçici */}
-      {isPhotoPickerOpen && (
-        <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4">
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-4xl max-h-[80vh] overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-neutral-800">
-              <h3 className="text-lg font-medium text-white">Fotoğraf Seç</h3>
-              <button onClick={() => setIsPhotoPickerOpen(false)} className="text-neutral-400 hover:text-white">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="p-4 overflow-y-auto max-h-[60vh]">
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {photos.map((photo) => (
-                  <button
-                    key={photo.id}
-                    onClick={() => {
-                      setFormData({ ...formData, photo_id: photo.id });
-                      setIsPhotoPickerOpen(false);
-                    }}
-                    className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                      formData.photo_id === photo.id ? 'border-blue-500' : 'border-transparent hover:border-neutral-600'
-                    }`}
-                  >
-                    <Image src={photo.url} alt="" fill className="object-cover" />
-                    {formData.photo_id === photo.id && (
-                      <div className="absolute inset-0 bg-blue-500/30 flex items-center justify-center">
-                        <Check className="w-8 h-8 text-white" />
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       )}
