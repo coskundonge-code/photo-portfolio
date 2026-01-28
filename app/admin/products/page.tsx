@@ -7,7 +7,7 @@ import { supabase, getPhotos } from '@/lib/supabase';
 
 interface Photo {
   id: string;
-  title: string;
+  title?: string;
   url: string;
   project_id?: string;
 }
