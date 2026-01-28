@@ -6,8 +6,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { getPhotos, getProducts, getProjects } from '@/lib/supabase';
 import { Photo, Product, Project } from '@/lib/types';
-import { Loader2, ArrowLeft, ShoppingBag, Check, Eye } from 'lucide-react';
-import RoomPreview from '@/components/RoomPreview';
+import { Loader2, ArrowLeft, ShoppingBag, Check } from 'lucide-react';
 
 const sizeOptions = [
   { id: 'small', label: '30x40 cm', price: 0 },
@@ -32,7 +31,6 @@ export default function ShopDetailPage() {
   
   const [selectedSize, setSelectedSize] = useState('small');
   const [selectedFrame, setSelectedFrame] = useState('black');
-  const [showRoomPreview, setShowRoomPreview] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
 
   useEffect(() => {
@@ -190,15 +188,6 @@ export default function ShopDetailPage() {
                 }}
               />
             </div>
-
-            {/* Odada Görüntüle Butonu */}
-            <button
-              onClick={() => setShowRoomPreview(true)}
-              className="mt-4 w-full flex items-center justify-center gap-2 py-3 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors"
-            >
-              <Eye className="w-5 h-5" />
-              Odada Görüntüle
-            </button>
           </div>
 
           {/* Sağ: Ürün Bilgileri */}
@@ -318,14 +307,6 @@ export default function ShopDetailPage() {
         </div>
       </div>
 
-      {/* Room Preview Modal */}
-      {showRoomPreview && (
-        <RoomPreview
-          photoUrl={photo.url}
-          isPortrait={isPortrait}
-          onClose={() => setShowRoomPreview(false)}
-        />
-      )}
     </div>
   );
 }
