@@ -4,18 +4,16 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**.supabase.co',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
+        hostname: '**',
       },
     ],
-    formats: ['image/avif', 'image/webp'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60,
+    // Alternatif olarak spesifik domainler:
+    // domains: [
+    //   'res.cloudinary.com',
+    //   'images.unsplash.com',
+    //   // Supabase storage domain'iniz varsa ekleyin
+    // ],
   },
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
