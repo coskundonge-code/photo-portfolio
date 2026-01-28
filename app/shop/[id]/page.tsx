@@ -55,7 +55,6 @@ export default function ProductPage() {
     loadData();
   }, [params.id]);
 
-  // FOTOĞRAF DİKEY Mİ KONTROL
   const isPhotoPortrait = () => {
     const photo = product?.photos;
     if (!photo) return false;
@@ -68,8 +67,6 @@ export default function ProductPage() {
   };
 
   const isPortrait = isPhotoPortrait();
-
-  // ÇERÇEVE BOYUTLARI - DİKEY/YATAY
   const frameWidth = isPortrait ? 220 : 320;
   const frameHeight = isPortrait ? 320 : 220;
 
@@ -77,7 +74,6 @@ export default function ProductPage() {
     return (selectedSize.price || product?.base_price || 0) + (selectedFrame.price || 0);
   };
 
-<<<<<<< HEAD
   const getFrameStyle = (color: string) => {
     const isWhite = color === '#ffffff';
     const isLight = color === '#c4a574';
@@ -94,8 +90,6 @@ export default function ProductPage() {
     };
   };
 
-=======
->>>>>>> parent of b5b053e (3D çerçeve efekti + URL ile fotoğraf ekleme" git push)
   const handleAddToCart = () => {
     const cartItem = {
       productId: product?.id,
@@ -141,7 +135,6 @@ export default function ProductPage() {
       
       <section className="pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
-<<<<<<< HEAD
           {/* Geri Butonu */}
           <Link 
             href="/shop" 
@@ -151,13 +144,13 @@ export default function ProductPage() {
             <span>Mağazaya Dön</span>
           </Link>
 
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-start">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
             
-            {/* Sol: STATES GALLERY 3D ÇERÇEVE - sticky kaldırıldı, normal flow */}
-            <div className="relative lg:sticky lg:top-28 lg:self-start">
+            {/* Sol: Ürün Önizleme */}
+            <div className="relative">
               <div 
-                className="bg-[#f5f5f5] flex items-center justify-center cursor-pointer relative group"
-                style={{ minHeight: '450px' }}
+                className="bg-[#e8e8e8] flex items-center justify-center cursor-pointer relative group"
+                style={{ minHeight: '500px' }}
                 onClick={() => setLightboxOpen(true)}
               >
                 {/* Zoom icon */}
@@ -165,29 +158,8 @@ export default function ProductPage() {
                   <ZoomIn className="w-5 h-5" />
                 </div>
 
-                <div 
-                  className="relative transition-all duration-500"
-                  style={{ transform: `scale(${selectedSize.scale || 1})` }}
-                >
-                  {/* ===== DIŞ ÇERÇEVE ===== */}
-=======
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
-            
-            {/* Sol: Ürün Önizleme - TIKLANINCA LIGHTBOX */}
-            <div className="relative">
-              <div className="sticky top-24">
-                <div 
-                  className="bg-[#e8e8e8] flex items-center justify-center cursor-pointer relative group"
-                  style={{ minHeight: '500px' }}
-                  onClick={() => setLightboxOpen(true)}
-                >
-                  {/* Zoom icon */}
-                  <div className="absolute top-4 right-4 p-2 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    <ZoomIn className="w-5 h-5" />
-                  </div>
-
-                  {/* Çerçeve */}
->>>>>>> parent of b5b053e (3D çerçeve efekti + URL ile fotoğraf ekleme" git push)
+                {/* Çerçeve */}
+                <div className="relative">
                   <div 
                     style={{
                       ...getFrameStyle(selectedFrame.color),
@@ -195,21 +167,6 @@ export default function ProductPage() {
                       position: 'relative',
                     }}
                   >
-<<<<<<< HEAD
-                    {/* ===== PASSEPARTOUT / MAT ===== */}
-                    <div 
-                      style={{ 
-                        background: selectedStyle === 'mat' ? '#ffffff' : 'transparent',
-                        padding: selectedStyle === 'mat' 
-                          ? (isPortrait ? '40px 35px' : '35px 40px') 
-                          : '0',
-                        position: 'relative',
-                        boxShadow: selectedStyle === 'mat' ? 'inset 0 0 15px rgba(0,0,0,0.04)' : 'none'
-                      }}
-                    >
-                      {/* ===== V-GROOVE / İÇ ÇİZGİ ===== */}
-                      {selectedStyle === 'mat' && (
-=======
                     {/* Dış Çerçeve */}
                     <div 
                       style={{ 
@@ -242,75 +199,32 @@ export default function ProductPage() {
                           />
                         )}
                         
-                        {/* Fotoğraf - DİKEY/YATAY */}
->>>>>>> parent of b5b053e (3D çerçeve efekti + URL ile fotoğraf ekleme" git push)
+                        {/* Fotoğraf */}
                         <div 
                           className="relative overflow-hidden bg-neutral-100"
                           style={{
-<<<<<<< HEAD
-                            position: 'absolute',
-                            top: isPortrait ? '35px' : '30px',
-                            left: isPortrait ? '30px' : '35px',
-                            right: isPortrait ? '30px' : '35px',
-                            bottom: isPortrait ? '35px' : '30px',
-                            boxShadow: `
-                              inset 1px 1px 0 0 rgba(0,0,0,0.12),
-                              inset -1px -1px 0 0 rgba(255,255,255,0.9),
-                              inset 2px 2px 4px 0 rgba(0,0,0,0.06)
-                            `,
-                            pointerEvents: 'none'
-=======
                             width: `${frameWidth}px`,
                             height: `${frameHeight}px`,
->>>>>>> parent of b5b053e (3D çerçeve efekti + URL ile fotoğraf ekleme" git push)
                           }}
-                        />
-                      )}
-                      
-                      {/* ===== FOTOĞRAF ===== */}
-                      <div 
-                        style={{
-                          width: `${photoWidth}px`,
-                          height: `${photoHeight}px`,
-                          position: 'relative',
-                          overflow: 'hidden',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                        }}
-                      >
-                        {product.photos?.url && (
-                          <Image
-                            src={product.photos.url}
-                            alt={product.title}
-                            fill
-                            className="object-cover"
-                            priority
-                          />
-                        )}
+                        >
+                          {product.photos?.url && (
+                            <Image
+                              src={product.photos.url}
+                              alt={product.title}
+                              fill
+                              className="object-cover"
+                              priority
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
-<<<<<<< HEAD
-=======
-
-                    {/* Gölge */}
-                    <div 
-                      className="absolute -bottom-4 left-[10%] right-[10%] h-8 -z-10"
-                      style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, transparent 70%)' }}
-                    />
->>>>>>> parent of b5b053e (3D çerçeve efekti + URL ile fotoğraf ekleme" git push)
                   </div>
 
-                  {/* ===== ALT GÖLGE ===== */}
+                  {/* Gölge */}
                   <div 
-                    style={{
-                      position: 'absolute',
-                      bottom: '-18px',
-                      left: '8%',
-                      right: '8%',
-                      height: '25px',
-                      background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, transparent 70%)',
-                      filter: 'blur(4px)',
-                      zIndex: -1
-                    }}
+                    className="absolute -bottom-4 left-[10%] right-[10%] h-8 -z-10"
+                    style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, transparent 70%)' }}
                   />
                 </div>
               </div>
@@ -318,8 +232,8 @@ export default function ProductPage() {
               <p className="text-center text-sm text-neutral-400 mt-4">{selectedSize.dimensions}</p>
             </div>
 
-            {/* Sağ: Satın Alma - scroll edilebilir */}
-            <div className="lg:pt-0">
+            {/* Sağ: Satın Alma */}
+            <div>
               <h1 className="text-2xl lg:text-3xl font-light mb-2 tracking-wide">
                 {product.title.toUpperCase()}
               </h1>
@@ -415,32 +329,21 @@ export default function ProductPage() {
                 <span className="underline">Boyut Rehberi</span>
               </button>
 
-              {/* SEPETE EKLE - Daha belirgin */}
+              {/* SEPETE EKLE */}
               <button
                 onClick={handleAddToCart}
-<<<<<<< HEAD
-                className="w-full py-4 bg-black text-white text-sm tracking-wide hover:bg-neutral-800 transition-colors mb-4 font-medium"
-=======
                 className="w-full py-4 bg-black text-white text-sm tracking-wide hover:bg-neutral-800 mb-4"
->>>>>>> parent of b5b053e (3D çerçeve efekti + URL ile fotoğraf ekleme" git push)
               >
                 SEPETE EKLE — ₺{formatPrice(calculatePrice())}
               </button>
 
               <button 
                 onClick={() => setRoomPreviewOpen(true)}
-<<<<<<< HEAD
-                className="w-full py-4 bg-neutral-100 text-sm hover:bg-neutral-200 transition-colors mb-8"
-=======
                 className="w-full py-4 bg-neutral-100 text-sm hover:bg-neutral-200 mb-4"
->>>>>>> parent of b5b053e (3D çerçeve efekti + URL ile fotoğraf ekleme" git push)
               >
                 Odanda Görüntüle
               </button>
 
-<<<<<<< HEAD
-              <div className="pt-8 border-t">
-=======
               {(product.description || (product as any).story) && (
                 <div className="mt-10 pt-8 border-t">
                   <h3 className="font-medium mb-4">Bu Eser Hakkında</h3>
@@ -451,7 +354,6 @@ export default function ProductPage() {
               )}
 
               <div className="mt-8 pt-8 border-t">
->>>>>>> parent of b5b053e (3D çerçeve efekti + URL ile fotoğraf ekleme" git push)
                 <h3 className="font-medium mb-4">Teknik Özellikler</h3>
                 <dl className="space-y-3 text-sm">
                   <div className="flex justify-between">
