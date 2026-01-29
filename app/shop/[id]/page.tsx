@@ -130,7 +130,7 @@ export default function ProductPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="bg-white">
       <Navigation projects={projects} settings={settings} />
       
       <section className="pt-24 pb-16">
@@ -144,14 +144,14 @@ export default function ProductPage() {
             <span>Mağazaya Dön</span>
           </Link>
 
-          {/* SCROLL FIX: items-start kaldırıldı, normal flow */}
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
+          {/* Desktop: Yan yana, Mobile: Alt alta */}
+          <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
             
-            {/* Sol: Fotoğraf - SCROLL FIX: sticky kaldırıldı */}
-            <div className="relative">
+            {/* Sol: Fotoğraf */}
+            <div className="lg:w-1/2">
               <div 
                 className="bg-[#f5f5f5] flex items-center justify-center cursor-pointer relative group"
-                style={{ minHeight: '450px' }}
+                style={{ minHeight: '400px' }}
                 onClick={() => setLightboxOpen(true)}
               >
                 {/* Zoom icon */}
@@ -243,8 +243,8 @@ export default function ProductPage() {
               <p className="text-center text-sm text-neutral-400 mt-4">{selectedSize.dimensions}</p>
             </div>
 
-            {/* Sağ: Satın Alma */}
-            <div>
+            {/* Sağ: Satın Alma Seçenekleri */}
+            <div className="lg:w-1/2">
               <h1 className="text-2xl lg:text-3xl font-light mb-2 tracking-wide">
                 {product.title.toUpperCase()}
               </h1>
