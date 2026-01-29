@@ -67,8 +67,10 @@ export default function ProductPage() {
   };
 
   const isPortrait = isPhotoPortrait();
-  const photoWidth = isPortrait ? 180 : 280;
-  const photoHeight = isPortrait ? 260 : 180;
+  
+  // BÜYÜK FOTOĞRAF BOYUTLARI
+  const photoWidth = isPortrait ? 280 : 400;
+  const photoHeight = isPortrait ? 380 : 280;
 
   const calculatePrice = () => {
     return (selectedSize.price || product?.base_price || 0) + (selectedFrame.price || 0);
@@ -147,11 +149,15 @@ export default function ProductPage() {
           {/* Desktop: Yan yana, Mobile: Alt alta */}
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
             
-            {/* Sol: Fotoğraf */}
+            {/* Sol: Fotoğraf - DİNAMİK GRİ ALAN */}
             <div className="lg:w-1/2">
               <div 
                 className="bg-[#f5f5f5] flex items-center justify-center cursor-pointer relative group"
-                style={{ minHeight: '400px' }}
+                style={{ 
+                  // Portrait ise dikey, landscape ise yatay gri alan
+                  aspectRatio: isPortrait ? '3/4' : '4/3',
+                  minHeight: isPortrait ? '550px' : '450px'
+                }}
                 onClick={() => setLightboxOpen(true)}
               >
                 {/* Zoom icon */}
@@ -167,7 +173,7 @@ export default function ProductPage() {
                   <div 
                     style={{
                       ...getFrameStyle(selectedFrame.color),
-                      padding: '12px',
+                      padding: '14px',
                       position: 'relative',
                     }}
                   >
@@ -176,7 +182,7 @@ export default function ProductPage() {
                       style={{ 
                         background: selectedStyle === 'mat' ? '#ffffff' : 'transparent',
                         padding: selectedStyle === 'mat' 
-                          ? (isPortrait ? '40px 35px' : '35px 40px') 
+                          ? (isPortrait ? '50px 40px' : '40px 50px') 
                           : '0',
                         position: 'relative',
                         boxShadow: selectedStyle === 'mat' ? 'inset 0 0 15px rgba(0,0,0,0.04)' : 'none'
@@ -187,10 +193,10 @@ export default function ProductPage() {
                         <div 
                           style={{
                             position: 'absolute',
-                            top: isPortrait ? '35px' : '30px',
-                            left: isPortrait ? '30px' : '35px',
-                            right: isPortrait ? '30px' : '35px',
-                            bottom: isPortrait ? '35px' : '30px',
+                            top: isPortrait ? '45px' : '35px',
+                            left: isPortrait ? '35px' : '45px',
+                            right: isPortrait ? '35px' : '45px',
+                            bottom: isPortrait ? '45px' : '35px',
                             boxShadow: `
                               inset 1px 1px 0 0 rgba(0,0,0,0.12),
                               inset -1px -1px 0 0 rgba(255,255,255,0.9),
@@ -201,7 +207,7 @@ export default function ProductPage() {
                         />
                       )}
                       
-                      {/* ===== FOTOĞRAF ===== */}
+                      {/* ===== FOTOĞRAF - BÜYÜK ===== */}
                       <div 
                         style={{
                           width: `${photoWidth}px`,
