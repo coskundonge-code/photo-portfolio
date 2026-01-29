@@ -22,10 +22,10 @@ const defaultSizes = [
 
 // Çerçeve renkleri - ahşap dokulu
 const defaultFrames = [
-  { id: 'black', name: 'Black', color: '#1a1a1a', texture: 'linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #0a0a0a 100%)' },
-  { id: 'white', name: 'White', color: '#f5f5f5', texture: 'linear-gradient(135deg, #ffffff 0%, #f5f5f5 50%, #e8e8e8 100%)' },
-  { id: 'natural', name: 'Natural Oak', color: '#c4a574', texture: 'linear-gradient(135deg, #d4b584 0%, #c4a574 25%, #b49564 50%, #a48554 75%, #c4a574 100%)' },
-  { id: 'walnut', name: 'Walnut', color: '#5c4033', texture: 'linear-gradient(135deg, #6c5043 0%, #5c4033 25%, #4c3023 50%, #5c4033 75%, #6c5043 100%)' },
+  { id: 'black', name: 'Black', color: '#1a1a1a', texture: 'linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #0a0a0a 100%)', price: 0 },
+  { id: 'white', name: 'White', color: '#f5f5f5', texture: 'linear-gradient(135deg, #ffffff 0%, #f5f5f5 50%, #e8e8e8 100%)', price: 0 },
+  { id: 'natural', name: 'Natural Oak', color: '#c4a574', texture: 'linear-gradient(135deg, #d4b584 0%, #c4a574 25%, #b49564 50%, #a48554 75%, #c4a574 100%)', price: 200 },
+  { id: 'walnut', name: 'Walnut', color: '#5c4033', texture: 'linear-gradient(135deg, #6c5043 0%, #5c4033 25%, #4c3023 50%, #5c4033 75%, #6c5043 100%)', price: 200 },
 ];
 
 const formatPrice = (price: number) => price.toLocaleString('tr-TR');
