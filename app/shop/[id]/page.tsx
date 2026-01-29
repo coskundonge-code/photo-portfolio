@@ -2,30 +2,80 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import Lightbox from '@/components/Lightbox';
-import RoomPreview from '@/components/RoomPreview';
 import { getSettings, getProjects, getProductById } from '@/lib/supabase';
 import { Settings, Project, Product } from '@/lib/types';
-import { Loader2, Check, ZoomIn, ArrowLeft, ShoppingBag } from 'lucide-react';
+import { Loader2, Check, ZoomIn } from 'lucide-react';
 
-// Yeni boyutlar - States Gallery tarzı
+// Boyutlar
 const defaultSizes = [
-  { id: 'classic', name: 'Classic', dimensions: '42x32cm', price: 1500, scale: 0.6 },
-  { id: 'medium', name: 'Medium', dimensions: '57x42cm', price: 2500, scale: 0.75 },
-  { id: 'large', name: 'Large', dimensions: '72x52cm', price: 3500, scale: 0.9 },
-  { id: 'luxe', name: 'Luxe', dimensions: '87x62cm', price: 4500, scale: 1 },
+  { id: 'classic', name: 'Classic', dimensions: '30x20cm', price: 1500, scale: 0.55 },
+  { id: 'medium', name: 'Medium', dimensions: '45x30cm', price: 2500, scale: 0.7 },
+  { id: 'large', name: 'Large', dimensions: '60x40cm', price: 3500, scale: 0.85 },
+  { id: 'luxe', name: 'Luxe', dimensions: '75x50cm', price: 4500, scale: 1 },
 ];
 
-// Çerçeve renkleri - ahşap dokulu
+// Çerçeve renkleri - gerçek ahşap dokuları
 const defaultFrames = [
-  { id: 'black', name: 'Black', color: '#1a1a1a', texture: 'linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #0a0a0a 100%)', price: 0 },
-  { id: 'white', name: 'White', color: '#f5f5f5', texture: 'linear-gradient(135deg, #ffffff 0%, #f5f5f5 50%, #e8e8e8 100%)', price: 0 },
-  { id: 'natural', name: 'Natural Oak', color: '#c4a574', texture: 'linear-gradient(135deg, #d4b584 0%, #c4a574 25%, #b49564 50%, #a48554 75%, #c4a574 100%)', price: 200 },
-  { id: 'walnut', name: 'Walnut', color: '#5c4033', texture: 'linear-gradient(135deg, #6c5043 0%, #5c4033 25%, #4c3023 50%, #5c4033 75%, #6c5043 100%)', price: 200 },
+  { 
+    id: 'black', 
+    name: 'Black', 
+    color: '#1a1a1a', 
+    texture: 'linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 20%, #1a1a1a 50%, #0a0a0a 80%, #1a1a1a 100%)',
+    buttonTexture: 'linear-gradient(135deg, #3a3a3a 0%, #1a1a1a 50%, #0a0a0a 100%)',
+    price: 0 
+  },
+  { 
+    id: 'white', 
+    name: 'White', 
+    color: '#f8f8f8', 
+    texture: 'linear-gradient(180deg, #ffffff 0%, #f8f8f8 20%, #f0f0f0 50%, #e8e8e8 80%, #f5f5f5 100%)',
+    buttonTexture: 'linear-gradient(135deg, #ffffff 0%, #f5f5f5 50%, #e8e8e8 100%)',
+    price: 0 
+  },
+  { 
+    id: 'oak', 
+    name: 'Oak', 
+    color: '#c9a66b', 
+    texture: `repeating-linear-gradient(
+      90deg,
+      #d4b07a 0px,
+      #c9a66b 2px,
+      #be9c5c 4px,
+      #c9a66b 6px,
+      #d4b07a 8px
+    ), linear-gradient(180deg, #d4b07a 0%, #c9a66b 50%, #be9c5c 100%)`,
+    buttonTexture: `repeating-linear-gradient(
+      120deg,
+      #d4b07a 0px,
+      #c9a66b 3px,
+      #be9c5c 6px
+    )`,
+    price: 200 
+  },
+  { 
+    id: 'walnut', 
+    name: 'Walnut', 
+    color: '#5d4037', 
+    texture: `repeating-linear-gradient(
+      90deg,
+      #6d5047 0px,
+      #5d4037 2px,
+      #4d3027 4px,
+      #5d4037 6px,
+      #6d5047 8px
+    ), linear-gradient(180deg, #6d5047 0%, #5d4037 50%, #4d3027 100%)`,
+    buttonTexture: `repeating-linear-gradient(
+      120deg,
+      #6d5047 0px,
+      #5d4037 3px,
+      #4d3027 6px
+    )`,
+    price: 200 
+  },
 ];
 
 const formatPrice = (price: number) => price.toLocaleString('tr-TR');
@@ -39,11 +89,10 @@ export default function ProductPage() {
   const [loading, setLoading] = useState(true);
   
   const [selectedStyle, setSelectedStyle] = useState<'mat' | 'fullbleed'>('mat');
-  const [selectedSize, setSelectedSize] = useState(defaultSizes[0]);
+  const [selectedSize, setSelectedSize] = useState(defaultSizes[3]); // Luxe - en büyük
   const [selectedFrame, setSelectedFrame] = useState(defaultFrames[0]);
   
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [roomPreviewOpen, setRoomPreviewOpen] = useState(false);
   const [showFloatingCart, setShowFloatingCart] = useState(false);
 
   useEffect(() => {
@@ -62,8 +111,7 @@ export default function ProductPage() {
   // Floating cart gösterme
   useEffect(() => {
     const handleScroll = () => {
-      const scrollY = window.scrollY;
-      setShowFloatingCart(scrollY > 400);
+      setShowFloatingCart(window.scrollY > 500);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -82,9 +130,9 @@ export default function ProductPage() {
 
   const isPortrait = isPhotoPortrait();
   
-  // Büyük fotoğraf boyutları
-  const basePhotoWidth = isPortrait ? 320 : 450;
-  const basePhotoHeight = isPortrait ? 450 : 320;
+  // Fotoğraf boyutları
+  const basePhotoWidth = isPortrait ? 340 : 480;
+  const basePhotoHeight = isPortrait ? 480 : 340;
 
   const calculatePrice = () => {
     return (selectedSize.price || product?.base_price || 0) + (selectedFrame.price || 0);
@@ -107,6 +155,10 @@ export default function ProductPage() {
     localStorage.setItem('cart', JSON.stringify(cart));
     window.dispatchEvent(new Event('cartUpdated'));
     router.push('/checkout');
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (loading) {
@@ -133,31 +185,24 @@ export default function ProductPage() {
     <main className="bg-white">
       <Navigation projects={projects} settings={settings} />
       
-      <section className="pt-24 pb-16">
+      <section className="pt-28 pb-16">
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
-          {/* Geri Butonu */}
-          <Link 
-            href="/shop" 
-            className="inline-flex items-center gap-2 text-neutral-500 hover:text-black transition-colors mb-8"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Shop</span>
-          </Link>
 
-          <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
+          <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
             
             {/* Sol: Çerçeveli Fotoğraf - STICKY */}
             <div className="lg:w-[55%] lg:sticky lg:top-28 lg:self-start">
               <div 
-                className="flex items-center justify-center cursor-pointer relative group py-8"
+                className="flex items-center justify-center cursor-pointer relative group"
+                style={{ minHeight: '500px' }}
                 onClick={() => setLightboxOpen(true)}
               >
                 {/* Zoom icon */}
-                <div className="absolute top-4 right-4 p-2 bg-black/5 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
-                  <ZoomIn className="w-5 h-5 text-neutral-600" />
+                <div className="absolute top-4 right-4 p-3 bg-white/90 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 shadow-lg">
+                  <ZoomIn className="w-5 h-5 text-neutral-700" />
                 </div>
 
-                {/* Çerçeve + Fotoğraf - Smooth scale animasyonu */}
+                {/* Çerçeve + Fotoğraf */}
                 <div 
                   className="relative transition-all duration-700 ease-out"
                   style={{ transform: `scale(${selectedSize.scale})` }}
@@ -166,22 +211,24 @@ export default function ProductPage() {
                   <div 
                     style={{
                       background: selectedFrame.texture,
-                      padding: '16px',
+                      padding: '18px',
                       position: 'relative',
                       boxShadow: `
-                        0 25px 60px -15px rgba(0,0,0,0.3),
-                        0 10px 20px -10px rgba(0,0,0,0.2),
-                        inset 0 1px 0 0 rgba(255,255,255,0.1),
-                        inset 0 -1px 0 0 rgba(0,0,0,0.2)
+                        0 30px 60px -20px rgba(0,0,0,0.35),
+                        0 15px 30px -15px rgba(0,0,0,0.25),
+                        inset 0 2px 0 0 rgba(255,255,255,0.15),
+                        inset 0 -2px 0 0 rgba(0,0,0,0.2),
+                        inset 2px 0 0 0 rgba(255,255,255,0.1),
+                        inset -2px 0 0 0 rgba(0,0,0,0.15)
                       `
                     }}
                   >
-                    {/* İç çerçeve detayı */}
+                    {/* İç çerçeve çizgisi */}
                     <div 
                       style={{
                         position: 'absolute',
-                        inset: '4px',
-                        border: selectedFrame.id === 'white' ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.1)',
+                        inset: '6px',
+                        border: selectedFrame.id === 'white' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.15)',
                         pointerEvents: 'none'
                       }}
                     />
@@ -191,11 +238,11 @@ export default function ProductPage() {
                       style={{ 
                         background: selectedStyle === 'mat' ? '#ffffff' : 'transparent',
                         padding: selectedStyle === 'mat' 
-                          ? (isPortrait ? '45px 35px' : '35px 45px') 
+                          ? (isPortrait ? '50px 40px' : '40px 50px') 
                           : '0',
                         position: 'relative',
                         boxShadow: selectedStyle === 'mat' 
-                          ? 'inset 0 0 20px rgba(0,0,0,0.03), inset 0 0 1px rgba(0,0,0,0.1)' 
+                          ? 'inset 0 0 30px rgba(0,0,0,0.03)' 
                           : 'none'
                       }}
                     >
@@ -204,13 +251,13 @@ export default function ProductPage() {
                         <div 
                           style={{
                             position: 'absolute',
-                            top: isPortrait ? '40px' : '30px',
-                            left: isPortrait ? '30px' : '40px',
-                            right: isPortrait ? '30px' : '40px',
-                            bottom: isPortrait ? '40px' : '30px',
+                            top: isPortrait ? '45px' : '35px',
+                            left: isPortrait ? '35px' : '45px',
+                            right: isPortrait ? '35px' : '45px',
+                            bottom: isPortrait ? '45px' : '35px',
                             boxShadow: `
-                              inset 1px 1px 0 0 rgba(0,0,0,0.08),
-                              inset -1px -1px 0 0 rgba(255,255,255,0.9)
+                              inset 1px 1px 0 0 rgba(0,0,0,0.06),
+                              inset -1px -1px 0 0 rgba(255,255,255,0.8)
                             `,
                             pointerEvents: 'none'
                           }}
@@ -243,12 +290,12 @@ export default function ProductPage() {
                   <div 
                     style={{
                       position: 'absolute',
-                      bottom: '-25px',
-                      left: '5%',
-                      right: '5%',
-                      height: '30px',
-                      background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, transparent 70%)',
-                      filter: 'blur(8px)',
+                      bottom: '-30px',
+                      left: '10%',
+                      right: '10%',
+                      height: '40px',
+                      background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, transparent 70%)',
+                      filter: 'blur(10px)',
                       zIndex: -1
                     }}
                   />
@@ -258,43 +305,40 @@ export default function ProductPage() {
 
             {/* Sağ: Ürün Detayları */}
             <div className="lg:w-[45%]">
-              <h1 className="text-3xl lg:text-4xl font-light mb-3 tracking-wide">
-                {product.title.toUpperCase()}
-              </h1>
-              
-              <p className="text-neutral-500 mb-6 text-sm">
+              {/* Edisyon Badge */}
+              <div className="inline-block bg-black text-white text-xs px-4 py-2 mb-4 tracking-wider">
                 {product.edition_type === 'limited' 
-                  ? `Limited Edition • ${product.edition_total} pieces`
-                  : 'Open Edition'}
-              </p>
+                  ? `SINIRLI EDİSYON`
+                  : 'AÇIK EDİSYON'}
+              </div>
 
-              <div className="mb-10">
-                <p className="text-3xl font-light">€{formatPrice(calculatePrice())}</p>
-                <p className="text-xs text-neutral-400 mt-1">Tax included</p>
+              <div className="mb-8">
+                <p className="text-3xl font-light">₺{formatPrice(calculatePrice())},00</p>
+                <p className="text-sm text-neutral-500 mt-2">KDV dahil. Kargo ödeme sırasında hesaplanır.</p>
               </div>
 
               {/* Stil Seçimi */}
               <div className="mb-10">
                 <h3 className="text-sm text-neutral-600 mb-4">
-                  Choose Your Style: <span className="text-black">{selectedStyle === 'mat' ? 'Mat' : 'Full Bleed'}</span>
+                  Stil Seçin: <span className="text-black font-medium">{selectedStyle === 'mat' ? 'Mat' : 'Full Bleed'}</span>
                 </h3>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setSelectedStyle('mat')}
-                    className={`px-8 py-3 text-sm transition-all duration-300 ${
+                    className={`px-8 py-3 text-sm transition-all duration-300 border ${
                       selectedStyle === 'mat' 
-                        ? 'bg-black text-white' 
-                        : 'bg-transparent text-black border border-neutral-200 hover:border-black'
+                        ? 'border-black bg-white' 
+                        : 'border-neutral-200 hover:border-neutral-400'
                     }`}
                   >
                     Mat
                   </button>
                   <button
                     onClick={() => setSelectedStyle('fullbleed')}
-                    className={`px-8 py-3 text-sm transition-all duration-300 ${
+                    className={`px-8 py-3 text-sm transition-all duration-300 border ${
                       selectedStyle === 'fullbleed' 
-                        ? 'bg-black text-white' 
-                        : 'bg-transparent text-black border border-neutral-200 hover:border-black'
+                        ? 'border-black bg-white' 
+                        : 'border-neutral-200 hover:border-neutral-400'
                     }`}
                   >
                     Full Bleed
@@ -305,17 +349,17 @@ export default function ProductPage() {
               {/* Boyut Seçimi */}
               <div className="mb-10">
                 <h3 className="text-sm text-neutral-600 mb-4">
-                  Choose Your Frame Size: <span className="text-black">{selectedSize.name}</span>
+                  Çerçeve Boyutu Seçin: <span className="text-black font-medium">{selectedSize.name}</span>
                 </h3>
                 <div className="space-y-2">
                   {defaultSizes.map((size) => (
                     <button
                       key={size.id}
                       onClick={() => setSelectedSize(size)}
-                      className={`w-full flex items-center justify-between px-5 py-4 transition-all duration-300 ${
+                      className={`w-full flex items-center justify-between px-5 py-4 transition-all duration-300 border ${
                         selectedSize.id === size.id 
-                          ? 'border-2 border-black' 
-                          : 'border border-neutral-200 hover:border-neutral-400'
+                          ? 'border-black' 
+                          : 'border-neutral-200 hover:border-neutral-400'
                       }`}
                     >
                       <span className="font-medium">{size.name}</span>
@@ -325,10 +369,10 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              {/* Çerçeve Rengi */}
+              {/* Çerçeve Rengi - Ahşap dokulu butonlar */}
               <div className="mb-10">
                 <h3 className="text-sm text-neutral-600 mb-4">
-                  Choose Your Frame Color: <span className="text-black">{selectedFrame.name}</span>
+                  Çerçeve Rengi Seçin: <span className="text-black font-medium">{selectedFrame.name}</span>
                 </h3>
                 <div className="flex gap-4">
                   {defaultFrames.map((frame) => (
@@ -341,59 +385,63 @@ export default function ProductPage() {
                           : 'hover:scale-105'
                       }`}
                       style={{ 
-                        background: frame.texture,
-                        border: frame.id === 'white' ? '1px solid #e0e0e0' : 'none',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                        background: frame.buttonTexture,
+                        border: frame.id === 'white' ? '1px solid #d0d0d0' : 'none',
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.2)'
                       }}
                     >
                       {selectedFrame.id === frame.id && (
                         <Check className={`absolute inset-0 m-auto w-5 h-5 ${
                           frame.id === 'white' ? 'text-black' : 'text-white'
-                        }`} />
+                        }`} strokeWidth={2.5} />
                       )}
                     </button>
                   ))}
                 </div>
               </div>
 
+              {/* Size Guide Link */}
+              <button className="flex items-center gap-2 text-sm text-neutral-700 hover:text-black mb-8 group">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+                <span className="underline underline-offset-4">Boyut Rehberi</span>
+              </button>
+
               {/* Sepete Ekle */}
               <button
                 onClick={handleAddToCart}
-                className="w-full py-5 bg-black text-white text-sm tracking-widest hover:bg-neutral-800 transition-all duration-300 mb-4"
+                className="w-full py-5 bg-black text-white text-sm tracking-widest hover:bg-neutral-800 transition-all duration-300"
               >
-                ADD TO CART
-              </button>
-
-              <button 
-                onClick={() => setRoomPreviewOpen(true)}
-                className="w-full py-4 text-sm text-neutral-600 hover:text-black transition-colors underline"
-              >
-                View in your room
+                Sepete Ekle
               </button>
 
               {/* Ürün Bilgileri */}
-              <div className="mt-12 pt-8 border-t border-neutral-100">
-                <h3 className="font-medium mb-6 text-lg">QUALITY PRESERVED</h3>
+              <div className="mt-16 pt-10 border-t border-neutral-200">
+                <h3 className="text-2xl font-light mb-3 tracking-wide text-center">KALİTE KORUMASI</h3>
+                <p className="text-sm text-neutral-500 text-center mb-10">
+                  Kendi bünyemizde yapılan baskı ve çerçeveleme sürecimiz, en yüksek müze kalitesinde çerçeveli parçalar üretir.
+                </p>
                 
-                <div className="space-y-6 text-sm">
+                <div className="space-y-8 text-sm">
                   <div>
-                    <h4 className="font-medium mb-2">PRINT QUALITY</h4>
+                    <h4 className="font-medium mb-2 tracking-wide">BASKI KALİTESİ</h4>
                     <p className="text-neutral-500 leading-relaxed">
-                      The paper we print our images on is a silver halide photographic substrate that offers the best possible image quality.
+                      Resimlerimizi bastığımız kağıt, mümkün olan en iyi görüntü kalitesini sunan gümüş halojenür fotoğraf substratıdır.
                     </p>
                   </div>
                   
                   <div>
-                    <h4 className="font-medium mb-2">MATERIALS MATTER</h4>
+                    <h4 className="font-medium mb-2 tracking-wide">MALZEME ÖNEMLİ</h4>
                     <p className="text-neutral-500 leading-relaxed">
-                      Iconic framing using museum-quality materials like museum glass ensures the preservation of the piece.
+                      Müze camı gibi müze kalitesinde malzemeler kullanan ikonik çerçeveleme, parçanın korunmasını sağlar.
                     </p>
                   </div>
                   
                   <div>
-                    <h4 className="font-medium mb-2">CERTIFICATE</h4>
+                    <h4 className="font-medium mb-2 tracking-wide">SERTİFİKA</h4>
                     <p className="text-neutral-500 leading-relaxed">
-                      Every piece includes a certificate of authenticity signed by the artist.
+                      Her parça, sanatçı tarafından imzalanmış bir orijinallik sertifikası içerir.
                     </p>
                   </div>
                 </div>
@@ -403,43 +451,70 @@ export default function ProductPage() {
         </div>
       </section>
 
-      {/* Floating Add to Cart - Scroll sonrası görünür */}
+      {/* Floating Add to Cart - States Gallery tarzı */}
       <div 
-        className={`fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 py-4 px-6 z-40 transition-all duration-500 ${
-          showFloatingCart ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+        className={`fixed bottom-6 right-6 z-50 transition-all duration-500 ${
+          showFloatingCart ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0 pointer-events-none'
         }`}
-        style={{ boxShadow: '0 -4px 20px rgba(0,0,0,0.1)' }}
       >
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 relative">
-              {product.photos?.url && (
-                <Image
-                  src={product.photos.url}
-                  alt={product.title}
-                  fill
-                  className="object-cover"
-                />
-              )}
+        <div 
+          className="bg-white rounded-lg shadow-2xl border border-neutral-200 overflow-hidden"
+          style={{ 
+            width: '380px',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)'
+          }}
+        >
+          <div className="flex">
+            {/* 3D Çerçeve Önizleme */}
+            <div className="w-24 h-28 relative bg-neutral-100 flex-shrink-0 flex items-center justify-center p-2">
+              <div 
+                style={{
+                  background: selectedFrame.texture,
+                  padding: '4px',
+                  transform: 'perspective(200px) rotateY(-15deg)',
+                  boxShadow: '5px 5px 15px rgba(0,0,0,0.2)'
+                }}
+              >
+                <div className="w-14 h-16 relative bg-white p-1">
+                  {product.photos?.url && (
+                    <Image
+                      src={product.photos.url}
+                      alt={product.title}
+                      fill
+                      className="object-cover"
+                    />
+                  )}
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="font-medium text-sm">{product.title.toUpperCase()}</p>
-              <p className="text-xs text-neutral-500">
-                {selectedStyle === 'mat' ? 'Mat' : 'Full Bleed'} • {selectedSize.name} • {selectedFrame.name}
-              </p>
+            
+            {/* Detaylar */}
+            <div className="flex-1 p-4">
+              <h4 className="font-medium text-sm mb-2">{product.title.toUpperCase()}</h4>
+              <div className="text-xs text-neutral-500 space-y-0.5">
+                <p>Stil Seçin: {selectedStyle === 'mat' ? 'Mat' : 'Full Bleed'}</p>
+                <p>Çerçeve Boyutu: {selectedSize.name}</p>
+                <p>Çerçeve Rengi: {selectedFrame.name}</p>
+              </div>
+              <div className="flex items-center justify-between mt-3">
+                <span className="font-medium">₺{formatPrice(calculatePrice())},00</span>
+                <button 
+                  onClick={scrollToTop}
+                  className="text-xs text-neutral-500 hover:text-black underline underline-offset-2"
+                >
+                  Değiştir
+                </button>
+              </div>
             </div>
           </div>
           
-          <div className="flex items-center gap-6">
-            <span className="text-lg font-light">€{formatPrice(calculatePrice())}</span>
-            <button
-              onClick={handleAddToCart}
-              className="flex items-center gap-2 px-8 py-3 bg-black text-white text-sm tracking-wide hover:bg-neutral-800 transition-colors"
-            >
-              <ShoppingBag className="w-4 h-4" />
-              Add to cart
-            </button>
-          </div>
+          {/* Sepete Ekle Butonu */}
+          <button
+            onClick={handleAddToCart}
+            className="w-full py-4 bg-black text-white text-sm tracking-wide hover:bg-neutral-800 transition-colors"
+          >
+            Sepete Ekle
+          </button>
         </div>
       </div>
 
@@ -451,15 +526,6 @@ export default function ProductPage() {
         onClose={() => setLightboxOpen(false)}
         imageUrl={product.photos?.url || ''}
         title={product.title}
-      />
-
-      {/* Room Preview */}
-      <RoomPreview
-        isOpen={roomPreviewOpen}
-        onClose={() => setRoomPreviewOpen(false)}
-        imageUrl={product.photos?.url || ''}
-        frameColor={selectedFrame.color}
-        size={selectedSize}
       />
     </main>
   );
