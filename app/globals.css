@@ -13,11 +13,16 @@
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-y: auto !important;
+    height: auto !important;
   }
   
   body {
     @apply bg-white text-black font-sans;
     font-feature-settings: "kern" 1;
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
   }
   
   ::selection {
