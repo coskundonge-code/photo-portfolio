@@ -1,18 +1,8 @@
-// Cloudinary Unsigned Upload
+// Cloudinary Upload
 // Çözünürlük ve kalite korunarak fotoğraf yükleme
 
 const CLOUD_NAME = 'dgiak1uhc';
 const UPLOAD_PRESET = 'photo-portfolio';
-
-interface CloudinaryUploadResponse {
-  secure_url: string;
-  public_id: string;
-  width: number;
-  height: number;
-  format: string;
-  bytes: number;
-  original_filename: string;
-}
 
 interface UploadProgress {
   loaded: number;
@@ -21,12 +11,9 @@ interface UploadProgress {
 }
 
 /**
- * Cloudinary'ye fotoğraf yükler
- * - Çözünürlük korunur (transformasyon yok)
- * - Orijinal kalite korunur
- * - Progress callback ile yükleme durumu takip edilebilir
+ * Küçük dosyalar için unsigned upload (< 10MB)
  */
-export const uploadToCloudinary = async (
+const uploadSmallFile = async (
   file: File,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<string | null> => {
@@ -35,10 +22,6 @@ export const uploadToCloudinary = async (
     formData.append('file', file);
     formData.append('upload_preset', UPLOAD_PRESET);
     formData.append('folder', 'photo-portfolio');
-
-    // Kalite ayarları - orijinal kaliteyi koru
-    // q_auto kullanmıyoruz çünkü kalite düşürüyor
-    // Transformasyon yok = orijinal dosya korunur
 
     const xhr = new XMLHttpRequest();
 
@@ -55,111 +38,73 @@ export const uploadToCloudinary = async (
 
       xhr.addEventListener('load', () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          const response: CloudinaryUploadResponse = JSON.parse(xhr.responseText);
+          const response = JSON.parse(xhr.responseText);
           console.log('Upload successful:', response.secure_url);
           resolve(response.secure_url);
         } else {
-          console.error('Cloudinary upload failed:', {
-            status: xhr.status,
-            response: xhr.responseText,
-            cloudName: CLOUD_NAME,
-            preset: UPLOAD_PRESET
-          });
-          // Kullanıcıya daha detaylı hata göster
-          try {
-            const errorResponse = JSON.parse(xhr.responseText);
-            alert(`Yükleme hatası: ${errorResponse.error?.message || 'Bilinmeyen hata'}`);
-          } catch {
-            alert(`Yükleme hatası (${xhr.status}): Cloudinary ayarlarını kontrol edin.`);
-          }
-          reject(new Error('Upload failed'));
+          console.error('Upload failed:', xhr.status, xhr.responseText);
+          resolve(null);
         }
       });
 
       xhr.addEventListener('error', () => {
-        console.error('Cloudinary upload error');
-        reject(new Error('Upload error'));
+        console.error('Upload error');
+        resolve(null);
       });
 
       xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
       xhr.send(formData);
     });
   } catch (error) {
-    console.error('Cloudinary upload error:', error);
+    console.error('Upload error:', error);
     return null;
   }
 };
 
 /**
- * Büyük dosyalar için chunk upload (10MB üzeri)
- * Cloudinary unsigned upload'da 10MB sınırı var
- * Bu fonksiyon büyük dosyaları parçalayarak yükler
+ * Büyük dosyalar için signed upload via API route (> 10MB)
+ * Kalite ve çözünürlük korunur
  */
-export const uploadLargeToCloudinary = async (
+const uploadLargeFile = async (
   file: File,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<string | null> => {
-  const MAX_CHUNK_SIZE = 6 * 1024 * 1024; // 6MB chunks
-
-  // 10MB'dan küçük dosyalar için normal upload
-  if (file.size <= 10 * 1024 * 1024) {
-    return uploadToCloudinary(file, onProgress);
-  }
-
   try {
-    const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
-    const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
-    let uploadedUrl: string | null = null;
+    const formData = new FormData();
+    formData.append('file', file);
 
-    for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-      const start = chunkIndex * MAX_CHUNK_SIZE;
-      const end = Math.min(start + MAX_CHUNK_SIZE, file.size);
-      const chunk = file.slice(start, end);
+    const xhr = new XMLHttpRequest();
 
-      const formData = new FormData();
-      formData.append('file', chunk);
-      formData.append('upload_preset', UPLOAD_PRESET);
-      formData.append('folder', 'photo-portfolio');
-      formData.append('public_id', uniqueId);
-
-      // Chunk bilgileri
-      const contentRange = `bytes ${start}-${end - 1}/${file.size}`;
-
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-        {
-          method: 'POST',
-          headers: {
-            'X-Unique-Upload-Id': uniqueId,
-            'Content-Range': contentRange,
-          },
-          body: formData,
+    return new Promise((resolve, reject) => {
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable && onProgress) {
+          onProgress({
+            loaded: event.loaded,
+            total: event.total,
+            percent: Math.round((event.loaded / event.total) * 100)
+          });
         }
-      );
+      });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Chunk upload failed:', errorText);
-        throw new Error('Chunk upload failed');
-      }
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const response = JSON.parse(xhr.responseText);
+          console.log('Large file upload successful:', response.url);
+          resolve(response.url);
+        } else {
+          console.error('Large file upload failed:', xhr.status, xhr.responseText);
+          resolve(null);
+        }
+      });
 
-      // Progress güncelle
-      if (onProgress) {
-        onProgress({
-          loaded: end,
-          total: file.size,
-          percent: Math.round((end / file.size) * 100)
-        });
-      }
+      xhr.addEventListener('error', () => {
+        console.error('Large file upload error');
+        resolve(null);
+      });
 
-      // Son chunk'ta URL'yi al
-      if (chunkIndex === totalChunks - 1) {
-        const result: CloudinaryUploadResponse = await response.json();
-        uploadedUrl = result.secure_url;
-      }
-    }
-
-    return uploadedUrl;
+      xhr.open('POST', '/api/upload');
+      xhr.send(formData);
+    });
   } catch (error) {
     console.error('Large file upload error:', error);
     return null;
@@ -168,23 +113,23 @@ export const uploadLargeToCloudinary = async (
 
 /**
  * Akıllı upload - dosya boyutuna göre otomatik seçim
+ * - < 10MB: Unsigned upload (hızlı)
+ * - > 10MB: Signed upload via API (100MB'a kadar)
  * Kalite ve çözünürlük her zaman korunur
  */
 export const smartUploadToCloudinary = async (
   file: File,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<string | null> => {
-  // Dosya boyutunu kontrol et
   const fileSizeMB = file.size / (1024 * 1024);
-
   console.log(`Uploading ${file.name} (${fileSizeMB.toFixed(2)} MB)`);
 
   if (fileSizeMB > 10) {
-    console.log('Using chunked upload for large file');
-    return uploadLargeToCloudinary(file, onProgress);
+    console.log('Using signed upload for large file');
+    return uploadLargeFile(file, onProgress);
   }
 
-  return uploadToCloudinary(file, onProgress);
+  return uploadSmallFile(file, onProgress);
 };
 
 export default smartUploadToCloudinary;

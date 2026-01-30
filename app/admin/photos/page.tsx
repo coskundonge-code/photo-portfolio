@@ -89,10 +89,10 @@ export default function AdminPhotosPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Dosya boyutu kontrolü (10MB sınırı - Cloudinary free tier)
+    // Dosya boyutu kontrolü (100MB sınırı)
     const fileSizeMB = file.size / (1024 * 1024);
-    if (fileSizeMB > 10) {
-      alert(`Dosya çok büyük (${fileSizeMB.toFixed(1)} MB). Maksimum 10 MB yüklenebilir. Lütfen dosyayı küçültün.`);
+    if (fileSizeMB > 100) {
+      alert(`Dosya çok büyük (${fileSizeMB.toFixed(1)} MB). Maksimum 100 MB yüklenebilir.`);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
