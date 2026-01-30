@@ -408,20 +408,6 @@ export default function ShopPage() {
                 })}
               </div>
 
-              <div className="mt-8 pt-6 border-t flex gap-3">
-                <button
-                  onClick={() => setSelectedTheme('all')}
-                  className="flex-1 py-3 border text-sm hover:bg-neutral-50 transition-colors duration-200"
-                >
-                  Temizle
-                </button>
-                <button
-                  onClick={closeFilter}
-                  className="flex-1 py-3 bg-black text-white text-sm hover:bg-neutral-800 transition-colors duration-200"
-                >
-                  Uygula
-                </button>
-              </div>
             </div>
           </div>
         </>
