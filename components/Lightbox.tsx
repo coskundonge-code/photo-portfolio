@@ -4,6 +4,12 @@ import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
+// Görsel boyutları için state tipi
+interface ImageDimensions {
+  width: number;
+  height: number;
+}
+
 // Photo tipi - projedeki mevcut tip ile uyumlu
 interface Photo {
   id: string;
@@ -54,13 +60,20 @@ export default function Lightbox(props: LightboxProps) {
 
   // Dizi modu mu tekil mod mu?
   const isArrayMode = Boolean(photos && photos.length > 0);
-  
+
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [imageDimensions, setImageDimensions] = useState<ImageDimensions | null>(null);
 
   // initialIndex değişince güncelle
   useEffect(() => {
     setCurrentIndex(initialIndex);
+    setImageDimensions(null);
   }, [initialIndex]);
+
+  // currentIndex değişince dimensions sıfırla
+  useEffect(() => {
+    setImageDimensions(null);
+  }, [currentIndex]);
 
   // Mevcut fotoğraf bilgileri
   const currentPhoto = isArrayMode ? photos![currentIndex] : null;
@@ -150,8 +163,11 @@ export default function Lightbox(props: LightboxProps) {
       <div className="relative">
         {(() => {
           // Fotoğrafın portrait/landscape durumunu belirle
+          // 1. Önce photo objesinden orientation/width/height
+          // 2. Yoksa yüklenen görselin naturalWidth/naturalHeight değerlerinden
           const isPortrait = currentPhoto?.orientation === 'portrait' ||
-            (currentPhoto?.width && currentPhoto?.height && currentPhoto.height > currentPhoto.width);
+            (currentPhoto?.width && currentPhoto?.height && currentPhoto.height > currentPhoto.width) ||
+            (imageDimensions && imageDimensions.height > imageDimensions.width);
 
           return (
             <div
@@ -212,6 +228,15 @@ export default function Lightbox(props: LightboxProps) {
                     objectFit: 'contain'
                   }}
                   priority
+                  onLoad={(e) => {
+                    const img = e.currentTarget as HTMLImageElement;
+                    if (!imageDimensions) {
+                      setImageDimensions({
+                        width: img.naturalWidth,
+                        height: img.naturalHeight
+                      });
+                    }
+                  }}
                 />
               </div>
             </div>
