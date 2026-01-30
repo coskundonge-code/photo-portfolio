@@ -9,6 +9,9 @@ interface Photo {
   id: string;
   url: string;
   title?: string;
+  width?: number;
+  height?: number;
+  orientation?: string;
   [key: string]: any;
 }
 
@@ -143,16 +146,77 @@ export default function Lightbox(props: LightboxProps) {
         </button>
       )}
 
-      {/* Image */}
-      <div className="relative max-w-[90vw] max-h-[90vh]">
-        <Image
-          src={imageUrl}
-          alt={title || 'Photo'}
-          width={1920}
-          height={1080}
-          className="max-w-full max-h-[90vh] object-contain"
-          priority
-        />
+      {/* Image with Frame */}
+      <div className="relative">
+        {(() => {
+          // Fotoğrafın portrait/landscape durumunu belirle
+          const isPortrait = currentPhoto?.orientation === 'portrait' ||
+            (currentPhoto?.width && currentPhoto?.height && currentPhoto.height > currentPhoto.width);
+
+          return (
+            <div
+              style={{
+                background: 'linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 20%, #1a1a1a 50%, #0a0a0a 80%, #1a1a1a 100%)',
+                padding: '14px',
+                position: 'relative',
+                boxShadow: `
+                  0 40px 80px -20px rgba(0,0,0,0.5),
+                  0 20px 40px -20px rgba(0,0,0,0.4),
+                  inset 0 2px 0 0 rgba(255,255,255,0.15),
+                  inset 0 -2px 0 0 rgba(0,0,0,0.2)
+                `
+              }}
+            >
+              {/* İç çerçeve çizgisi */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: '5px',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  pointerEvents: 'none'
+                }}
+              />
+              {/* Mat / Passepartout */}
+              <div
+                style={{
+                  background: '#ffffff',
+                  padding: isPortrait ? '28px 22px' : '22px 28px',
+                  position: 'relative'
+                }}
+              >
+                {/* V-Groove */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: isPortrait ? '24px' : '18px',
+                    left: isPortrait ? '18px' : '24px',
+                    right: isPortrait ? '18px' : '24px',
+                    bottom: isPortrait ? '24px' : '18px',
+                    boxShadow: 'inset 1px 1px 0 0 rgba(0,0,0,0.05), inset -1px -1px 0 0 rgba(255,255,255,0.9)',
+                    pointerEvents: 'none'
+                  }}
+                />
+                {/* Fotoğraf */}
+                <Image
+                  src={imageUrl}
+                  alt={title || 'Photo'}
+                  width={isPortrait ? 600 : 900}
+                  height={isPortrait ? 900 : 600}
+                  quality={95}
+                  className="block"
+                  style={{
+                    maxWidth: isPortrait ? '42vw' : '65vw',
+                    maxHeight: isPortrait ? '65vh' : '50vh',
+                    width: 'auto',
+                    height: 'auto',
+                    objectFit: 'contain'
+                  }}
+                  priority
+                />
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Next Button */}
