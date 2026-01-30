@@ -88,8 +88,8 @@ export default function OrdersPage() {
                     <p className="text-sm text-neutral-500">{order.customer_phone}</p>
                   )}
                   <p className="text-sm text-neutral-500 mt-2">
-                    {new Date(order.created_at).toLocaleDateString('tr-TR', { 
-                      year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                    {order.created_at && new Date(order.created_at).toLocaleDateString('tr-TR', {
+                      year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
                     })}
                   </p>
                 </div>
