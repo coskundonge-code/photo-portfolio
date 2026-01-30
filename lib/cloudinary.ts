@@ -1,16 +1,8 @@
 // Cloudinary Unsigned Upload
 // Çözünürlük ve kalite korunarak fotoğraf yükleme
 
-const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-
-// Debug: Environment variables kontrolü
-if (typeof window !== 'undefined') {
-  console.log('Cloudinary Config:', {
-    cloudName: CLOUD_NAME ? 'SET' : 'NOT SET',
-    uploadPreset: UPLOAD_PRESET ? 'SET' : 'NOT SET'
-  });
-}
+const CLOUD_NAME = 'dgiak1uhc';
+const UPLOAD_PRESET = 'photo-portfolio';
 
 interface CloudinaryUploadResponse {
   secure_url: string;
@@ -38,16 +30,6 @@ export const uploadToCloudinary = async (
   file: File,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<string | null> => {
-  // Environment variables kontrolü
-  if (!CLOUD_NAME || !UPLOAD_PRESET) {
-    console.error('Cloudinary yapılandırması eksik!', {
-      CLOUD_NAME: CLOUD_NAME || 'EKSİK',
-      UPLOAD_PRESET: UPLOAD_PRESET || 'EKSİK'
-    });
-    alert('Cloudinary yapılandırması eksik. Lütfen Vercel environment variables kontrol edin.');
-    return null;
-  }
-
   try {
     const formData = new FormData();
     formData.append('file', file);
