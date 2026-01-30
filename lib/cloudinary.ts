@@ -75,6 +75,9 @@ const uploadLargeFile = async (
     const signatureRes = await fetch('/api/upload/signature');
     if (!signatureRes.ok) {
       console.error('Failed to get signature');
+      const errorText = await signatureRes.text();
+      console.error('Signature error:', errorText);
+      alert('İmza alınamadı - API ayarlarını kontrol edin');
       return null;
     }
 
@@ -108,12 +111,22 @@ const uploadLargeFile = async (
           resolve(response.secure_url);
         } else {
           console.error('Large file upload failed:', xhr.status, xhr.responseText);
+          // Cloudinary hata mesajını parse et
+          try {
+            const errorResponse = JSON.parse(xhr.responseText);
+            const errorMsg = errorResponse.error?.message || 'Bilinmeyen hata';
+            console.error('Cloudinary error:', errorMsg);
+            alert(`Cloudinary hatası: ${errorMsg}`);
+          } catch (e) {
+            alert(`Yükleme hatası: HTTP ${xhr.status}`);
+          }
           resolve(null);
         }
       });
 
       xhr.addEventListener('error', () => {
-        console.error('Large file upload error');
+        console.error('Large file upload network error');
+        alert('Ağ hatası - Cloudinary\'ye bağlanılamadı');
         resolve(null);
       });
 
