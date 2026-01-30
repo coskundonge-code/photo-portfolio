@@ -53,7 +53,6 @@ export default function ShopPage() {
   const [filterVisible, setFilterVisible] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
-  const [visibleProducts, setVisibleProducts] = useState<Set<string>>(new Set());
   const [pageReady, setPageReady] = useState(false);
 
   useEffect(() => {
@@ -67,15 +66,8 @@ export default function ShopPage() {
       setFilteredProducts(productsData);
       setLoading(false);
 
-      // Trigger page ready animation
+      // Simple page fade-in
       setTimeout(() => setPageReady(true), 100);
-
-      // Staggered product reveal
-      productsData.forEach((product, index) => {
-        setTimeout(() => {
-          setVisibleProducts(prev => new Set(prev).add(product.id));
-        }, 200 + index * 100);
-      });
     };
     loadData();
   }, []);
@@ -162,20 +154,12 @@ export default function ShopPage() {
         className="pt-24 pb-16"
         style={{
           opacity: pageReady ? 1 : 0,
-          transition: 'opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1)',
+          transition: 'opacity 1.2s ease',
         }}
       >
         <div className="max-w-[1800px] mx-auto px-4 lg:px-8">
 
-          <div
-            className="flex items-center justify-between mb-6 pb-4 border-b border-neutral-200"
-            style={{
-              opacity: pageReady ? 1 : 0,
-              transform: pageReady ? 'translateY(0)' : 'translateY(10px)',
-              transition: 'opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)',
-              transitionDelay: '0.1s',
-            }}
-          >
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-neutral-200">
             <button
               onClick={openFilter}
               className="flex items-center gap-2 text-sm text-neutral-600 hover:text-black"
@@ -229,28 +213,20 @@ export default function ShopPage() {
             </div>
           </div>
 
-          <p
-            className="text-sm text-neutral-400 mb-8"
-            style={{
-              opacity: pageReady ? 1 : 0,
-              transition: 'opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1)',
-              transitionDelay: '0.2s',
-            }}
-          >
+          <p className="text-sm text-neutral-400 mb-8">
             {filteredProducts.length} eser gösteriliyor
           </p>
 
           {filteredProducts.length === 0 ? (
-            <div className="text-center py-20 animate-fade-in">
+            <div className="text-center py-20">
               <p className="text-neutral-500">Bu kategoride eser bulunamadı.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts.map((product, index) => {
+              {filteredProducts.map((product) => {
                 const isHovered = hoveredProduct === product.id;
                 const photo = product.photos;
                 const isPortrait = isPhotoPortrait(product);
-                const isVisible = visibleProducts.has(product.id);
 
                 const frameWidth = isPortrait ? 200 : 280;
                 const frameHeight = isPortrait ? 280 : 200;
@@ -263,11 +239,6 @@ export default function ShopPage() {
                     className="group block"
                     onMouseEnter={() => setHoveredProduct(product.id)}
                     onMouseLeave={() => setHoveredProduct(null)}
-                    style={{
-                      opacity: isVisible ? 1 : 0,
-                      transform: isVisible ? 'translateY(0)' : 'translateY(30px)',
-                      transition: 'opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1)',
-                    }}
                   >
                     <div
                       className="bg-[#e8e8e8] flex items-center justify-center"
@@ -387,20 +358,15 @@ export default function ShopPage() {
               </div>
 
               <div className="space-y-1">
-                {themes.map((theme, index) => {
+                {themes.map((theme) => {
                   const count = themeCounts[theme.id] || 0;
                   return (
                     <button
                       key={theme.id}
                       onClick={() => setSelectedTheme(theme.id)}
-                      className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between transition-all duration-200 ${
+                      className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between transition-colors duration-200 ${
                         selectedTheme === theme.id ? 'bg-black text-white' : 'hover:bg-neutral-100'
                       }`}
-                      style={{
-                        opacity: filterVisible ? 1 : 0,
-                        transform: filterVisible ? 'translateX(0)' : 'translateX(-10px)',
-                        transitionDelay: filterVisible ? `${index * 30}ms` : '0ms',
-                      }}
                     >
                       <span>{theme.label}</span>
                       <span className={`text-xs ${
@@ -413,14 +379,7 @@ export default function ShopPage() {
                 })}
               </div>
 
-              <div
-                className="mt-8 pt-6 border-t flex gap-3"
-                style={{
-                  opacity: filterVisible ? 1 : 0,
-                  transition: 'opacity 0.3s ease',
-                  transitionDelay: filterVisible ? '0.2s' : '0s',
-                }}
-              >
+              <div className="mt-8 pt-6 border-t flex gap-3">
                 <button
                   onClick={() => setSelectedTheme('all')}
                   className="flex-1 py-3 border text-sm hover:bg-neutral-50 transition-colors duration-200"
