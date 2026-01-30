@@ -59,6 +59,10 @@ export default function AdminPhotosPage() {
       orientation: 'landscape',
     });
     setEditingPhoto(null);
+    // File input'u sıfırla
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const openCreateModal = () => {
@@ -117,6 +121,11 @@ export default function AdminPhotosPage() {
           setUploadProgress(100);
         } else {
           alert('Yükleme başarısız oldu. Lütfen tekrar deneyin.');
+        }
+
+        // File input'u sıfırla (yeni yükleme için)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
         }
 
         setTimeout(() => {
