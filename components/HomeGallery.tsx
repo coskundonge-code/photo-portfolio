@@ -112,28 +112,9 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                   width={800}
                   height={600}
                   quality={90}
-                  className="w-full h-auto"
-                  style={{
-                    transition: 'transform 0.8s ease, opacity 0.8s ease',
-                  }}
-                />
-                {/* Subtle hover overlay */}
-                <div
-                  className="absolute inset-0 bg-black pointer-events-none"
-                  style={{
-                    opacity: 0,
-                    transition: 'opacity 0.6s ease',
-                  }}
+                  className="w-full h-auto transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                 />
               </div>
-              <style jsx>{`
-                .group:hover img {
-                  transform: scale(1.02);
-                }
-                .group:hover div {
-                  opacity: 0.08 !important;
-                }
-              `}</style>
             </div>
           ))}
         </div>
