@@ -77,29 +77,78 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
     <>
       {/* Gallery Grid */}
       <div className="px-2 md:px-4 lg:px-6">
-        <div className="columns-1 sm:columns-2 lg:columns-3 gap-2 md:gap-3 lg:gap-4">
-          {photos.map((photo, index) => (
-            <div
-              key={photo.id}
-              onClick={() => openLightbox(index)}
-              className={`block mb-2 md:mb-3 lg:mb-4 break-inside-avoid cursor-pointer transition-opacity duration-500 ${
-                loadedImages.has(photo.id) ? 'opacity-100' : 'opacity-0'
-              }`}
-            >
-              <div className="relative group overflow-hidden">
-                <Image
-                  src={photo.url}
-                  alt={photo.title || 'Photo'}
-                  width={800}
-                  height={600}
-                  quality={90}
-                  className="w-full h-auto transition-transform duration-700 group-hover:scale-[1.02]"
-                  onLoad={() => setLoadedImages(prev => new Set(prev).add(photo.id))}
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300" />
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 md:gap-5 lg:gap-6">
+          {photos.map((photo, index) => {
+            const isPortrait = photo.orientation === 'portrait' ||
+              (photo.width && photo.height && photo.height > photo.width);
+
+            return (
+              <div
+                key={photo.id}
+                onClick={() => openLightbox(index)}
+                className={`block mb-4 md:mb-5 lg:mb-6 break-inside-avoid cursor-pointer transition-all duration-500 group ${
+                  loadedImages.has(photo.id) ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                {/* Çerçeve */}
+                <div
+                  style={{
+                    background: 'linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 20%, #1a1a1a 50%, #0a0a0a 80%, #1a1a1a 100%)',
+                    padding: '8px',
+                    position: 'relative',
+                    boxShadow: `
+                      0 10px 30px -10px rgba(0,0,0,0.4),
+                      0 5px 15px -5px rgba(0,0,0,0.3),
+                      inset 0 1px 0 0 rgba(255,255,255,0.1),
+                      inset 0 -1px 0 0 rgba(0,0,0,0.2)
+                    `
+                  }}
+                  className="transition-transform duration-500 group-hover:scale-[1.02]"
+                >
+                  {/* İç çerçeve çizgisi */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: '3px',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      pointerEvents: 'none'
+                    }}
+                  />
+                  {/* Mat / Passepartout */}
+                  <div
+                    style={{
+                      background: '#ffffff',
+                      padding: isPortrait ? '12px 10px' : '10px 12px',
+                      position: 'relative'
+                    }}
+                  >
+                    {/* V-Groove */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: isPortrait ? '10px' : '8px',
+                        left: isPortrait ? '8px' : '10px',
+                        right: isPortrait ? '8px' : '10px',
+                        bottom: isPortrait ? '10px' : '8px',
+                        boxShadow: 'inset 1px 1px 0 0 rgba(0,0,0,0.04), inset -1px -1px 0 0 rgba(255,255,255,0.9)',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                    {/* Fotoğraf */}
+                    <Image
+                      src={photo.url}
+                      alt={photo.title || 'Photo'}
+                      width={800}
+                      height={600}
+                      quality={90}
+                      className="w-full h-auto block"
+                      onLoad={() => setLoadedImages(prev => new Set(prev).add(photo.id))}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

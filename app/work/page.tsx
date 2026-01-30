@@ -131,28 +131,80 @@ function WorkContent() {
               <p className="text-neutral-500">Bu projede henüz fotoğraf yok.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredPhotos.map((photo, index) => (
-                <div
-                  key={photo.id}
-                  className="aspect-[4/3] relative overflow-hidden bg-neutral-100 cursor-pointer group"
-                  onClick={() => openLightbox(index)}
-                >
-                  <Image
-                    src={photo.url}
-                    alt={photo.title || ''}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
-                  {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-end">
-                    <div className="p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                      <p className="font-medium">{photo.title}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredPhotos.map((photo, index) => {
+                const isPortrait = photo.orientation === 'portrait' ||
+                  (photo.width && photo.height && photo.height > photo.width);
+
+                return (
+                  <div
+                    key={photo.id}
+                    className="cursor-pointer group"
+                    onClick={() => openLightbox(index)}
+                  >
+                    {/* Çerçeve */}
+                    <div
+                      style={{
+                        background: 'linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 20%, #1a1a1a 50%, #0a0a0a 80%, #1a1a1a 100%)',
+                        padding: '8px',
+                        position: 'relative',
+                        boxShadow: `
+                          0 10px 30px -10px rgba(0,0,0,0.4),
+                          0 5px 15px -5px rgba(0,0,0,0.3),
+                          inset 0 1px 0 0 rgba(255,255,255,0.1),
+                          inset 0 -1px 0 0 rgba(0,0,0,0.2)
+                        `
+                      }}
+                      className="transition-transform duration-500 group-hover:scale-[1.02]"
+                    >
+                      {/* İç çerçeve çizgisi */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          inset: '3px',
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          pointerEvents: 'none'
+                        }}
+                      />
+                      {/* Mat / Passepartout */}
+                      <div
+                        style={{
+                          background: '#ffffff',
+                          padding: isPortrait ? '12px 10px' : '10px 12px',
+                          position: 'relative'
+                        }}
+                      >
+                        {/* V-Groove */}
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: isPortrait ? '10px' : '8px',
+                            left: isPortrait ? '8px' : '10px',
+                            right: isPortrait ? '8px' : '10px',
+                            bottom: isPortrait ? '10px' : '8px',
+                            boxShadow: 'inset 1px 1px 0 0 rgba(0,0,0,0.04), inset -1px -1px 0 0 rgba(255,255,255,0.9)',
+                            pointerEvents: 'none'
+                          }}
+                        />
+                        {/* Fotoğraf */}
+                        <div className="aspect-[4/3] relative overflow-hidden">
+                          <Image
+                            src={photo.url}
+                            alt={photo.title || ''}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          />
+                        </div>
+                      </div>
                     </div>
+                    {/* Fotoğraf Başlığı */}
+                    {photo.title && (
+                      <p className="mt-3 text-sm text-neutral-600 text-center">{photo.title}</p>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
