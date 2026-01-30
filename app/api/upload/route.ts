@@ -80,10 +80,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-// Büyük dosyalar için config
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
