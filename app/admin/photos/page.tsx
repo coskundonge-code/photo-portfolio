@@ -89,6 +89,16 @@ export default function AdminPhotosPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Dosya boyutu kontrolü (10MB sınırı - Cloudinary free tier)
+    const fileSizeMB = file.size / (1024 * 1024);
+    if (fileSizeMB > 10) {
+      alert(`Dosya çok büyük (${fileSizeMB.toFixed(1)} MB). Maksimum 10 MB yüklenebilir. Lütfen dosyayı küçültün.`);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+
     setUploading(true);
     setUploadProgress(5);
 
@@ -120,7 +130,7 @@ export default function AdminPhotosPage() {
           }));
           setUploadProgress(100);
         } else {
-          alert('Yükleme başarısız oldu. Lütfen tekrar deneyin.');
+          alert(`Yükleme başarısız oldu.\n\nDosya: ${file.name}\nBoyut: ${fileSizeMB.toFixed(1)} MB\n\nLütfen tekrar deneyin veya daha küçük bir dosya seçin.`);
         }
 
         // File input'u sıfırla (yeni yükleme için)
