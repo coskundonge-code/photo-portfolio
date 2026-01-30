@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Loader2, Plus, Edit2, Trash2, X, Upload, ImageIcon, Star } from 'lucide-react';
-import { getPhotos, getProjects, createPhoto, updatePhoto, deletePhoto, uploadImage } from '@/lib/supabase';
+import { getPhotos, getProjects, createPhoto, updatePhoto, deletePhoto } from '@/lib/supabase';
+import { smartUploadToCloudinary } from '@/lib/cloudinary';
 import { Photo, Project } from '@/lib/types';
 
 const themeOptions = [
@@ -78,34 +79,38 @@ export default function AdminPhotosPage() {
     setIsModalOpen(true);
   };
 
-  // DOSYA YÜKLEME - ÇALIŞAN VERSİYON
+  // DOSYA YÜKLEME - CLOUDINARY İLE ÇALIŞAN VERSİYON
+  // Çözünürlük ve kalite korunarak yükleme yapılır
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
-    setUploadProgress(10);
+    setUploadProgress(5);
 
     try {
       // Resim boyutlarını al
       const img = document.createElement('img');
       const objectUrl = URL.createObjectURL(file);
-      
+
       img.onload = async () => {
         const width = img.width;
         const height = img.height;
         const orientation = height > width ? 'portrait' : 'landscape';
-        
+
         URL.revokeObjectURL(objectUrl);
-        setUploadProgress(30);
-        
-        // Supabase'e yükle
-        const uploadedUrl = await uploadImage(file);
-        setUploadProgress(90);
-        
+        setUploadProgress(10);
+
+        // Cloudinary'ye yükle - çözünürlük korunur
+        const uploadedUrl = await smartUploadToCloudinary(file, (progress) => {
+          // Progress: 10-90 arası Cloudinary upload
+          const mappedProgress = 10 + Math.round(progress.percent * 0.8);
+          setUploadProgress(mappedProgress);
+        });
+
         if (uploadedUrl) {
-          setFormData(prev => ({ 
-            ...prev, 
+          setFormData(prev => ({
+            ...prev,
             url: uploadedUrl,
             orientation: orientation,
           }));
@@ -113,18 +118,18 @@ export default function AdminPhotosPage() {
         } else {
           alert('Yükleme başarısız oldu. Lütfen tekrar deneyin.');
         }
-        
+
         setTimeout(() => {
           setUploading(false);
           setUploadProgress(0);
         }, 500);
       };
-      
+
       img.onerror = () => {
         alert('Görsel okunamadı.');
         setUploading(false);
       };
-      
+
       img.src = objectUrl;
     } catch (error) {
       console.error('Upload error:', error);
