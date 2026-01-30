@@ -62,7 +62,8 @@ const uploadSmallFile = async (
 };
 
 /**
- * Büyük dosyalar için signed upload via API route (> 10MB)
+ * Büyük dosyalar için signed upload (> 10MB)
+ * Doğrudan Cloudinary'ye yükler - Vercel limiti atlanır
  * Kalite ve çözünürlük korunur
  */
 const uploadLargeFile = async (
@@ -70,8 +71,22 @@ const uploadLargeFile = async (
   onProgress?: (progress: UploadProgress) => void
 ): Promise<string | null> => {
   try {
+    // 1. Sunucudan imza al
+    const signatureRes = await fetch('/api/upload/signature');
+    if (!signatureRes.ok) {
+      console.error('Failed to get signature');
+      return null;
+    }
+
+    const { signature, timestamp, api_key, cloud_name, folder } = await signatureRes.json();
+
+    // 2. FormData oluştur
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('api_key', api_key);
+    formData.append('timestamp', timestamp.toString());
+    formData.append('signature', signature);
+    formData.append('folder', folder);
 
     const xhr = new XMLHttpRequest();
 
@@ -89,8 +104,8 @@ const uploadLargeFile = async (
       xhr.addEventListener('load', () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           const response = JSON.parse(xhr.responseText);
-          console.log('Large file upload successful:', response.url);
-          resolve(response.url);
+          console.log('Large file upload successful:', response.secure_url);
+          resolve(response.secure_url);
         } else {
           console.error('Large file upload failed:', xhr.status, xhr.responseText);
           resolve(null);
@@ -102,7 +117,8 @@ const uploadLargeFile = async (
         resolve(null);
       });
 
-      xhr.open('POST', '/api/upload');
+      // Doğrudan Cloudinary'ye yükle
+      xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`);
       xhr.send(formData);
     });
   } catch (error) {
