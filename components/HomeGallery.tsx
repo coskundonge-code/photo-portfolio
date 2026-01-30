@@ -15,6 +15,7 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxVisible, setLightboxVisible] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [hoveredPhoto, setHoveredPhoto] = useState<string | null>(null);
 
   // Simple page fade-in on mount
   useEffect(() => {
@@ -92,35 +93,84 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
     <>
       {/* Gallery Grid - whole section fades in together */}
       <div
-        className="px-2 md:px-4 lg:px-6"
+        className="px-4 md:px-6 lg:px-8"
         style={{
           opacity: pageReady ? 1 : 0,
           transition: 'opacity 1.2s ease',
         }}
       >
-        <div className="columns-1 sm:columns-2 lg:columns-3 gap-2 md:gap-3 lg:gap-4">
-          {photos.map((photo, index) => (
-            <div
-              key={photo.id}
-              onClick={() => openLightbox(index)}
-              className="block mb-2 md:mb-3 lg:mb-4 break-inside-avoid cursor-pointer group"
-            >
-              <div className="relative overflow-hidden">
-                <Image
-                  src={photo.url}
-                  alt={photo.title || 'Photo'}
-                  width={800}
-                  height={600}
-                  quality={90}
-                  className="w-full h-auto transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-                />
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 md:gap-6 lg:gap-8">
+          {photos.map((photo, index) => {
+            const isHovered = hoveredPhoto === photo.id;
+
+            return (
+              <div
+                key={photo.id}
+                onClick={() => openLightbox(index)}
+                onMouseEnter={() => setHoveredPhoto(photo.id)}
+                onMouseLeave={() => setHoveredPhoto(null)}
+                className="block mb-4 md:mb-6 lg:mb-8 break-inside-avoid cursor-pointer"
+              >
+                {/* Framed photo */}
+                <div
+                  className="relative"
+                  style={{
+                    transform: isHovered ? 'scale(1.02)' : 'scale(1)',
+                    transition: 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+                  }}
+                >
+                  {/* Black frame */}
+                  <div
+                    className="bg-[#1a1a1a] p-[5px]"
+                    style={{
+                      boxShadow: isHovered
+                        ? '0 25px 50px -12px rgba(0,0,0,0.5)'
+                        : '0 15px 35px -10px rgba(0,0,0,0.4)',
+                      transition: 'box-shadow 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+                    }}
+                  >
+                    {/* White mat */}
+                    <div className="bg-white p-3 md:p-4 relative">
+                      {/* Inner border line */}
+                      <div
+                        className="absolute pointer-events-none"
+                        style={{
+                          top: '10px',
+                          left: '10px',
+                          right: '10px',
+                          bottom: '10px',
+                          boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)',
+                        }}
+                      />
+                      {/* Photo */}
+                      <Image
+                        src={photo.url}
+                        alt={photo.title || 'Photo'}
+                        width={800}
+                        height={600}
+                        quality={90}
+                        className="w-full h-auto"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Shadow underneath */}
+                  <div
+                    className="absolute -bottom-2 left-[10%] right-[10%] h-4 -z-10"
+                    style={{
+                      background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, transparent 70%)',
+                      opacity: isHovered ? 0.6 : 0.4,
+                      transition: 'opacity 0.5s ease',
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      {/* Lightbox with smooth transitions */}
+      {/* Lightbox with framed photo */}
       {lightboxOpen && currentPhoto && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
@@ -162,7 +212,7 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
             </>
           )}
 
-          {/* Image */}
+          {/* Framed Image in Lightbox */}
           <div
             className="relative z-40"
             onClick={(e) => e.stopPropagation()}
@@ -171,15 +221,38 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               transition: 'transform 0.6s ease',
             }}
           >
-            <Image
-              src={currentPhoto.url}
-              alt=""
-              width={1920}
-              height={1280}
-              quality={95}
-              className="max-w-[90vw] max-h-[90vh] w-auto h-auto object-contain"
-              priority
-            />
+            {/* Black frame */}
+            <div
+              className="bg-[#1a1a1a] p-[6px]"
+              style={{
+                boxShadow: '0 30px 60px -15px rgba(0,0,0,0.6)',
+              }}
+            >
+              {/* White mat */}
+              <div className="bg-white p-4 md:p-6 relative">
+                {/* Inner border line */}
+                <div
+                  className="absolute pointer-events-none"
+                  style={{
+                    top: '14px',
+                    left: '14px',
+                    right: '14px',
+                    bottom: '14px',
+                    boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)',
+                  }}
+                />
+                {/* Photo */}
+                <Image
+                  src={currentPhoto.url}
+                  alt=""
+                  width={1920}
+                  height={1280}
+                  quality={95}
+                  className="max-w-[85vw] max-h-[80vh] w-auto h-auto object-contain"
+                  priority
+                />
+              </div>
+            </div>
           </div>
 
           {/* Counter */}
