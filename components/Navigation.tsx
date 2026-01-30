@@ -94,12 +94,20 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
                 </Link>
                 
                 {/* Dropdown Menu */}
-                {isWorkDropdownOpen && projects.length > 0 && (
-                  <div className="absolute top-full left-0 pt-2">
+                {projects.length > 0 && (
+                  <div
+                    className="absolute top-full left-0 pt-2"
+                    style={{
+                      opacity: isWorkDropdownOpen ? 1 : 0,
+                      transform: isWorkDropdownOpen ? 'translateY(0)' : 'translateY(-8px)',
+                      pointerEvents: isWorkDropdownOpen ? 'auto' : 'none',
+                      transition: 'opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1), transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+                    }}
+                  >
                     <div className="bg-white border border-neutral-200 shadow-lg min-w-[200px]">
                       <Link
                         href="/work"
-                        className="block px-4 py-3 text-sm hover:bg-neutral-50 border-b border-neutral-100"
+                        className="block px-4 py-3 text-sm hover:bg-neutral-50 border-b border-neutral-100 transition-colors duration-200"
                       >
                         Tümü
                       </Link>
@@ -107,7 +115,7 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
                         <Link
                           key={project.id}
                           href={`/work?project=${project.id}`}
-                          className="block px-4 py-3 text-sm hover:bg-neutral-50 text-neutral-600 hover:text-black"
+                          className="block px-4 py-3 text-sm hover:bg-neutral-50 text-neutral-600 hover:text-black transition-colors duration-200"
                         >
                           {project.title}
                         </Link>
@@ -177,27 +185,41 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
         </div>
 
         {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="lg:hidden bg-white border-t">
-            <div className="px-4 py-6 space-y-4">
-              <Link href="/" className="block text-lg" onClick={() => setIsMenuOpen(false)}>Ana Sayfa</Link>
-              <Link href="/work" className="block text-lg" onClick={() => setIsMenuOpen(false)}>Çalışmalar</Link>
-              {projects.map((project) => (
-                <Link 
-                  key={project.id}
-                  href={`/work?project=${project.id}`} 
-                  className="block text-base pl-4 text-neutral-500" 
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {project.title}
-                </Link>
-              ))}
-              <Link href="/shop" className="block text-lg" onClick={() => setIsMenuOpen(false)}>Mağaza</Link>
-              <Link href="/about" className="block text-lg" onClick={() => setIsMenuOpen(false)}>Hakkında</Link>
-              <Link href="/contact" className="block text-lg" onClick={() => setIsMenuOpen(false)}>İletişim</Link>
-            </div>
+        <div
+          className="lg:hidden bg-white border-t overflow-hidden"
+          style={{
+            maxHeight: isMenuOpen ? '500px' : '0',
+            opacity: isMenuOpen ? 1 : 0,
+            transition: 'max-height 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
+          }}
+        >
+          <div className="px-4 py-6 space-y-4">
+            {[
+              { href: '/', label: 'Ana Sayfa' },
+              { href: '/work', label: 'Çalışmalar' },
+              ...projects.map(p => ({ href: `/work?project=${p.id}`, label: p.title, isProject: true })),
+              { href: '/shop', label: 'Mağaza' },
+              { href: '/about', label: 'Hakkında' },
+              { href: '/contact', label: 'İletişim' },
+            ].map((item, index) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`block transition-all duration-300 ${
+                  (item as any).isProject ? 'text-base pl-4 text-neutral-500' : 'text-lg'
+                }`}
+                style={{
+                  opacity: isMenuOpen ? 1 : 0,
+                  transform: isMenuOpen ? 'translateX(0)' : 'translateX(-10px)',
+                  transitionDelay: isMenuOpen ? `${index * 50}ms` : '0ms',
+                }}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
-        )}
+        </div>
       </nav>
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
