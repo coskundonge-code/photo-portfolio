@@ -72,7 +72,7 @@ export default function ProductsPage() {
       description,
       base_price: parseFloat(basePrice),
       edition_type: editionType,
-      is_active: true,
+      is_available: true,
     };
     if (selectedPhotoId) productData.photo_id = selectedPhotoId;
     if (editionType === 'limited' && editionTotal) productData.edition_total = parseInt(editionTotal);
