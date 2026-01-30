@@ -111,56 +111,83 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                 onMouseLeave={() => setHoveredPhoto(null)}
                 className="block mb-4 md:mb-6 lg:mb-8 break-inside-avoid cursor-pointer"
               >
-                {/* Framed photo */}
+                {/* Framed photo - 3D realistic */}
                 <div
                   className="relative"
                   style={{
-                    transform: isHovered ? 'scale(1.02)' : 'scale(1)',
+                    transform: isHovered ? 'scale(1.02) translateY(-4px)' : 'scale(1)',
                     transition: 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
                   }}
                 >
-                  {/* Dark brown frame */}
+                  {/* 3D Frame with depth */}
                   <div
-                    className="bg-[#3d2b1f] p-[8px]"
+                    className="relative"
                     style={{
                       boxShadow: isHovered
-                        ? '0 25px 50px -12px rgba(0,0,0,0.5)'
-                        : '0 15px 35px -10px rgba(0,0,0,0.4)',
+                        ? '0 35px 60px -15px rgba(0,0,0,0.5), 0 15px 25px -10px rgba(0,0,0,0.3)'
+                        : '0 20px 40px -15px rgba(0,0,0,0.4), 0 10px 20px -10px rgba(0,0,0,0.2)',
                       transition: 'box-shadow 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
                     }}
                   >
-                    {/* White mat */}
-                    <div className="bg-white p-3 md:p-4 relative">
-                      {/* Inner border line */}
+                    {/* Outer frame - black with 3D edge */}
+                    <div
+                      className="bg-[#1a1a1a] p-[10px]"
+                      style={{
+                        boxShadow: 'inset 2px 2px 4px rgba(255,255,255,0.1), inset -2px -2px 4px rgba(0,0,0,0.3)',
+                      }}
+                    >
+                      {/* Inner frame edge - creates depth */}
                       <div
-                        className="absolute pointer-events-none"
+                        className="bg-[#0d0d0d] p-[3px]"
                         style={{
-                          top: '10px',
-                          left: '10px',
-                          right: '10px',
-                          bottom: '10px',
-                          boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)',
+                          boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.8), inset -1px -1px 2px rgba(255,255,255,0.05)',
                         }}
-                      />
-                      {/* Photo */}
-                      <Image
-                        src={photo.url}
-                        alt={photo.title || 'Photo'}
-                        width={800}
-                        height={600}
-                        quality={90}
-                        className="w-full h-auto"
-                      />
+                      >
+                        {/* White mat */}
+                        <div className="bg-[#fafafa] p-3 md:p-4 relative">
+                          {/* Mat inner shadow for depth */}
+                          <div
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                              boxShadow: 'inset 0 0 10px rgba(0,0,0,0.08)',
+                            }}
+                          />
+                          {/* Inner border line */}
+                          <div
+                            className="absolute pointer-events-none"
+                            style={{
+                              top: '10px',
+                              left: '10px',
+                              right: '10px',
+                              bottom: '10px',
+                              boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.08)',
+                            }}
+                          />
+                          {/* Photo */}
+                          <Image
+                            src={photo.url}
+                            alt={photo.title || 'Photo'}
+                            width={800}
+                            height={600}
+                            quality={90}
+                            className="w-full h-auto relative"
+                            style={{
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Shadow underneath */}
+                  {/* Wall shadow - makes it look like hanging */}
                   <div
-                    className="absolute -bottom-2 left-[10%] right-[10%] h-4 -z-10"
+                    className="absolute -bottom-4 left-[5%] right-[5%] h-8 -z-10"
                     style={{
-                      background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, transparent 70%)',
-                      opacity: isHovered ? 0.6 : 0.4,
-                      transition: 'opacity 0.5s ease',
+                      background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, transparent 70%)',
+                      opacity: isHovered ? 0.8 : 0.5,
+                      transform: isHovered ? 'scaleY(1.2)' : 'scaleY(1)',
+                      transition: 'opacity 0.5s ease, transform 0.5s ease',
                     }}
                   />
                 </div>
@@ -221,36 +248,61 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               transition: 'transform 0.6s ease',
             }}
           >
-            {/* Dark brown frame */}
+            {/* 3D Frame */}
             <div
-              className="bg-[#3d2b1f] p-[10px]"
               style={{
-                boxShadow: '0 30px 60px -15px rgba(0,0,0,0.6)',
+                boxShadow: '0 40px 80px -20px rgba(0,0,0,0.6), 0 20px 40px -15px rgba(0,0,0,0.4)',
               }}
             >
-              {/* White mat */}
-              <div className="bg-white p-4 md:p-6 relative">
-                {/* Inner border line */}
+              {/* Outer frame - black with 3D edge */}
+              <div
+                className="bg-[#1a1a1a] p-[12px]"
+                style={{
+                  boxShadow: 'inset 2px 2px 6px rgba(255,255,255,0.1), inset -2px -2px 6px rgba(0,0,0,0.4)',
+                }}
+              >
+                {/* Inner frame edge */}
                 <div
-                  className="absolute pointer-events-none"
+                  className="bg-[#0d0d0d] p-[4px]"
                   style={{
-                    top: '14px',
-                    left: '14px',
-                    right: '14px',
-                    bottom: '14px',
-                    boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)',
+                    boxShadow: 'inset 1px 1px 3px rgba(0,0,0,0.8), inset -1px -1px 3px rgba(255,255,255,0.05)',
                   }}
-                />
-                {/* Photo */}
-                <Image
-                  src={currentPhoto.url}
-                  alt=""
-                  width={1920}
-                  height={1280}
-                  quality={95}
-                  className="max-w-[85vw] max-h-[80vh] w-auto h-auto object-contain"
-                  priority
-                />
+                >
+                  {/* White mat */}
+                  <div className="bg-[#fafafa] p-5 md:p-8 relative">
+                    {/* Mat inner shadow */}
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        boxShadow: 'inset 0 0 15px rgba(0,0,0,0.08)',
+                      }}
+                    />
+                    {/* Inner border line */}
+                    <div
+                      className="absolute pointer-events-none"
+                      style={{
+                        top: '16px',
+                        left: '16px',
+                        right: '16px',
+                        bottom: '16px',
+                        boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.08)',
+                      }}
+                    />
+                    {/* Photo */}
+                    <Image
+                      src={currentPhoto.url}
+                      alt=""
+                      width={1920}
+                      height={1280}
+                      quality={95}
+                      className="max-w-[80vw] max-h-[75vh] w-auto h-auto object-contain"
+                      style={{
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                      }}
+                      priority
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

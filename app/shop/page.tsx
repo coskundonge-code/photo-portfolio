@@ -251,59 +251,88 @@ export default function ShopPage() {
                           transition: 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
                         }}
                       >
+                        {/* 3D Frame with depth */}
                         <div
-                          className="relative bg-[#3d2b1f]"
+                          className="relative"
                           style={{
-                            padding: '8px',
                             boxShadow: isHovered
-                              ? '0 30px 60px -10px rgba(0,0,0,0.5)'
-                              : '0 20px 40px -10px rgba(0,0,0,0.4)',
+                              ? '0 35px 60px -15px rgba(0,0,0,0.5), 0 15px 25px -10px rgba(0,0,0,0.3)'
+                              : '0 20px 40px -15px rgba(0,0,0,0.4), 0 10px 20px -10px rgba(0,0,0,0.2)',
                             transition: 'box-shadow 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
                           }}
                         >
+                          {/* Outer frame - black with 3D edge */}
                           <div
-                            className="bg-white relative"
+                            className="bg-[#1a1a1a]"
                             style={{
-                              padding: isPortrait ? '20px 16px' : '16px 20px'
+                              padding: '8px',
+                              boxShadow: 'inset 2px 2px 4px rgba(255,255,255,0.1), inset -2px -2px 4px rgba(0,0,0,0.3)',
                             }}
                           >
+                            {/* Inner frame edge */}
                             <div
-                              className="absolute pointer-events-none"
+                              className="bg-[#0d0d0d]"
                               style={{
-                                top: isPortrait ? '18px' : '14px',
-                                left: isPortrait ? '14px' : '18px',
-                                right: isPortrait ? '14px' : '18px',
-                                bottom: isPortrait ? '18px' : '14px',
-                                boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.06)',
-                              }}
-                            />
-
-                            <div
-                              className="relative overflow-hidden bg-neutral-100"
-                              style={{
-                                width: `${frameWidth}px`,
-                                height: `${frameHeight}px`,
+                                padding: '3px',
+                                boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.8), inset -1px -1px 2px rgba(255,255,255,0.05)',
                               }}
                             >
-                              {photo?.url && (
-                                <Image
-                                  src={photo.url}
-                                  alt={product.title}
-                                  fill
-                                  className="object-cover"
-                                  sizes="(max-width: 768px) 100vw, 33vw"
+                              {/* White mat */}
+                              <div
+                                className="bg-[#fafafa] relative"
+                                style={{
+                                  padding: isPortrait ? '20px 16px' : '16px 20px'
+                                }}
+                              >
+                                {/* Mat inner shadow */}
+                                <div
+                                  className="absolute inset-0 pointer-events-none"
+                                  style={{
+                                    boxShadow: 'inset 0 0 10px rgba(0,0,0,0.06)',
+                                  }}
                                 />
-                              )}
+                                {/* Inner border line */}
+                                <div
+                                  className="absolute pointer-events-none"
+                                  style={{
+                                    top: isPortrait ? '18px' : '14px',
+                                    left: isPortrait ? '14px' : '18px',
+                                    right: isPortrait ? '14px' : '18px',
+                                    bottom: isPortrait ? '18px' : '14px',
+                                    boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.08)',
+                                  }}
+                                />
+
+                                <div
+                                  className="relative overflow-hidden bg-neutral-100"
+                                  style={{
+                                    width: `${frameWidth}px`,
+                                    height: `${frameHeight}px`,
+                                  }}
+                                >
+                                  {photo?.url && (
+                                    <Image
+                                      src={photo.url}
+                                      alt={product.title}
+                                      fill
+                                      className="object-cover"
+                                      sizes="(max-width: 768px) 100vw, 33vw"
+                                    />
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
 
+                        {/* Wall shadow */}
                         <div
-                          className="absolute -bottom-3 left-[15%] right-[15%] h-6 -z-10"
+                          className="absolute -bottom-4 left-[5%] right-[5%] h-8 -z-10"
                           style={{
-                            background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, transparent 70%)',
-                            opacity: isHovered ? 0.5 : 0.3,
-                            transition: 'opacity 0.5s ease',
+                            background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, transparent 70%)',
+                            opacity: isHovered ? 0.8 : 0.5,
+                            transform: isHovered ? 'scaleY(1.2)' : 'scaleY(1)',
+                            transition: 'opacity 0.5s ease, transform 0.5s ease',
                           }}
                         />
                       </div>

@@ -15,7 +15,7 @@ import { Loader2 } from 'lucide-react';
 function WorkContent() {
   const searchParams = useSearchParams();
   const projectParam = searchParams.get('project');
-  
+
   const [settings, setSettings] = useState<Settings | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -24,6 +24,8 @@ function WorkContent() {
   const [selectedProject, setSelectedProject] = useState<string | null>(projectParam);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [pageReady, setPageReady] = useState(false);
+  const [hoveredPhoto, setHoveredPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -39,6 +41,14 @@ function WorkContent() {
     };
     loadData();
   }, []);
+
+  // Page fade-in on mount
+  useEffect(() => {
+    if (!loading) {
+      const timer = setTimeout(() => setPageReady(true), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
 
   // URL'den gelen project parametresi değişince
   useEffect(() => {
@@ -86,18 +96,24 @@ function WorkContent() {
   return (
     <main className="min-h-screen bg-white">
       <Navigation projects={projects} settings={settings} />
-      
-      <section className="pt-24 pb-16">
+
+      <section
+        className="pt-24 pb-16"
+        style={{
+          opacity: pageReady ? 1 : 0,
+          transition: 'opacity 1.2s ease',
+        }}
+      >
         <div className="max-w-[1800px] mx-auto px-4 lg:px-8">
-          
+
           {/* Proje Tabs */}
           <div className="mb-8 border-b border-neutral-200">
             <div className="flex items-center gap-8 overflow-x-auto pb-4">
               <button
                 onClick={() => handleProjectClick(null)}
                 className={`text-sm font-medium whitespace-nowrap pb-2 border-b-2 transition-colors ${
-                  !selectedProject 
-                    ? 'text-black border-black' 
+                  !selectedProject
+                    ? 'text-black border-black'
                     : 'text-neutral-500 border-transparent hover:text-black'
                 }`}
               >
@@ -108,8 +124,8 @@ function WorkContent() {
                   key={project.id}
                   onClick={() => handleProjectClick(project.id)}
                   className={`text-sm font-medium whitespace-nowrap pb-2 border-b-2 transition-colors ${
-                    selectedProject === project.id 
-                      ? 'text-black border-black' 
+                    selectedProject === project.id
+                      ? 'text-black border-black'
                       : 'text-neutral-500 border-transparent hover:text-black'
                   }`}
                 >
@@ -125,34 +141,107 @@ function WorkContent() {
             {selectedProject && ` • ${getSelectedProjectTitle()}`}
           </p>
 
-          {/* Fotoğraf Grid */}
+          {/* Fotoğraf Grid with 3D Frames */}
           {filteredPhotos.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-neutral-500">Bu projede henüz fotoğraf yok.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredPhotos.map((photo, index) => (
-                <div
-                  key={photo.id}
-                  className="aspect-[4/3] relative overflow-hidden bg-neutral-100 cursor-pointer group"
-                  onClick={() => openLightbox(index)}
-                >
-                  <Image
-                    src={photo.url}
-                    alt={photo.title || ''}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
-                  {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-end">
-                    <div className="p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                      <p className="font-medium">{photo.title}</p>
+            <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 md:gap-6 lg:gap-8">
+              {filteredPhotos.map((photo, index) => {
+                const isHovered = hoveredPhoto === photo.id;
+
+                return (
+                  <div
+                    key={photo.id}
+                    onClick={() => openLightbox(index)}
+                    onMouseEnter={() => setHoveredPhoto(photo.id)}
+                    onMouseLeave={() => setHoveredPhoto(null)}
+                    className="block mb-4 md:mb-6 lg:mb-8 break-inside-avoid cursor-pointer"
+                  >
+                    {/* Framed photo - 3D realistic */}
+                    <div
+                      className="relative"
+                      style={{
+                        transform: isHovered ? 'scale(1.02) translateY(-4px)' : 'scale(1)',
+                        transition: 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+                      }}
+                    >
+                      {/* 3D Frame with depth */}
+                      <div
+                        className="relative"
+                        style={{
+                          boxShadow: isHovered
+                            ? '0 35px 60px -15px rgba(0,0,0,0.5), 0 15px 25px -10px rgba(0,0,0,0.3)'
+                            : '0 20px 40px -15px rgba(0,0,0,0.4), 0 10px 20px -10px rgba(0,0,0,0.2)',
+                          transition: 'box-shadow 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+                        }}
+                      >
+                        {/* Outer frame - black with 3D edge */}
+                        <div
+                          className="bg-[#1a1a1a] p-[10px]"
+                          style={{
+                            boxShadow: 'inset 2px 2px 4px rgba(255,255,255,0.1), inset -2px -2px 4px rgba(0,0,0,0.3)',
+                          }}
+                        >
+                          {/* Inner frame edge - creates depth */}
+                          <div
+                            className="bg-[#0d0d0d] p-[3px]"
+                            style={{
+                              boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.8), inset -1px -1px 2px rgba(255,255,255,0.05)',
+                            }}
+                          >
+                            {/* White mat */}
+                            <div className="bg-[#fafafa] p-3 md:p-4 relative">
+                              {/* Mat inner shadow for depth */}
+                              <div
+                                className="absolute inset-0 pointer-events-none"
+                                style={{
+                                  boxShadow: 'inset 0 0 10px rgba(0,0,0,0.08)',
+                                }}
+                              />
+                              {/* Inner border line */}
+                              <div
+                                className="absolute pointer-events-none"
+                                style={{
+                                  top: '10px',
+                                  left: '10px',
+                                  right: '10px',
+                                  bottom: '10px',
+                                  boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.08)',
+                                }}
+                              />
+                              {/* Photo */}
+                              <Image
+                                src={photo.url}
+                                alt={photo.title || 'Photo'}
+                                width={800}
+                                height={600}
+                                quality={90}
+                                className="w-full h-auto relative"
+                                style={{
+                                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Wall shadow - makes it look like hanging */}
+                      <div
+                        className="absolute -bottom-4 left-[5%] right-[5%] h-8 -z-10"
+                        style={{
+                          background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, transparent 70%)',
+                          opacity: isHovered ? 0.8 : 0.5,
+                          transform: isHovered ? 'scaleY(1.2)' : 'scaleY(1)',
+                          transition: 'opacity 0.5s ease, transform 0.5s ease',
+                        }}
+                      />
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
