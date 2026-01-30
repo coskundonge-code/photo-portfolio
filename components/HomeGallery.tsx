@@ -119,9 +119,9 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                     transition: 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
                   }}
                 >
-                  {/* Black frame */}
+                  {/* Dark brown frame */}
                   <div
-                    className="bg-[#1a1a1a] p-[5px]"
+                    className="bg-[#3d2b1f] p-[8px]"
                     style={{
                       boxShadow: isHovered
                         ? '0 25px 50px -12px rgba(0,0,0,0.5)'
@@ -221,9 +221,9 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               transition: 'transform 0.6s ease',
             }}
           >
-            {/* Black frame */}
+            {/* Dark brown frame */}
             <div
-              className="bg-[#1a1a1a] p-[6px]"
+              className="bg-[#3d2b1f] p-[10px]"
               style={{
                 boxShadow: '0 30px 60px -15px rgba(0,0,0,0.6)',
               }}

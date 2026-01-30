@@ -252,9 +252,9 @@ export default function ShopPage() {
                         }}
                       >
                         <div
-                          className="relative bg-[#1a1a1a]"
+                          className="relative bg-[#3d2b1f]"
                           style={{
-                            padding: '6px',
+                            padding: '8px',
                             boxShadow: isHovered
                               ? '0 30px 60px -10px rgba(0,0,0,0.5)'
                               : '0 20px 40px -10px rgba(0,0,0,0.4)',
