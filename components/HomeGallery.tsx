@@ -102,7 +102,96 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
         <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 md:gap-6 lg:gap-8">
           {photos.map((photo, index) => {
             const isHovered = hoveredPhoto === photo.id;
+            const isFirstPhoto = index === 0;
 
+            // İlk fotoğraf için ahşap 3D çerçeve
+            if (isFirstPhoto) {
+              return (
+                <div
+                  key={photo.id}
+                  onClick={() => openLightbox(index)}
+                  onMouseEnter={() => setHoveredPhoto(photo.id)}
+                  onMouseLeave={() => setHoveredPhoto(null)}
+                  className="block mb-4 md:mb-6 lg:mb-8 break-inside-avoid cursor-pointer"
+                >
+                  {/* Perspective wrapper */}
+                  <div
+                    style={{
+                      perspective: '1200px',
+                      transform: isHovered ? 'scale(1.02)' : 'scale(1)',
+                      transition: 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+                    }}
+                  >
+                    {/* Wooden frame with 3D rotation */}
+                    <div
+                      className="relative"
+                      style={{
+                        background: 'linear-gradient(135deg, #e2c6a3, #d3b18a, #e8cfae)',
+                        padding: '20px',
+                        boxShadow: isHovered
+                          ? '0 40px 70px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(0,0,0,0.15)'
+                          : '0 30px 60px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(0,0,0,0.15)',
+                        transform: isHovered ? 'rotateY(-4deg)' : 'rotateY(-6deg)',
+                        transition: 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.7s ease',
+                      }}
+                    >
+                      {/* Inner channel / frame step */}
+                      <div
+                        className="absolute pointer-events-none"
+                        style={{
+                          inset: '12px',
+                          background: 'linear-gradient(135deg, #d1af86, #f1d8b8)',
+                          boxShadow: 'inset 0 4px 8px rgba(0,0,0,0.25)',
+                          zIndex: 0,
+                        }}
+                      />
+
+                      {/* Photo area */}
+                      <div
+                        className="relative"
+                        style={{
+                          background: '#d8d8d8',
+                          boxShadow: 'inset 0 0 25px rgba(0,0,0,0.35)',
+                          zIndex: 1,
+                        }}
+                      >
+                        {/* Photo */}
+                        <Image
+                          src={photo.url}
+                          alt={photo.title || 'Photo'}
+                          width={800}
+                          height={600}
+                          quality={90}
+                          className="w-full h-auto block relative"
+                        />
+
+                        {/* Glass reflection */}
+                        <div
+                          className="absolute inset-0 pointer-events-none"
+                          style={{
+                            background: 'linear-gradient(120deg, rgba(255,255,255,0.25), rgba(255,255,255,0.05), transparent)',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Wall shadow */}
+                  <div
+                    className="relative h-6 -z-10"
+                    style={{
+                      marginTop: '-8px',
+                      background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.4) 0%, transparent 70%)',
+                      opacity: isHovered ? 0.9 : 0.6,
+                      transform: isHovered ? 'scaleY(1.3) scaleX(0.95)' : 'scaleY(1) scaleX(0.9)',
+                      transition: 'opacity 0.5s ease, transform 0.5s ease',
+                    }}
+                  />
+                </div>
+              );
+            }
+
+            // Diğer fotoğraflar için mevcut siyah çerçeve
             return (
               <div
                 key={photo.id}
