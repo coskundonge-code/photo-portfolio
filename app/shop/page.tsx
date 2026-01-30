@@ -69,26 +69,28 @@ export default function ShopPage() {
 
   const themeCounts = useMemo(() => {
     const counts: Record<string, number> = { all: products.length };
-    
+
     themes.forEach(theme => {
       if (theme.id !== 'all') {
         counts[theme.id] = products.filter(p => {
-          const productTheme = (p as any).theme;
+          // Tema, photos içinde
+          const productTheme = (p.photos as any)?.theme;
           const normalizedProductTheme = normalizeTheme(productTheme);
           return normalizedProductTheme === theme.id;
         }).length;
       }
     });
-    
+
     return counts;
   }, [products]);
 
   useEffect(() => {
     let result = [...products];
-    
+
     if (selectedTheme !== 'all') {
       result = result.filter(p => {
-        const productTheme = (p as any).theme;
+        // Tema, photos içinde
+        const productTheme = (p.photos as any)?.theme;
         const normalizedProductTheme = normalizeTheme(productTheme);
         return normalizedProductTheme === selectedTheme;
       });
