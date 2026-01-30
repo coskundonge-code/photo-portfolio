@@ -1,8 +1,16 @@
 // Cloudinary Unsigned Upload
 // Çözünürlük ve kalite korunarak fotoğraf yükleme
 
-const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'demo';
-const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'ml_default';
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+// Debug: Environment variables kontrolü
+if (typeof window !== 'undefined') {
+  console.log('Cloudinary Config:', {
+    cloudName: CLOUD_NAME ? 'SET' : 'NOT SET',
+    uploadPreset: UPLOAD_PRESET ? 'SET' : 'NOT SET'
+  });
+}
 
 interface CloudinaryUploadResponse {
   secure_url: string;
@@ -30,6 +38,16 @@ export const uploadToCloudinary = async (
   file: File,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<string | null> => {
+  // Environment variables kontrolü
+  if (!CLOUD_NAME || !UPLOAD_PRESET) {
+    console.error('Cloudinary yapılandırması eksik!', {
+      CLOUD_NAME: CLOUD_NAME || 'EKSİK',
+      UPLOAD_PRESET: UPLOAD_PRESET || 'EKSİK'
+    });
+    alert('Cloudinary yapılandırması eksik. Lütfen Vercel environment variables kontrol edin.');
+    return null;
+  }
+
   try {
     const formData = new FormData();
     formData.append('file', file);
@@ -56,10 +74,22 @@ export const uploadToCloudinary = async (
       xhr.addEventListener('load', () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           const response: CloudinaryUploadResponse = JSON.parse(xhr.responseText);
-          // Orijinal URL'yi döndür - transformasyon yok
+          console.log('Upload successful:', response.secure_url);
           resolve(response.secure_url);
         } else {
-          console.error('Cloudinary upload failed:', xhr.responseText);
+          console.error('Cloudinary upload failed:', {
+            status: xhr.status,
+            response: xhr.responseText,
+            cloudName: CLOUD_NAME,
+            preset: UPLOAD_PRESET
+          });
+          // Kullanıcıya daha detaylı hata göster
+          try {
+            const errorResponse = JSON.parse(xhr.responseText);
+            alert(`Yükleme hatası: ${errorResponse.error?.message || 'Bilinmeyen hata'}`);
+          } catch {
+            alert(`Yükleme hatası (${xhr.status}): Cloudinary ayarlarını kontrol edin.`);
+          }
           reject(new Error('Upload failed'));
         }
       });
