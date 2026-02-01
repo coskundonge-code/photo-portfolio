@@ -245,7 +245,7 @@ export default function ShopPage() {
                       <div
                         className="bg-[#222] p-[10px] transition-transform duration-300 group-hover:-translate-y-2"
                         style={{
-                          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)',
+                          boxShadow: '8px 12px 30px -5px rgba(0, 0, 0, 0.4)',
                         }}
                       >
                         {/* White Mat */}

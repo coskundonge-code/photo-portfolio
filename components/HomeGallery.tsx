@@ -107,7 +107,7 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               <div
                 className="bg-[#222] p-[10px] transition-transform duration-300 group-hover:-translate-y-2"
                 style={{
-                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)',
+                  boxShadow: '8px 12px 30px -5px rgba(0, 0, 0, 0.4)',
                 }}
               >
                 {/* White Mat */}
@@ -175,7 +175,7 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
             <div
               className="bg-[#222] p-[12px]"
               style={{
-                boxShadow: '0 50px 100px -20px rgba(0, 0, 0, 0.6)',
+                boxShadow: '10px 15px 40px -5px rgba(0, 0, 0, 0.5)',
               }}
             >
               <div className="bg-white p-8 md:p-12">
