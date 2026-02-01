@@ -12,10 +12,10 @@ import { Loader2, Check, ZoomIn } from 'lucide-react';
 
 // Boyutlar
 const defaultSizes = [
-  { id: 'small', name: 'Small', dimensions: '20×30 cm', price: 1500, scale: 0.5 },
+  { id: 'classic', name: 'Classic', dimensions: '20×30 cm', price: 1500, scale: 0.5 },
   { id: 'medium', name: 'Medium', dimensions: '40×60 cm', price: 2500, scale: 0.65 },
   { id: 'large', name: 'Large', dimensions: '60×90 cm', price: 3500, scale: 0.8 },
-  { id: 'xlarge', name: 'X-Large', dimensions: '100×150 cm', price: 5000, scale: 1 },
+  { id: 'luxe', name: 'Luxe', dimensions: '100×150 cm', price: 5000, scale: 1 },
 ];
 
 // Çerçeve renkleri - gerçek ahşap dokuları

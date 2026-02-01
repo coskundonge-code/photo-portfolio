@@ -225,10 +225,10 @@ export default function AdminPhotosPage() {
         // 4 boyut için fiyatları oluştur
         if (newProduct) {
           const sizes = [
-            { name: 'Small', dimensions: '20×30 cm', price: parseFloat(formData.price20x30) || 1500, order_index: 0 },
+            { name: 'Classic', dimensions: '20×30 cm', price: parseFloat(formData.price20x30) || 1500, order_index: 0 },
             { name: 'Medium', dimensions: '40×60 cm', price: parseFloat(formData.price40x60) || 2500, order_index: 1 },
             { name: 'Large', dimensions: '60×90 cm', price: parseFloat(formData.price60x90) || 3500, order_index: 2 },
-            { name: 'X-Large', dimensions: '100×150 cm', price: parseFloat(formData.price100x150) || 5000, order_index: 3 },
+            { name: 'Luxe', dimensions: '100×150 cm', price: parseFloat(formData.price100x150) || 5000, order_index: 3 },
           ];
 
           for (const size of sizes) {
