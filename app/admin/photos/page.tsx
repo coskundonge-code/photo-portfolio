@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Loader2, Plus, Edit2, Trash2, X, Upload, ImageIcon, Star, ShoppingBag } from 'lucide-react';
-import { getPhotos, getProjects, createPhoto, updatePhoto, deletePhoto, getAllProducts, createProduct } from '@/lib/supabase';
+import { getPhotos, getProjects, createPhoto, updatePhoto, deletePhoto, getAllProducts, createProduct, createProductSize } from '@/lib/supabase';
 import { smartUploadToCloudinary } from '@/lib/cloudinary';
 import { Photo, Project, Product } from '@/lib/types';
 
@@ -38,7 +38,11 @@ export default function AdminPhotosPage() {
     is_featured: false,
     orientation: 'landscape' as 'landscape' | 'portrait',
     addToShop: true, // Mağazaya ekle checkbox
-    shopPrice: '1500', // Varsayılan fiyat
+    // 4 boyut için fiyatlar
+    price20x30: '1500',
+    price40x60: '2500',
+    price60x90: '3500',
+    price100x150: '5000',
   });
 
   useEffect(() => {
@@ -76,7 +80,10 @@ export default function AdminPhotosPage() {
       is_featured: false,
       orientation: 'landscape',
       addToShop: true,
-      shopPrice: '1500',
+      price20x30: '1500',
+      price40x60: '2500',
+      price60x90: '3500',
+      price100x150: '5000',
     });
     setEditingPhoto(null);
     // File input'u sıfırla
@@ -92,7 +99,6 @@ export default function AdminPhotosPage() {
 
   const openEditModal = (photo: Photo) => {
     setEditingPhoto(photo);
-    const existingProduct = getProductForPhoto(photo.id);
     setFormData({
       title: photo.title || '',
       url: photo.url,
@@ -101,7 +107,10 @@ export default function AdminPhotosPage() {
       is_featured: photo.is_featured,
       orientation: (photo as any).orientation || 'landscape',
       addToShop: false, // Edit modunda bu gösterilmez
-      shopPrice: existingProduct ? existingProduct.base_price.toString() : '1500',
+      price20x30: '1500',
+      price40x60: '2500',
+      price60x90: '3500',
+      price100x150: '5000',
     });
     setIsModalOpen(true);
   };
@@ -203,15 +212,32 @@ export default function AdminPhotosPage() {
       // Yeni fotoğraf oluştur
       const newPhoto = await createPhoto(photoData);
 
-      // Mağazaya da ekle seçiliyse ürün oluştur
+      // Mağazaya da ekle seçiliyse ürün ve boyutları oluştur
       if (newPhoto && formData.addToShop) {
-        await createProduct({
+        const newProduct = await createProduct({
           title: formData.title || 'İsimsiz Eser',
           photo_id: newPhoto.id,
-          base_price: parseFloat(formData.shopPrice) || 1500,
+          base_price: parseFloat(formData.price20x30) || 1500,
           edition_type: 'open',
           is_available: true,
         });
+
+        // 4 boyut için fiyatları oluştur
+        if (newProduct) {
+          const sizes = [
+            { name: 'Small', dimensions: '20×30 cm', price: parseFloat(formData.price20x30) || 1500, order_index: 0 },
+            { name: 'Medium', dimensions: '40×60 cm', price: parseFloat(formData.price40x60) || 2500, order_index: 1 },
+            { name: 'Large', dimensions: '60×90 cm', price: parseFloat(formData.price60x90) || 3500, order_index: 2 },
+            { name: 'X-Large', dimensions: '100×150 cm', price: parseFloat(formData.price100x150) || 5000, order_index: 3 },
+          ];
+
+          for (const size of sizes) {
+            await createProductSize({
+              product_id: newProduct.id,
+              ...size,
+            });
+          }
+        }
       }
     }
 
@@ -482,17 +508,55 @@ export default function AdminPhotosPage() {
                   </div>
 
                   {formData.addToShop && (
-                    <div>
-                      <label className="block text-sm font-medium text-neutral-400 mb-2">Başlangıç Fiyatı (₺)</label>
-                      <input
-                        type="number"
-                        value={formData.shopPrice}
-                        onChange={(e) => setFormData({ ...formData, shopPrice: e.target.value })}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white"
-                        placeholder="1500"
-                        min="0"
-                      />
-                      <p className="text-xs text-neutral-500 mt-1">Mağazada ürün detaylarını daha sonra düzenleyebilirsiniz.</p>
+                    <div className="space-y-3">
+                      <label className="block text-sm font-medium text-neutral-400">Boyut Fiyatları (₺)</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">20×30 cm</label>
+                          <input
+                            type="number"
+                            value={formData.price20x30}
+                            onChange={(e) => setFormData({ ...formData, price20x30: e.target.value })}
+                            className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm"
+                            placeholder="1500"
+                            min="0"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">40×60 cm</label>
+                          <input
+                            type="number"
+                            value={formData.price40x60}
+                            onChange={(e) => setFormData({ ...formData, price40x60: e.target.value })}
+                            className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm"
+                            placeholder="2500"
+                            min="0"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">60×90 cm</label>
+                          <input
+                            type="number"
+                            value={formData.price60x90}
+                            onChange={(e) => setFormData({ ...formData, price60x90: e.target.value })}
+                            className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm"
+                            placeholder="3500"
+                            min="0"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">100×150 cm</label>
+                          <input
+                            type="number"
+                            value={formData.price100x150}
+                            onChange={(e) => setFormData({ ...formData, price100x150: e.target.value })}
+                            className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm"
+                            placeholder="5000"
+                            min="0"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-neutral-500">Mağazada ürün detaylarını daha sonra düzenleyebilirsiniz.</p>
                     </div>
                   )}
                 </div>
