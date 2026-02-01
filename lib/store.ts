@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { Member } from './types';
 
 interface AdminState {
   isAuthenticated: boolean;
@@ -15,7 +16,7 @@ export const useAdminStore = create<AdminState>()(
   persist(
     (set, get) => ({
       isAuthenticated: false,
-      
+
       login: (password: string) => {
         if (ADMIN_PASSWORDS.includes(password)) {
           set({ isAuthenticated: true });
@@ -27,7 +28,7 @@ export const useAdminStore = create<AdminState>()(
         }
         return false;
       },
-      
+
       logout: () => {
         set({ isAuthenticated: false });
         // Footer ile senkronizasyon
@@ -35,19 +36,19 @@ export const useAdminStore = create<AdminState>()(
           localStorage.removeItem('adminAuth');
         }
       },
-      
+
       // Footer'dan giriş yapılmışsa kontrol et
       checkAuth: () => {
         if (typeof window !== 'undefined') {
           const legacyAuth = localStorage.getItem('adminAuth') === 'true';
           const currentAuth = get().isAuthenticated;
-          
+
           // Footer'dan giriş yapılmışsa Zustand'ı da güncelle
           if (legacyAuth && !currentAuth) {
             set({ isAuthenticated: true });
             return true;
           }
-          
+
           return currentAuth || legacyAuth;
         }
         return get().isAuthenticated;
@@ -55,6 +56,41 @@ export const useAdminStore = create<AdminState>()(
     }),
     {
       name: 'admin-auth',
+    }
+  )
+);
+
+// User/Member Authentication Store
+interface UserState {
+  user: Member | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  setUser: (user: Member | null) => void;
+  setLoading: (loading: boolean) => void;
+  logout: () => void;
+}
+
+export const useUserStore = create<UserState>()(
+  persist(
+    (set) => ({
+      user: null,
+      isAuthenticated: false,
+      isLoading: true,
+
+      setUser: (user: Member | null) => {
+        set({ user, isAuthenticated: !!user, isLoading: false });
+      },
+
+      setLoading: (loading: boolean) => {
+        set({ isLoading: loading });
+      },
+
+      logout: () => {
+        set({ user: null, isAuthenticated: false, isLoading: false });
+      },
+    }),
+    {
+      name: 'user-auth',
     }
   )
 );

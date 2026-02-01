@@ -132,7 +132,28 @@ VALUES ('main', 'Photography Portfolio', 'hello@example.com')
 ON CONFLICT (id) DO NOTHING;
 
 -- =====================================================
--- 7. UPDATED_AT TRİGGER FONKSİYONU
+-- 7. ÜYELER TABLOSU
+-- =====================================================
+CREATE TABLE IF NOT EXISTS members (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    name VARCHAR(255),
+    phone VARCHAR(50),
+    avatar_url TEXT,
+    is_active BOOLEAN DEFAULT true,
+    role VARCHAR(20) DEFAULT 'member' CHECK (role IN ('member', 'admin')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    last_login TIMESTAMP WITH TIME ZONE
+);
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_members_email ON members(email);
+CREATE INDEX IF NOT EXISTS idx_members_role ON members(role);
+CREATE INDEX IF NOT EXISTS idx_members_active ON members(is_active);
+
+-- =====================================================
+-- 8. UPDATED_AT TRİGGER FONKSİYONU
 -- =====================================================
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -173,8 +194,14 @@ CREATE TRIGGER update_settings_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_members_updated_at ON members;
+CREATE TRIGGER update_members_updated_at
+    BEFORE UPDATE ON members
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
 -- =====================================================
--- 8. ROW LEVEL SECURITY (RLS)
+-- 9. ROW LEVEL SECURITY (RLS)
 -- =====================================================
 -- Public okuma için politikalar
 
@@ -198,8 +225,35 @@ ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public can view settings" ON settings
     FOR SELECT USING (true);
 
+-- Üyeler tablosu RLS
+ALTER TABLE members ENABLE ROW LEVEL SECURITY;
+
+-- Üyeler kendi profillerini okuyabilir
+CREATE POLICY "Members can view own profile" ON members
+    FOR SELECT USING (auth.uid() = id);
+
+-- Admin tüm üyeleri görebilir (anon key ile geçici olarak)
+CREATE POLICY "Public can view members" ON members
+    FOR SELECT USING (true);
+
+-- Üyeler kendi profillerini güncelleyebilir
+CREATE POLICY "Members can update own profile" ON members
+    FOR UPDATE USING (auth.uid() = id);
+
+-- Admin tüm üyeleri güncelleyebilir
+CREATE POLICY "Admin can update all members" ON members
+    FOR UPDATE USING (true);
+
+-- Yeni üye kaydı
+CREATE POLICY "Enable insert for authenticated users" ON members
+    FOR INSERT WITH CHECK (true);
+
+-- Admin üye silebilir
+CREATE POLICY "Admin can delete members" ON members
+    FOR DELETE USING (true);
+
 -- =====================================================
--- 9. STORAGE BUCKET
+-- 10. STORAGE BUCKET
 -- =====================================================
 -- Bu kısmı Supabase Dashboard > Storage'dan manuel oluşturun:
 -- 1. "images" adında bir bucket oluşturun
@@ -211,7 +265,7 @@ CREATE POLICY "Public can view settings" ON settings
 -- ON CONFLICT (id) DO NOTHING;
 
 -- =====================================================
--- 10. ÖRNEK VERİLER (İSTEĞE BAĞLI)
+-- 11. ÖRNEK VERİLER (İSTEĞE BAĞLI)
 -- =====================================================
 -- Eğer demo veriler eklemek isterseniz:
 

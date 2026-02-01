@@ -150,6 +150,19 @@ export interface CartItem {
   updated_at?: string;
 }
 
+export interface Member {
+  id: string;
+  email: string;
+  name?: string;
+  phone?: string;
+  avatar_url?: string;
+  is_active: boolean;
+  role: 'member' | 'admin';
+  created_at?: string;
+  updated_at?: string;
+  last_login?: string;
+}
+
 // ================================================
 // SETTINGS
 // ================================================
@@ -866,6 +879,183 @@ export const deleteImage = async (url: string, bucket: string = 'photos'): Promi
 
   if (error) {
     console.error('Error deleting image:', error);
+    return false;
+  }
+
+  return true;
+};
+
+// ================================================
+// AUTHENTICATION
+// ================================================
+export const signUp = async (email: string, password: string, name?: string): Promise<{ user: any; error: string | null }> => {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { name }
+    }
+  });
+
+  if (error) {
+    console.error('Error signing up:', error);
+    return { user: null, error: error.message };
+  }
+
+  // Create member profile
+  if (data.user) {
+    await supabase.from('members').insert([{
+      id: data.user.id,
+      email: data.user.email,
+      name: name || '',
+      is_active: true,
+      role: 'member'
+    }]);
+  }
+
+  return { user: data.user, error: null };
+};
+
+export const signIn = async (email: string, password: string): Promise<{ user: any; error: string | null }> => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    console.error('Error signing in:', error);
+    return { user: null, error: error.message };
+  }
+
+  // Update last login
+  if (data.user) {
+    await supabase
+      .from('members')
+      .update({ last_login: new Date().toISOString() })
+      .eq('id', data.user.id);
+  }
+
+  return { user: data.user, error: null };
+};
+
+export const signOut = async (): Promise<boolean> => {
+  const { error } = await supabase.auth.signOut();
+
+  if (error) {
+    console.error('Error signing out:', error);
+    return false;
+  }
+
+  return true;
+};
+
+export const getCurrentUser = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+};
+
+export const onAuthStateChange = (callback: (event: string, session: any) => void) => {
+  return supabase.auth.onAuthStateChange(callback);
+};
+
+export const resetPassword = async (email: string): Promise<{ error: string | null }> => {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password`,
+  });
+
+  if (error) {
+    console.error('Error resetting password:', error);
+    return { error: error.message };
+  }
+
+  return { error: null };
+};
+
+// ================================================
+// MEMBERS
+// ================================================
+export const getMembers = async (): Promise<Member[]> => {
+  const { data, error } = await supabase
+    .from('members')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching members:', error);
+    return [];
+  }
+
+  return data || [];
+};
+
+export const getMemberById = async (id: string): Promise<Member | null> => {
+  const { data, error } = await supabase
+    .from('members')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching member:', error);
+    return null;
+  }
+
+  return data;
+};
+
+export const getMemberByEmail = async (email: string): Promise<Member | null> => {
+  const { data, error } = await supabase
+    .from('members')
+    .select('*')
+    .eq('email', email)
+    .single();
+
+  if (error) {
+    console.error('Error fetching member:', error);
+    return null;
+  }
+
+  return data;
+};
+
+export const updateMember = async (id: string, member: Partial<Member>): Promise<Member | null> => {
+  const { data, error } = await supabase
+    .from('members')
+    .update({ ...member, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating member:', error);
+    return null;
+  }
+
+  return data;
+};
+
+export const deleteMember = async (id: string): Promise<boolean> => {
+  const { error } = await supabase
+    .from('members')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting member:', error);
+    return false;
+  }
+
+  return true;
+};
+
+export const toggleMemberStatus = async (id: string, isActive: boolean): Promise<boolean> => {
+  const { error } = await supabase
+    .from('members')
+    .update({ is_active: isActive, updated_at: new Date().toISOString() })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error toggling member status:', error);
     return false;
   }
 

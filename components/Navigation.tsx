@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, User, ShoppingBag, ChevronDown } from 'lucide-react';
+import { Menu, X, User, ShoppingBag, ChevronDown, LogOut } from 'lucide-react';
 import { Settings as SettingsType, Project } from '@/lib/types';
+import { signOut, onAuthStateChange, getMemberByEmail } from '@/lib/supabase';
+import { useUserStore } from '@/lib/store';
 import CartDrawer from './CartDrawer';
 import AuthModal from './AuthModal';
 
@@ -21,6 +23,8 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [isWorkDropdownOpen, setIsWorkDropdownOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const { user, isAuthenticated, setUser, logout: logoutStore } = useUserStore();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -35,16 +39,39 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
       const cart = JSON.parse(localStorage.getItem('cart') || '[]');
       setCartCount(cart.length);
     };
-    
+
     updateCartCount();
     window.addEventListener('storage', updateCartCount);
     window.addEventListener('cartUpdated', updateCartCount);
-    
+
     return () => {
       window.removeEventListener('storage', updateCartCount);
       window.removeEventListener('cartUpdated', updateCartCount);
     };
   }, []);
+
+  useEffect(() => {
+    const { data: { subscription } } = onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        const member = await getMemberByEmail(session.user.email!);
+        if (member) {
+          setUser(member);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        logoutStore();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [setUser, logoutStore]);
+
+  const handleLogout = async () => {
+    await signOut();
+    logoutStore();
+    setIsUserDropdownOpen(false);
+  };
 
   const isAdminPage = pathname?.startsWith('/admin');
   if (isAdminPage) return null;
@@ -153,13 +180,48 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
 
             {/* Sağ: User, Cart & Mobile Menu */}
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsAuthOpen(true)}
-                className="p-2 hover:opacity-60 transition-opacity"
-                title="Hesabım"
-              >
-                <User className="w-5 h-5" strokeWidth={1.5} />
-              </button>
+              {isAuthenticated && user ? (
+                <div
+                  className="relative"
+                  onMouseEnter={() => setIsUserDropdownOpen(true)}
+                  onMouseLeave={() => setIsUserDropdownOpen(false)}
+                >
+                  <button
+                    className="flex items-center gap-2 p-2 hover:opacity-60 transition-opacity"
+                    title="Hesabım"
+                  >
+                    <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-medium">
+                      {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                    </div>
+                  </button>
+
+                  {isUserDropdownOpen && (
+                    <div className="absolute top-full right-0 pt-2">
+                      <div className="bg-white border border-neutral-200 shadow-lg min-w-[200px]">
+                        <div className="px-4 py-3 border-b border-neutral-100">
+                          <p className="font-medium text-sm">{user.name || 'Üye'}</p>
+                          <p className="text-xs text-neutral-500 truncate">{user.email}</p>
+                        </div>
+                        <button
+                          onClick={handleLogout}
+                          className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Çıkış Yap
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsAuthOpen(true)}
+                  className="p-2 hover:opacity-60 transition-opacity"
+                  title="Giriş Yap"
+                >
+                  <User className="w-5 h-5" strokeWidth={1.5} />
+                </button>
+              )}
 
               <button
                 onClick={() => setIsCartOpen(true)}
