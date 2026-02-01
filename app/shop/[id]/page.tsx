@@ -18,67 +18,76 @@ const defaultSizes = [
   { id: 'luxe', name: 'Luxe', dimensions: '100×150 cm', price: 5000, scale: 1 },
 ];
 
-// Çerçeve renkleri - gerçek ahşap dokuları
+// Çerçeve renkleri - States Gallery tarzı
 const defaultFrames = [
-  { 
-    id: 'black', 
-    name: 'Black', 
-    color: '#1a1a1a', 
-    texture: 'linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 20%, #1a1a1a 50%, #0a0a0a 80%, #1a1a1a 100%)',
-    buttonTexture: 'linear-gradient(135deg, #3a3a3a 0%, #1a1a1a 50%, #0a0a0a 100%)',
-    price: 0 
+  {
+    id: 'black',
+    name: 'Black',
+    color: '#1a1a1a',
+    buttonColor: '#1a1a1a',
+    buttonBorder: 'none',
+    price: 0
   },
-  { 
-    id: 'white', 
-    name: 'White', 
-    color: '#f8f8f8', 
-    texture: 'linear-gradient(180deg, #ffffff 0%, #f8f8f8 20%, #f0f0f0 50%, #e8e8e8 80%, #f5f5f5 100%)',
-    buttonTexture: 'linear-gradient(135deg, #ffffff 0%, #f5f5f5 50%, #e8e8e8 100%)',
-    price: 0 
+  {
+    id: 'white',
+    name: 'White',
+    color: '#ffffff',
+    buttonColor: 'transparent',
+    buttonBorder: '1px solid #c0c0c0',
+    price: 0
   },
-  { 
-    id: 'oak', 
-    name: 'Oak', 
-    color: '#c9a66b', 
-    texture: `repeating-linear-gradient(
-      90deg,
-      #d4b07a 0px,
-      #c9a66b 2px,
-      #be9c5c 4px,
-      #c9a66b 6px,
-      #d4b07a 8px
-    ), linear-gradient(180deg, #d4b07a 0%, #c9a66b 50%, #be9c5c 100%)`,
-    buttonTexture: `repeating-linear-gradient(
-      120deg,
-      #d4b07a 0px,
-      #c9a66b 3px,
-      #be9c5c 6px
-    )`,
-    price: 200 
+  {
+    id: 'oak',
+    name: 'Oak',
+    color: '#c9a66b',
+    buttonColor: '#c9a66b',
+    buttonBorder: 'none',
+    price: 200
   },
-  { 
-    id: 'walnut', 
-    name: 'Walnut', 
-    color: '#5d4037', 
-    texture: `repeating-linear-gradient(
-      90deg,
-      #6d5047 0px,
-      #5d4037 2px,
-      #4d3027 4px,
-      #5d4037 6px,
-      #6d5047 8px
-    ), linear-gradient(180deg, #6d5047 0%, #5d4037 50%, #4d3027 100%)`,
-    buttonTexture: `repeating-linear-gradient(
-      120deg,
-      #6d5047 0px,
-      #5d4037 3px,
-      #4d3027 6px
-    )`,
-    price: 200 
+  {
+    id: 'walnut',
+    name: 'Walnut',
+    color: '#6d4c3d',
+    buttonColor: '#6d4c3d',
+    buttonBorder: 'none',
+    price: 200
   },
 ];
 
 const formatPrice = (price: number) => price.toLocaleString('tr-TR');
+
+// Çerçeve dokusu stilleri - States Gallery tarzı gerçekçi ahşap
+const getFrameStyle = (frameId: string) => {
+  switch (frameId) {
+    case 'black':
+      return {
+        background: '#1a1a1a',
+      };
+    case 'white':
+      return {
+        background: '#ffffff',
+        boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.08)',
+      };
+    case 'oak':
+      return {
+        backgroundColor: '#c9a66b',
+        backgroundImage: `
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-opacity='0.15'%3E%3Cpath fill='%23000' d='M0 0h10v2H0zM20 0h15v1H20zM45 0h5v3h-5zM60 0h20v1H60zM90 0h10v2H90z'/%3E%3Cpath fill='%23fff' d='M5 5h8v1H5zM25 4h10v2H25zM50 3h8v2h-8zM70 5h15v1H70z'/%3E%3Cpath fill='%23000' d='M0 10h12v1H0zM30 8h20v2H30zM65 10h25v1H65z'/%3E%3Cpath fill='%23fff' d='M10 15h15v1H10zM40 12h10v2H40zM75 14h20v1H75z'/%3E%3Cpath fill='%23000' d='M0 20h8v2H0zM20 18h25v1H20zM55 20h30v1H55z'/%3E%3Cpath fill='%23fff' d='M5 25h20v1H5zM45 22h15v2H45zM80 24h15v1H80z'/%3E%3Cpath fill='%23000' d='M0 30h15v1H0zM25 28h20v2H25zM60 30h25v1H60z'/%3E%3Cpath fill='%23fff' d='M10 35h12v1H10zM35 32h18v2H35zM70 34h20v1H70z'/%3E%3Cpath fill='%23000' d='M0 40h20v1H0zM30 38h15v2H30zM55 40h35v1H55z'/%3E%3Cpath fill='%23fff' d='M8 45h15v1H8zM40 42h20v2H40zM75 44h18v1H75z'/%3E%3Cpath fill='%23000' d='M0 50h10v2H0zM22 48h25v1H22zM60 50h30v1H60z'/%3E%3Cpath fill='%23fff' d='M5 55h18v1H5zM35 52h15v2H35zM70 54h25v1H70z'/%3E%3Cpath fill='%23000' d='M0 60h25v1H0zM40 58h20v2H40zM75 60h20v1H75z'/%3E%3Cpath fill='%23fff' d='M12 65h15v1H12zM50 62h18v2H50zM82 64h15v1H82z'/%3E%3Cpath fill='%23000' d='M0 70h18v1H0zM28 68h22v2H28zM65 70h28v1H65z'/%3E%3Cpath fill='%23fff' d='M8 75h20v1H8zM42 72h15v2H42zM78 74h18v1H78z'/%3E%3Cpath fill='%23000' d='M0 80h12v2H0zM20 78h30v1H20zM58 80h35v1H58z'/%3E%3Cpath fill='%23fff' d='M5 85h22v1H5zM38 82h20v2H38zM72 84h22v1H72z'/%3E%3Cpath fill='%23000' d='M0 90h15v1H0zM25 88h18v2H25zM55 90h40v1H55z'/%3E%3Cpath fill='%23fff' d='M10 95h18v1H10zM45 92h15v2H45zM80 94h15v1H80z'/%3E%3C/g%3E%3C/svg%3E")
+        `,
+        backgroundSize: '100px 100px',
+      };
+    case 'walnut':
+      return {
+        backgroundColor: '#6d4c3d',
+        backgroundImage: `
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-opacity='0.2'%3E%3Cpath fill='%23000' d='M0 0h8v3H0zM15 0h20v2H15zM42 0h8v3h-8zM58 0h25v2H58zM92 0h8v3H92z'/%3E%3Cpath fill='%23fff' d='M3 6h12v1H3zM22 5h18v2H22zM48 6h12v1H48zM68 5h20v2H68z'/%3E%3Cpath fill='%23000' d='M0 12h18v2H0zM25 10h22v3H25zM55 12h30v2H55z'/%3E%3Cpath fill='%23fff' d='M8 18h15v1H8zM35 16h15v2H35zM65 18h25v1H65z'/%3E%3Cpath fill='%23000' d='M0 24h12v3H0zM18 22h28v2H18zM52 24h38v2H52z'/%3E%3Cpath fill='%23fff' d='M5 30h22v1H5zM32 28h20v2H32zM70 30h22v1H70z'/%3E%3Cpath fill='%23000' d='M0 36h20v2H0zM28 34h25v3H28zM60 36h32v2H60z'/%3E%3Cpath fill='%23fff' d='M10 42h18v1H10zM38 40h18v2H38zM72 42h20v1H72z'/%3E%3Cpath fill='%23000' d='M0 48h15v3H0zM22 46h30v2H22zM58 48h35v2H58z'/%3E%3Cpath fill='%23fff' d='M6 54h20v1H6zM40 52h15v2H40zM68 54h25v1H68z'/%3E%3Cpath fill='%23000' d='M0 60h22v2H0zM30 58h22v3H30zM60 60h30v2H60z'/%3E%3Cpath fill='%23fff' d='M12 66h18v1H12zM42 64h15v2H42zM75 66h18v1H75z'/%3E%3Cpath fill='%23000' d='M0 72h18v3H0zM25 70h28v2H25zM62 72h32v2H62z'/%3E%3Cpath fill='%23fff' d='M8 78h22v1H8zM38 76h20v2H38zM78 78h18v1H78z'/%3E%3Cpath fill='%23000' d='M0 84h15v2H0zM22 82h25v3H22zM55 84h38v2H55z'/%3E%3Cpath fill='%23fff' d='M5 90h20v1H5zM35 88h18v2H35zM70 90h25v1H70z'/%3E%3Cpath fill='%23000' d='M0 96h12v3H0zM20 94h28v2H20zM58 96h35v2H58z'/%3E%3C/g%3E%3C/svg%3E")
+        `,
+        backgroundSize: '100px 100px',
+      };
+    default:
+      return { background: '#1a1a1a' };
+  }
+};
 
 export default function ProductPage() {
   const params = useParams();
@@ -207,10 +216,10 @@ export default function ProductPage() {
                   className="relative transition-all duration-700 ease-out"
                   style={{ transform: `scale(${selectedSize.scale})` }}
                 >
-                  {/* ===== ÇERÇEVE - Ahşap dokulu ===== */}
-                  <div 
+                  {/* ===== ÇERÇEVE - States Gallery tarzı ===== */}
+                  <div
                     style={{
-                      background: selectedFrame.texture,
+                      ...getFrameStyle(selectedFrame.id),
                       padding: '18px',
                       position: 'relative',
                       boxShadow: `
@@ -393,8 +402,13 @@ export default function ProductPage() {
                           : ''
                       }`}
                       style={{
-                        background: frame.buttonTexture,
-                        border: frame.id === 'white' ? '1px solid #d0d0d0' : 'none',
+                        backgroundColor: frame.buttonColor,
+                        border: frame.buttonBorder,
+                        backgroundImage: frame.id === 'oak'
+                          ? 'radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.3) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(0,0,0,0.15) 0%, transparent 50%)'
+                          : frame.id === 'walnut'
+                          ? 'radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.2) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(0,0,0,0.2) 0%, transparent 50%)'
+                          : 'none',
                       }}
                     />
                   ))}
@@ -469,9 +483,9 @@ export default function ProductPage() {
           <div className="flex">
             {/* 3D Çerçeve Önizleme */}
             <div className="w-24 h-28 relative bg-neutral-100 flex-shrink-0 flex items-center justify-center p-2">
-              <div 
+              <div
                 style={{
-                  background: selectedFrame.texture,
+                  ...getFrameStyle(selectedFrame.id),
                   padding: '4px',
                   transform: 'perspective(200px) rotateY(-15deg)',
                   boxShadow: '5px 5px 15px rgba(0,0,0,0.2)'
