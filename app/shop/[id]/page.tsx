@@ -243,36 +243,34 @@ export default function ProductPage() {
                   style={{ transform: `scale(${selectedSize.scale})` }}
                 >
                   {/* ===== States Gallery exact style frame ===== */}
-                  {/* Frame border + shadow (light from top-left, shadow on right/bottom) */}
+                  {/* Frame border + shadow (light from top-left, sharp shadow on right/bottom) */}
                   <div
-                    className="border-[10px]"
+                    className="border-8"
                     style={{
                       borderColor: selectedFrame.color,
                       ...getFrameStyle(selectedFrame.id),
-                      boxShadow: '4px 4px 5px rgba(0,0,0,0.4)'
+                      boxShadow: '4px 4px 0 rgba(0,0,0,0.5)'
                     }}
                   >
-                    {/* White inner border (passe-partout line) */}
-                    <div className="border-2 border-white">
-                      {/* White mat area */}
+                    {/* White inner border line */}
+                    <div className="border border-white/80">
+                      {/* White mat area with inner shadow (frame casts shadow inward at top/left) */}
                       <div
                         className="bg-white"
                         style={{
                           padding: selectedStyle === 'mat'
                             ? (isPortrait ? '50px 40px' : '40px 50px')
-                            : '0'
+                            : '0',
+                          boxShadow: selectedStyle === 'mat' ? 'inset 2px 2px 6px rgba(0,0,0,0.12)' : 'none'
                         }}
                       >
-                        {/* Photo with 3D inset border effect (light from top-left) */}
+                        {/* Photo with thin mounting line */}
                         <div
-                          className="relative overflow-hidden p-[3px] bg-[#f0f0f0]"
+                          className="relative overflow-hidden"
                           style={{
                             width: `${basePhotoWidth}px`,
                             height: `${basePhotoHeight}px`,
-                            borderTop: '3px solid #e0e0e0',
-                            borderLeft: '3px solid #e0e0e0',
-                            borderBottom: '3px solid #888888',
-                            borderRight: '3px solid #888888',
+                            boxShadow: 'inset 1px 1px 0 rgba(0,0,0,0.15), inset -1px -1px 0 rgba(255,255,255,0.5)'
                           }}
                         >
                           {product.photos?.url && (

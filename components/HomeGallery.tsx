@@ -105,24 +105,22 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
             >
               {/* States Gallery exact style frame */}
               <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
-                {/* Frame border + shadow (light from top-left, shadow on right/bottom) */}
+                {/* Frame border + shadow (light from top-left, sharp shadow on right/bottom) */}
                 <div
-                  className="border-[10px] border-black"
-                  style={{ boxShadow: '4px 4px 5px rgba(0,0,0,0.4)' }}
+                  className="border-8 border-black"
+                  style={{ boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
                 >
-                  {/* White inner border (passe-partout line) */}
-                  <div className="border-2 border-white">
-                    {/* White mat area */}
-                    <div className="bg-white p-8 md:p-10 lg:p-12">
-                      {/* Photo with 3D inset border effect + padding for visibility */}
+                  {/* White inner border line */}
+                  <div className="border border-white/80">
+                    {/* White mat area with inner shadow (frame casts shadow inward at top/left) */}
+                    <div
+                      className="bg-white p-8 md:p-10 lg:p-12"
+                      style={{ boxShadow: 'inset 2px 2px 6px rgba(0,0,0,0.12)' }}
+                    >
+                      {/* Photo with thin mounting line */}
                       <div
-                        className="p-[3px] bg-[#f0f0f0]"
-                        style={{
-                          borderTop: '3px solid #e0e0e0',
-                          borderLeft: '3px solid #e0e0e0',
-                          borderBottom: '3px solid #888888',
-                          borderRight: '3px solid #888888',
-                        }}
+                        className="relative"
+                        style={{ boxShadow: 'inset 1px 1px 0 rgba(0,0,0,0.15), inset -1px -1px 0 rgba(255,255,255,0.5)' }}
                       >
                         <Image
                           src={photo.url}
@@ -187,24 +185,22 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               transition: 'transform 0.4s ease',
             }}
           >
-            {/* Frame border + shadow (light from top-left, shadow on right/bottom) */}
+            {/* Frame border + shadow (light from top-left, sharp shadow on right/bottom) */}
             <div
-              className="border-[10px] border-black"
-              style={{ boxShadow: '4px 4px 5px rgba(0,0,0,0.4)' }}
+              className="border-8 border-black"
+              style={{ boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
             >
-              {/* White inner border (passe-partout line) */}
-              <div className="border-2 border-white">
-                {/* White mat area */}
-                <div className="bg-white p-10 md:p-14">
-                  {/* Photo with 3D inset border effect + padding for visibility */}
+              {/* White inner border line */}
+              <div className="border border-white/80">
+                {/* White mat area with inner shadow (frame casts shadow inward at top/left) */}
+                <div
+                  className="bg-white p-10 md:p-14"
+                  style={{ boxShadow: 'inset 2px 2px 6px rgba(0,0,0,0.12)' }}
+                >
+                  {/* Photo with thin mounting line */}
                   <div
-                    className="p-[3px] bg-[#f0f0f0]"
-                    style={{
-                      borderTop: '3px solid #e0e0e0',
-                      borderLeft: '3px solid #e0e0e0',
-                      borderBottom: '3px solid #888888',
-                      borderRight: '3px solid #888888',
-                    }}
+                    className="relative"
+                    style={{ boxShadow: 'inset 1px 1px 0 rgba(0,0,0,0.15), inset -1px -1px 0 rgba(255,255,255,0.5)' }}
                   >
                     <Image
                       src={currentPhoto.url}
