@@ -105,9 +105,9 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
             >
               {/* Frame with shadow - States Gallery style */}
               <div
-                className="bg-[#2d2d2d] p-[8px] transition-transform duration-300 group-hover:-translate-y-1"
+                className="bg-[#2d2d2d] p-[12px] transition-transform duration-300 group-hover:-translate-y-1"
                 style={{
-                  boxShadow: '6px 6px 16px rgba(0, 0, 0, 0.4)',
+                  boxShadow: '4px 4px 5px rgba(0, 0, 0, 0.5)',
                 }}
               >
                 {/* White Mat - wide like States Gallery */}
@@ -173,9 +173,9 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
             }}
           >
             <div
-              className="bg-[#2d2d2d] p-[10px]"
+              className="bg-[#2d2d2d] p-[14px]"
               style={{
-                boxShadow: '8px 8px 24px rgba(0, 0, 0, 0.5)',
+                boxShadow: '5px 5px 6px rgba(0, 0, 0, 0.5)',
               }}
             >
               <div className="bg-white p-12 md:p-16">
