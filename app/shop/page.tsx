@@ -222,7 +222,7 @@ export default function ShopPage() {
               <p className="text-neutral-500">Bu kategoride eser bulunamadı.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
               {filteredProducts.map((product) => {
                 const isHovered = hoveredProduct === product.id;
                 const photo = product.photos;
@@ -241,97 +241,90 @@ export default function ShopPage() {
                     onMouseLeave={() => setHoveredProduct(null)}
                   >
                     <div
-                      className="bg-[#e8e8e8] flex items-center justify-center"
+                      className="bg-[#f5f5f5] flex items-center justify-center"
                       style={{ minHeight: `${containerHeight}px` }}
                     >
                       <div
                         className="relative"
                         style={{
-                          transform: isHovered ? 'scale(1.02)' : 'scale(1)',
-                          transition: 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+                          transform: isHovered ? 'translateY(-8px)' : 'translateY(0)',
+                          transition: 'transform 0.5s cubic-bezier(0.33, 1, 0.68, 1)',
                         }}
                       >
-                        {/* 3D Frame with depth */}
+                        {/* Main Frame */}
                         <div
-                          className="relative"
+                          className="relative bg-[#1c1c1c]"
                           style={{
+                            padding: '10px',
                             boxShadow: isHovered
-                              ? '0 35px 60px -15px rgba(0,0,0,0.5), 0 15px 25px -10px rgba(0,0,0,0.3)'
-                              : '0 20px 40px -15px rgba(0,0,0,0.4), 0 10px 20px -10px rgba(0,0,0,0.2)',
-                            transition: 'box-shadow 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+                              ? `
+                                0 50px 100px -20px rgba(0,0,0,0.5),
+                                0 30px 60px -30px rgba(0,0,0,0.4),
+                                inset 0 1px 0 0 rgba(255,255,255,0.1),
+                                inset 0 -1px 0 0 rgba(0,0,0,0.3)
+                              `
+                              : `
+                                0 25px 50px -12px rgba(0,0,0,0.35),
+                                0 12px 24px -12px rgba(0,0,0,0.25),
+                                inset 0 1px 0 0 rgba(255,255,255,0.08),
+                                inset 0 -1px 0 0 rgba(0,0,0,0.2)
+                              `,
+                            transition: 'box-shadow 0.5s cubic-bezier(0.33, 1, 0.68, 1)',
                           }}
                         >
-                          {/* Outer frame - black with 3D edge */}
+                          {/* Inner frame edge */}
                           <div
-                            className="bg-[#1a1a1a]"
-                            style={{
-                              padding: '8px',
-                              boxShadow: 'inset 2px 2px 4px rgba(255,255,255,0.1), inset -2px -2px 4px rgba(0,0,0,0.3)',
-                            }}
+                            className="bg-[#0a0a0a]"
+                            style={{ padding: '2px' }}
                           >
-                            {/* Inner frame edge */}
+                            {/* White Mat */}
                             <div
-                              className="bg-[#0d0d0d]"
+                              className="bg-white relative"
                               style={{
-                                padding: '3px',
-                                boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.8), inset -1px -1px 2px rgba(255,255,255,0.05)',
+                                padding: isPortrait ? '28px 22px' : '22px 28px'
                               }}
                             >
-                              {/* White mat */}
+                              {/* Mat texture */}
                               <div
-                                className="bg-[#fafafa] relative"
+                                className="absolute inset-0 pointer-events-none"
                                 style={{
-                                  padding: isPortrait ? '20px 16px' : '16px 20px'
+                                  boxShadow: 'inset 0 0 20px rgba(0,0,0,0.04)',
+                                }}
+                              />
+
+                              <div
+                                className="relative overflow-hidden bg-neutral-100"
+                                style={{
+                                  width: `${frameWidth}px`,
+                                  height: `${frameHeight}px`,
+                                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
                                 }}
                               >
-                                {/* Mat inner shadow */}
-                                <div
-                                  className="absolute inset-0 pointer-events-none"
-                                  style={{
-                                    boxShadow: 'inset 0 0 10px rgba(0,0,0,0.06)',
-                                  }}
-                                />
-                                {/* Inner border line */}
-                                <div
-                                  className="absolute pointer-events-none"
-                                  style={{
-                                    top: isPortrait ? '18px' : '14px',
-                                    left: isPortrait ? '14px' : '18px',
-                                    right: isPortrait ? '14px' : '18px',
-                                    bottom: isPortrait ? '18px' : '14px',
-                                    boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.08)',
-                                  }}
-                                />
-
-                                <div
-                                  className="relative overflow-hidden bg-neutral-100"
-                                  style={{
-                                    width: `${frameWidth}px`,
-                                    height: `${frameHeight}px`,
-                                  }}
-                                >
-                                  {photo?.url && (
-                                    <Image
-                                      src={photo.url}
-                                      alt={product.title}
-                                      fill
-                                      className="object-cover"
-                                      sizes="(max-width: 768px) 100vw, 33vw"
-                                    />
-                                  )}
-                                </div>
+                                {photo?.url && (
+                                  <Image
+                                    src={photo.url}
+                                    alt={product.title}
+                                    fill
+                                    className="object-cover"
+                                    sizes="(max-width: 768px) 100vw, 33vw"
+                                  />
+                                )}
                               </div>
                             </div>
                           </div>
                         </div>
 
-                        {/* Wall shadow */}
+                        {/* Realistic floor shadow */}
                         <div
-                          className="absolute -bottom-4 left-[5%] right-[5%] h-8 -z-10"
+                          className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
                           style={{
-                            background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, transparent 70%)',
-                            opacity: isHovered ? 0.8 : 0.5,
-                            transform: isHovered ? 'scaleY(1.2)' : 'scaleY(1)',
+                            bottom: '-35px',
+                            width: '85%',
+                            height: '45px',
+                            background: 'radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.1) 40%, transparent 70%)',
+                            filter: 'blur(8px)',
+                            opacity: isHovered ? 0.9 : 0.7,
+                            transform: isHovered ? 'scaleX(1.05) scaleY(1.3)' : 'scaleX(1) scaleY(1)',
                             transition: 'opacity 0.5s ease, transform 0.5s ease',
                           }}
                         />

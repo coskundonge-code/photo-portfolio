@@ -17,13 +17,11 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [hoveredPhoto, setHoveredPhoto] = useState<string | null>(null);
 
-  // Simple page fade-in on mount
   useEffect(() => {
     const timer = setTimeout(() => setPageReady(true), 100);
     return () => clearTimeout(timer);
   }, []);
 
-  // Keyboard navigation
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (!lightboxOpen) return;
 
@@ -91,7 +89,7 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
 
   return (
     <>
-      {/* Gallery Grid - whole section fades in together */}
+      {/* Gallery Grid */}
       <div
         className="px-4 md:px-6 lg:px-8"
         style={{
@@ -99,7 +97,7 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
           transition: 'opacity 1.2s ease',
         }}
       >
-        <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 md:gap-6 lg:gap-8">
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-8 md:gap-10 lg:gap-12">
           {photos.map((photo, index) => {
             const isHovered = hoveredPhoto === photo.id;
 
@@ -109,70 +107,70 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                 onClick={() => openLightbox(index)}
                 onMouseEnter={() => setHoveredPhoto(photo.id)}
                 onMouseLeave={() => setHoveredPhoto(null)}
-                className="block mb-4 md:mb-6 lg:mb-8 break-inside-avoid cursor-pointer"
+                className="block mb-10 md:mb-12 lg:mb-14 break-inside-avoid cursor-pointer"
               >
-                {/* Framed photo - 3D realistic */}
+                {/* Frame Container with realistic shadow */}
                 <div
                   className="relative"
                   style={{
-                    transform: isHovered ? 'scale(1.02) translateY(-4px)' : 'scale(1)',
-                    transition: 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+                    transform: isHovered ? 'translateY(-8px)' : 'translateY(0)',
+                    transition: 'transform 0.5s cubic-bezier(0.33, 1, 0.68, 1)',
                   }}
                 >
-                  {/* 3D Frame with depth */}
+                  {/* Main Frame */}
                   <div
-                    className="relative"
+                    className="relative bg-[#1c1c1c]"
                     style={{
+                      padding: '12px',
                       boxShadow: isHovered
-                        ? '0 35px 60px -15px rgba(0,0,0,0.5), 0 15px 25px -10px rgba(0,0,0,0.3)'
-                        : '0 20px 40px -15px rgba(0,0,0,0.4), 0 10px 20px -10px rgba(0,0,0,0.2)',
-                      transition: 'box-shadow 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+                        ? `
+                          0 50px 100px -20px rgba(0,0,0,0.5),
+                          0 30px 60px -30px rgba(0,0,0,0.4),
+                          inset 0 1px 0 0 rgba(255,255,255,0.1),
+                          inset 0 -1px 0 0 rgba(0,0,0,0.3)
+                        `
+                        : `
+                          0 25px 50px -12px rgba(0,0,0,0.35),
+                          0 12px 24px -12px rgba(0,0,0,0.25),
+                          inset 0 1px 0 0 rgba(255,255,255,0.08),
+                          inset 0 -1px 0 0 rgba(0,0,0,0.2)
+                        `,
+                      transition: 'box-shadow 0.5s cubic-bezier(0.33, 1, 0.68, 1)',
                     }}
                   >
-                    {/* Outer frame - black with 3D edge */}
+                    {/* Inner frame edge for depth */}
                     <div
-                      className="bg-[#1a1a1a] p-[10px]"
+                      className="bg-[#0a0a0a]"
                       style={{
-                        boxShadow: 'inset 2px 2px 4px rgba(255,255,255,0.1), inset -2px -2px 4px rgba(0,0,0,0.3)',
+                        padding: '2px',
                       }}
                     >
-                      {/* Inner frame edge - creates depth */}
+                      {/* White Mat / Passepartout */}
                       <div
-                        className="bg-[#0d0d0d] p-[3px]"
+                        className="bg-white relative"
                         style={{
-                          boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.8), inset -1px -1px 2px rgba(255,255,255,0.05)',
+                          padding: 'clamp(20px, 5vw, 40px)',
                         }}
                       >
-                        {/* White mat */}
-                        <div className="bg-[#fafafa] p-3 md:p-4 relative">
-                          {/* Mat inner shadow for depth */}
-                          <div
-                            className="absolute inset-0 pointer-events-none"
-                            style={{
-                              boxShadow: 'inset 0 0 10px rgba(0,0,0,0.08)',
-                            }}
-                          />
-                          {/* Inner border line */}
-                          <div
-                            className="absolute pointer-events-none"
-                            style={{
-                              top: '10px',
-                              left: '10px',
-                              right: '10px',
-                              bottom: '10px',
-                              boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.08)',
-                            }}
-                          />
-                          {/* Photo */}
+                        {/* Subtle mat texture shadow */}
+                        <div
+                          className="absolute inset-0 pointer-events-none"
+                          style={{
+                            boxShadow: 'inset 0 0 20px rgba(0,0,0,0.04)',
+                          }}
+                        />
+
+                        {/* Photo with subtle shadow */}
+                        <div className="relative">
                           <Image
                             src={photo.url}
                             alt={photo.title || 'Photo'}
                             width={800}
                             height={600}
                             quality={90}
-                            className="w-full h-auto relative"
+                            className="w-full h-auto block"
                             style={{
-                              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
                             }}
                           />
                         </div>
@@ -180,13 +178,17 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                     </div>
                   </div>
 
-                  {/* Wall shadow - makes it look like hanging */}
+                  {/* Realistic floor/wall shadow */}
                   <div
-                    className="absolute -bottom-4 left-[5%] right-[5%] h-8 -z-10"
+                    className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
                     style={{
-                      background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, transparent 70%)',
-                      opacity: isHovered ? 0.8 : 0.5,
-                      transform: isHovered ? 'scaleY(1.2)' : 'scaleY(1)',
+                      bottom: '-40px',
+                      width: '90%',
+                      height: '50px',
+                      background: 'radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.1) 40%, transparent 70%)',
+                      filter: 'blur(8px)',
+                      opacity: isHovered ? 0.9 : 0.7,
+                      transform: isHovered ? 'scaleX(1.05) scaleY(1.3)' : 'scaleX(1) scaleY(1)',
                       transition: 'opacity 0.5s ease, transform 0.5s ease',
                     }}
                   />
@@ -197,7 +199,7 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
         </div>
       </div>
 
-      {/* Lightbox with framed photo */}
+      {/* Lightbox */}
       {lightboxOpen && currentPhoto && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
@@ -208,15 +210,15 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
           }}
         >
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/95" />
+          <div className="absolute inset-0 bg-neutral-900" />
 
           {/* Close button */}
           <button
             onClick={closeLightbox}
-            className="absolute top-6 right-6 z-50 p-2 text-white/30 hover:text-white/70"
-            style={{ transition: 'color 0.4s ease' }}
+            className="absolute top-6 right-6 z-50 p-2 text-white/40 hover:text-white/80"
+            style={{ transition: 'color 0.3s ease' }}
           >
-            <X className="w-6 h-6" strokeWidth={1} />
+            <X className="w-7 h-7" strokeWidth={1.5} />
           </button>
 
           {/* Navigation arrows */}
@@ -224,95 +226,99 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
             <>
               <button
                 onClick={goToPrevious}
-                className="absolute left-6 top-1/2 -translate-y-1/2 z-50 p-2 text-white/30 hover:text-white/70"
-                style={{ transition: 'color 0.4s ease' }}
+                className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-50 p-3 text-white/40 hover:text-white/80"
+                style={{ transition: 'color 0.3s ease' }}
               >
-                <ChevronLeft className="w-10 h-10" strokeWidth={1} />
+                <ChevronLeft className="w-10 h-10" strokeWidth={1.5} />
               </button>
               <button
                 onClick={goToNext}
-                className="absolute right-6 top-1/2 -translate-y-1/2 z-50 p-2 text-white/30 hover:text-white/70"
-                style={{ transition: 'color 0.4s ease' }}
+                className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-50 p-3 text-white/40 hover:text-white/80"
+                style={{ transition: 'color 0.3s ease' }}
               >
-                <ChevronRight className="w-10 h-10" strokeWidth={1} />
+                <ChevronRight className="w-10 h-10" strokeWidth={1.5} />
               </button>
             </>
           )}
 
           {/* Framed Image in Lightbox */}
           <div
-            className="relative z-40"
+            className="relative z-40 mx-4"
             onClick={(e) => e.stopPropagation()}
             style={{
-              transform: lightboxVisible ? 'scale(1)' : 'scale(0.97)',
-              transition: 'transform 0.6s ease',
+              transform: lightboxVisible ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(20px)',
+              transition: 'transform 0.5s cubic-bezier(0.33, 1, 0.68, 1)',
             }}
           >
-            {/* 3D Frame */}
+            {/* Frame with shadow */}
             <div
+              className="relative bg-[#1c1c1c]"
               style={{
-                boxShadow: '0 40px 80px -20px rgba(0,0,0,0.6), 0 20px 40px -15px rgba(0,0,0,0.4)',
+                padding: '14px',
+                boxShadow: `
+                  0 60px 120px -30px rgba(0,0,0,0.7),
+                  0 30px 60px -20px rgba(0,0,0,0.5),
+                  inset 0 1px 0 0 rgba(255,255,255,0.1),
+                  inset 0 -1px 0 0 rgba(0,0,0,0.4)
+                `,
               }}
             >
-              {/* Outer frame - black with 3D edge */}
+              {/* Inner frame edge */}
               <div
-                className="bg-[#1a1a1a] p-[12px]"
-                style={{
-                  boxShadow: 'inset 2px 2px 6px rgba(255,255,255,0.1), inset -2px -2px 6px rgba(0,0,0,0.4)',
-                }}
+                className="bg-[#0a0a0a]"
+                style={{ padding: '3px' }}
               >
-                {/* Inner frame edge */}
+                {/* White Mat */}
                 <div
-                  className="bg-[#0d0d0d] p-[4px]"
+                  className="bg-white relative"
                   style={{
-                    boxShadow: 'inset 1px 1px 3px rgba(0,0,0,0.8), inset -1px -1px 3px rgba(255,255,255,0.05)',
+                    padding: 'clamp(24px, 4vw, 50px)',
                   }}
                 >
-                  {/* White mat */}
-                  <div className="bg-[#fafafa] p-5 md:p-8 relative">
-                    {/* Mat inner shadow */}
-                    <div
-                      className="absolute inset-0 pointer-events-none"
-                      style={{
-                        boxShadow: 'inset 0 0 15px rgba(0,0,0,0.08)',
-                      }}
-                    />
-                    {/* Inner border line */}
-                    <div
-                      className="absolute pointer-events-none"
-                      style={{
-                        top: '16px',
-                        left: '16px',
-                        right: '16px',
-                        bottom: '16px',
-                        boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.08)',
-                      }}
-                    />
-                    {/* Photo */}
-                    <Image
-                      src={currentPhoto.url}
-                      alt=""
-                      width={1920}
-                      height={1280}
-                      quality={95}
-                      className="max-w-[80vw] max-h-[75vh] w-auto h-auto object-contain"
-                      style={{
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-                      }}
-                      priority
-                    />
-                  </div>
+                  {/* Mat texture */}
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      boxShadow: 'inset 0 0 30px rgba(0,0,0,0.04)',
+                    }}
+                  />
+
+                  {/* Photo */}
+                  <Image
+                    src={currentPhoto.url}
+                    alt=""
+                    width={1920}
+                    height={1280}
+                    quality={95}
+                    className="max-w-[85vw] max-h-[70vh] w-auto h-auto object-contain block"
+                    style={{
+                      boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                    }}
+                    priority
+                  />
                 </div>
               </div>
             </div>
+
+            {/* Lightbox floor shadow */}
+            <div
+              className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+              style={{
+                bottom: '-60px',
+                width: '80%',
+                height: '60px',
+                background: 'radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.15) 50%, transparent 80%)',
+                filter: 'blur(12px)',
+              }}
+            />
           </div>
 
           {/* Counter */}
           <div
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/30 text-sm tracking-widest"
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/50 text-sm tracking-[0.2em] font-light"
             style={{
               opacity: lightboxVisible ? 1 : 0,
-              transition: 'opacity 0.6s ease 0.2s',
+              transition: 'opacity 0.5s ease 0.2s',
             }}
           >
             {currentIndex + 1} / {photos.length}

@@ -147,7 +147,7 @@ function WorkContent() {
               <p className="text-neutral-500">Bu projede henüz fotoğraf yok.</p>
             </div>
           ) : (
-            <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 md:gap-6 lg:gap-8">
+            <div className="columns-1 sm:columns-2 lg:columns-3 gap-8 md:gap-10 lg:gap-12">
               {filteredPhotos.map((photo, index) => {
                 const isHovered = hoveredPhoto === photo.id;
 
@@ -157,70 +157,70 @@ function WorkContent() {
                     onClick={() => openLightbox(index)}
                     onMouseEnter={() => setHoveredPhoto(photo.id)}
                     onMouseLeave={() => setHoveredPhoto(null)}
-                    className="block mb-4 md:mb-6 lg:mb-8 break-inside-avoid cursor-pointer"
+                    className="block mb-10 md:mb-12 lg:mb-14 break-inside-avoid cursor-pointer"
                   >
-                    {/* Framed photo - 3D realistic */}
+                    {/* Frame Container with realistic shadow */}
                     <div
                       className="relative"
                       style={{
-                        transform: isHovered ? 'scale(1.02) translateY(-4px)' : 'scale(1)',
-                        transition: 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+                        transform: isHovered ? 'translateY(-8px)' : 'translateY(0)',
+                        transition: 'transform 0.5s cubic-bezier(0.33, 1, 0.68, 1)',
                       }}
                     >
-                      {/* 3D Frame with depth */}
+                      {/* Main Frame */}
                       <div
-                        className="relative"
+                        className="relative bg-[#1c1c1c]"
                         style={{
+                          padding: '12px',
                           boxShadow: isHovered
-                            ? '0 35px 60px -15px rgba(0,0,0,0.5), 0 15px 25px -10px rgba(0,0,0,0.3)'
-                            : '0 20px 40px -15px rgba(0,0,0,0.4), 0 10px 20px -10px rgba(0,0,0,0.2)',
-                          transition: 'box-shadow 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+                            ? `
+                              0 50px 100px -20px rgba(0,0,0,0.5),
+                              0 30px 60px -30px rgba(0,0,0,0.4),
+                              inset 0 1px 0 0 rgba(255,255,255,0.1),
+                              inset 0 -1px 0 0 rgba(0,0,0,0.3)
+                            `
+                            : `
+                              0 25px 50px -12px rgba(0,0,0,0.35),
+                              0 12px 24px -12px rgba(0,0,0,0.25),
+                              inset 0 1px 0 0 rgba(255,255,255,0.08),
+                              inset 0 -1px 0 0 rgba(0,0,0,0.2)
+                            `,
+                          transition: 'box-shadow 0.5s cubic-bezier(0.33, 1, 0.68, 1)',
                         }}
                       >
-                        {/* Outer frame - black with 3D edge */}
+                        {/* Inner frame edge for depth */}
                         <div
-                          className="bg-[#1a1a1a] p-[10px]"
+                          className="bg-[#0a0a0a]"
                           style={{
-                            boxShadow: 'inset 2px 2px 4px rgba(255,255,255,0.1), inset -2px -2px 4px rgba(0,0,0,0.3)',
+                            padding: '2px',
                           }}
                         >
-                          {/* Inner frame edge - creates depth */}
+                          {/* White Mat / Passepartout */}
                           <div
-                            className="bg-[#0d0d0d] p-[3px]"
+                            className="bg-white relative"
                             style={{
-                              boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.8), inset -1px -1px 2px rgba(255,255,255,0.05)',
+                              padding: 'clamp(20px, 5vw, 40px)',
                             }}
                           >
-                            {/* White mat */}
-                            <div className="bg-[#fafafa] p-3 md:p-4 relative">
-                              {/* Mat inner shadow for depth */}
-                              <div
-                                className="absolute inset-0 pointer-events-none"
-                                style={{
-                                  boxShadow: 'inset 0 0 10px rgba(0,0,0,0.08)',
-                                }}
-                              />
-                              {/* Inner border line */}
-                              <div
-                                className="absolute pointer-events-none"
-                                style={{
-                                  top: '10px',
-                                  left: '10px',
-                                  right: '10px',
-                                  bottom: '10px',
-                                  boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.08)',
-                                }}
-                              />
-                              {/* Photo */}
+                            {/* Subtle mat texture shadow */}
+                            <div
+                              className="absolute inset-0 pointer-events-none"
+                              style={{
+                                boxShadow: 'inset 0 0 20px rgba(0,0,0,0.04)',
+                              }}
+                            />
+
+                            {/* Photo with subtle shadow */}
+                            <div className="relative">
                               <Image
                                 src={photo.url}
                                 alt={photo.title || 'Photo'}
                                 width={800}
                                 height={600}
                                 quality={90}
-                                className="w-full h-auto relative"
+                                className="w-full h-auto block"
                                 style={{
-                                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
                                 }}
                               />
                             </div>
@@ -228,13 +228,17 @@ function WorkContent() {
                         </div>
                       </div>
 
-                      {/* Wall shadow - makes it look like hanging */}
+                      {/* Realistic floor/wall shadow */}
                       <div
-                        className="absolute -bottom-4 left-[5%] right-[5%] h-8 -z-10"
+                        className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
                         style={{
-                          background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, transparent 70%)',
-                          opacity: isHovered ? 0.8 : 0.5,
-                          transform: isHovered ? 'scaleY(1.2)' : 'scaleY(1)',
+                          bottom: '-40px',
+                          width: '90%',
+                          height: '50px',
+                          background: 'radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.1) 40%, transparent 70%)',
+                          filter: 'blur(8px)',
+                          opacity: isHovered ? 0.9 : 0.7,
+                          transform: isHovered ? 'scaleX(1.05) scaleY(1.3)' : 'scaleX(1) scaleY(1)',
                           transition: 'opacity 0.5s ease, transform 0.5s ease',
                         }}
                       />
