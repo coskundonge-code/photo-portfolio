@@ -103,35 +103,29 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               onClick={() => openLightbox(index)}
               className="block mb-12 md:mb-14 lg:mb-16 break-inside-avoid cursor-pointer group"
             >
-              {/* States Gallery exact style frame */}
+              {/* States Gallery style frame */}
               <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
-                {/* Frame border + shadow (light from top-left, sharp shadow on right/bottom) */}
+                {/* Frame with soft realistic shadow */}
                 <div
                   className="border-8 border-black"
-                  style={{ boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
+                  style={{
+                    boxShadow: '6px 8px 25px rgba(0,0,0,0.35), 2px 3px 8px rgba(0,0,0,0.2)'
+                  }}
                 >
-                  {/* White inner border line */}
-                  <div className="border border-white/80">
-                    {/* White mat area with inner shadow (frame casts shadow inward at top/left) */}
-                    <div
-                      className="bg-white p-8 md:p-10 lg:p-12"
-                      style={{ boxShadow: 'inset 2px 2px 6px rgba(0,0,0,0.12)' }}
-                    >
-                      {/* Photo with thin mounting line */}
-                      <div
-                        className="relative"
-                        style={{ boxShadow: 'inset 1px 1px 0 rgba(0,0,0,0.15), inset -1px -1px 0 rgba(255,255,255,0.5)' }}
-                      >
-                        <Image
-                          src={photo.url}
-                          alt={photo.title || 'Photo'}
-                          width={800}
-                          height={600}
-                          quality={90}
-                          className="w-full h-auto block"
-                        />
-                      </div>
-                    </div>
+                  {/* White mat area with subtle inner shadow */}
+                  <div
+                    className="bg-white p-8 md:p-10 lg:p-12"
+                    style={{ boxShadow: 'inset 0 0 20px rgba(0,0,0,0.04)' }}
+                  >
+                    {/* Photo */}
+                    <Image
+                      src={photo.url}
+                      alt={photo.title || 'Photo'}
+                      width={800}
+                      height={600}
+                      quality={90}
+                      className="w-full h-auto block"
+                    />
                   </div>
                 </div>
               </div>
@@ -185,34 +179,28 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               transition: 'transform 0.4s ease',
             }}
           >
-            {/* Frame border + shadow (light from top-left, sharp shadow on right/bottom) */}
+            {/* Frame with soft realistic shadow */}
             <div
               className="border-8 border-black"
-              style={{ boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
+              style={{
+                boxShadow: '6px 8px 25px rgba(0,0,0,0.35), 2px 3px 8px rgba(0,0,0,0.2)'
+              }}
             >
-              {/* White inner border line */}
-              <div className="border border-white/80">
-                {/* White mat area with inner shadow (frame casts shadow inward at top/left) */}
-                <div
-                  className="bg-white p-10 md:p-14"
-                  style={{ boxShadow: 'inset 2px 2px 6px rgba(0,0,0,0.12)' }}
-                >
-                  {/* Photo with thin mounting line */}
-                  <div
-                    className="relative"
-                    style={{ boxShadow: 'inset 1px 1px 0 rgba(0,0,0,0.15), inset -1px -1px 0 rgba(255,255,255,0.5)' }}
-                  >
-                    <Image
-                      src={currentPhoto.url}
-                      alt=""
-                      width={1920}
-                      height={1280}
-                      quality={95}
-                      className="max-w-[85vw] max-h-[70vh] w-auto h-auto object-contain block"
-                      priority
-                    />
-                  </div>
-                </div>
+              {/* White mat area with subtle inner shadow */}
+              <div
+                className="bg-white p-10 md:p-14"
+                style={{ boxShadow: 'inset 0 0 20px rgba(0,0,0,0.04)' }}
+              >
+                {/* Photo */}
+                <Image
+                  src={currentPhoto.url}
+                  alt=""
+                  width={1920}
+                  height={1280}
+                  quality={95}
+                  className="max-w-[85vw] max-h-[70vh] w-auto h-auto object-contain block"
+                  priority
+                />
               </div>
             </div>
           </div>

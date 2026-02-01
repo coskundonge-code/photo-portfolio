@@ -242,47 +242,42 @@ export default function ProductPage() {
                   className="relative transition-all duration-700 ease-out"
                   style={{ transform: `scale(${selectedSize.scale})` }}
                 >
-                  {/* ===== States Gallery exact style frame ===== */}
-                  {/* Frame border + shadow (light from top-left, sharp shadow on right/bottom) */}
+                  {/* Frame with soft realistic shadow */}
                   <div
                     className="border-8"
                     style={{
                       borderColor: selectedFrame.color,
                       ...getFrameStyle(selectedFrame.id),
-                      boxShadow: '4px 4px 0 rgba(0,0,0,0.5)'
+                      boxShadow: '6px 8px 25px rgba(0,0,0,0.35), 2px 3px 8px rgba(0,0,0,0.2)'
                     }}
                   >
-                    {/* White inner border line */}
-                    <div className="border border-white/80">
-                      {/* White mat area with inner shadow (frame casts shadow inward at top/left) */}
+                    {/* White mat area with subtle inner shadow */}
+                    <div
+                      className="bg-white"
+                      style={{
+                        padding: selectedStyle === 'mat'
+                          ? (isPortrait ? '50px 40px' : '40px 50px')
+                          : '0',
+                        boxShadow: selectedStyle === 'mat' ? 'inset 0 0 20px rgba(0,0,0,0.04)' : 'none'
+                      }}
+                    >
+                      {/* Photo */}
                       <div
-                        className="bg-white"
+                        className="relative overflow-hidden"
                         style={{
-                          padding: selectedStyle === 'mat'
-                            ? (isPortrait ? '50px 40px' : '40px 50px')
-                            : '0',
-                          boxShadow: selectedStyle === 'mat' ? 'inset 2px 2px 6px rgba(0,0,0,0.12)' : 'none'
+                          width: `${basePhotoWidth}px`,
+                          height: `${basePhotoHeight}px`,
                         }}
                       >
-                        {/* Photo with thin mounting line */}
-                        <div
-                          className="relative overflow-hidden"
-                          style={{
-                            width: `${basePhotoWidth}px`,
-                            height: `${basePhotoHeight}px`,
-                            boxShadow: 'inset 1px 1px 0 rgba(0,0,0,0.15), inset -1px -1px 0 rgba(255,255,255,0.5)'
-                          }}
-                        >
-                          {product.photos?.url && (
-                            <Image
-                              src={product.photos.url}
-                              alt={product.title}
-                              fill
-                              className="object-cover"
-                              priority
-                            />
-                          )}
-                        </div>
+                        {product.photos?.url && (
+                          <Image
+                            src={product.photos.url}
+                            alt={product.title}
+                            fill
+                            className="object-cover"
+                            priority
+                          />
+                        )}
                       </div>
                     </div>
                   </div>
