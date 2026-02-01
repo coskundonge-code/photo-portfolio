@@ -241,36 +241,45 @@ export default function ShopPage() {
                       className="bg-[#f5f5f5] flex items-center justify-center"
                       style={{ minHeight: `${containerHeight}px` }}
                     >
-                      {/* Frame with shadow - States Gallery style */}
-                      <div
-                        className="bg-[#2d2d2d] p-[8px] transition-transform duration-300 group-hover:-translate-y-1"
-                        style={{
-                          boxShadow: '6px 6px 16px rgba(0, 0, 0, 0.4)',
-                        }}
-                      >
-                        {/* White Mat - wide like States Gallery */}
+                      {/* States Gallery exact style frame */}
+                      <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
+                        {/* Black frame border + shadow */}
                         <div
-                          className="bg-white"
-                          style={{
-                            padding: isPortrait ? '40px 32px' : '32px 40px'
-                          }}
+                          className="border-[8px] border-black"
+                          style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
                         >
-                          <div
-                            className="relative overflow-hidden bg-neutral-100"
-                            style={{
-                              width: `${frameWidth}px`,
-                              height: `${frameHeight}px`,
-                            }}
-                          >
-                            {photo?.url && (
-                              <Image
-                                src={photo.url}
-                                alt={product.title}
-                                fill
-                                className="object-cover"
-                                sizes="(max-width: 768px) 100vw, 33vw"
-                              />
-                            )}
+                          {/* White inner border (passe-partout line) */}
+                          <div className="border-2 border-white">
+                            {/* White mat area */}
+                            <div
+                              className="bg-white"
+                              style={{
+                                padding: isPortrait ? '32px 24px' : '24px 32px'
+                              }}
+                            >
+                              {/* Photo with 3D inset border effect */}
+                              <div
+                                className="relative overflow-hidden p-[3px] bg-[#f0f0f0]"
+                                style={{
+                                  width: `${frameWidth}px`,
+                                  height: `${frameHeight}px`,
+                                  borderTop: '3px solid #e0e0e0',
+                                  borderLeft: '3px solid #e0e0e0',
+                                  borderBottom: '3px solid #888888',
+                                  borderRight: '3px solid #888888',
+                                }}
+                              >
+                                {photo?.url && (
+                                  <Image
+                                    src={photo.url}
+                                    alt={product.title}
+                                    fill
+                                    className="object-cover"
+                                    sizes="(max-width: 768px) 100vw, 33vw"
+                                  />
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>

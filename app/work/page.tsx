@@ -165,13 +165,14 @@ function WorkContent() {
                       <div className="border-2 border-white">
                         {/* White mat area */}
                         <div className="bg-white p-8 md:p-10 lg:p-12">
-                          {/* Photo with 3D inset border effect */}
+                          {/* Photo with 3D inset border effect + padding for visibility */}
                           <div
+                            className="p-[3px] bg-[#f0f0f0]"
                             style={{
-                              borderTop: '3px solid #e8e8e8',
-                              borderLeft: '3px solid #e8e8e8',
-                              borderBottom: '3px solid #a0a0a0',
-                              borderRight: '3px solid #a0a0a0',
+                              borderTop: '3px solid #e0e0e0',
+                              borderLeft: '3px solid #e0e0e0',
+                              borderBottom: '3px solid #888888',
+                              borderRight: '3px solid #888888',
                             }}
                           >
                             <Image
