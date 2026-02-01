@@ -303,42 +303,48 @@ export default function ProductPage() {
               </div>
             </div>
 
-            {/* Sağ: Ürün Detayları */}
+            {/* Sağ: Ürün Detayları - States Gallery Tarzı */}
             <div className="lg:w-[45%]">
+              {/* Başlık */}
+              <h1 className="text-3xl font-bold tracking-tight mb-3">{product.title.toUpperCase()}</h1>
+
               {/* Edisyon Badge */}
-              <div className="inline-block bg-black text-white text-xs px-4 py-2 mb-4 tracking-wider">
-                {product.edition_type === 'limited' 
+              <div className="inline-block bg-black text-white text-[11px] px-3 py-1.5 mb-4 tracking-wider">
+                {product.edition_type === 'limited'
                   ? `SINIRLI EDİSYON`
                   : 'AÇIK EDİSYON'}
               </div>
 
-              <div className="mb-8">
-                <p className="text-3xl font-light">₺{formatPrice(calculatePrice())},00</p>
-                <p className="text-sm text-neutral-500 mt-2">KDV dahil. Kargo ödeme sırasında hesaplanır.</p>
+              {/* Fiyat */}
+              <div className="mb-6">
+                <p className="text-2xl font-normal">₺{formatPrice(calculatePrice())},00</p>
+                <p className="text-sm text-neutral-500 mt-1">
+                  KDV dahil. <span className="underline cursor-pointer">Kargo</span> ödeme sırasında hesaplanır.
+                </p>
               </div>
 
               {/* Stil Seçimi */}
-              <div className="mb-10">
-                <h3 className="text-sm text-neutral-600 mb-4">
-                  Stil Seçin: <span className="text-black font-medium">{selectedStyle === 'mat' ? 'Mat' : 'Full Bleed'}</span>
-                </h3>
-                <div className="flex gap-3">
+              <div className="mb-6 pt-4 border-t border-neutral-200">
+                <p className="text-sm text-neutral-600 mb-3">
+                  Stil Seçin: <span className="text-black">{selectedStyle === 'mat' ? 'Mat' : 'Full Bleed'}</span>
+                </p>
+                <div className="flex gap-0">
                   <button
                     onClick={() => setSelectedStyle('mat')}
-                    className={`px-8 py-3 text-sm transition-all duration-300 border ${
-                      selectedStyle === 'mat' 
-                        ? 'border-black bg-white' 
-                        : 'border-neutral-200 hover:border-neutral-400'
+                    className={`px-8 py-2.5 text-sm border transition-colors ${
+                      selectedStyle === 'mat'
+                        ? 'border-black bg-white'
+                        : 'border-neutral-300 hover:border-neutral-400'
                     }`}
                   >
                     Mat
                   </button>
                   <button
                     onClick={() => setSelectedStyle('fullbleed')}
-                    className={`px-8 py-3 text-sm transition-all duration-300 border ${
-                      selectedStyle === 'fullbleed' 
-                        ? 'border-black bg-white' 
-                        : 'border-neutral-200 hover:border-neutral-400'
+                    className={`px-8 py-2.5 text-sm border-t border-b border-r transition-colors ${
+                      selectedStyle === 'fullbleed'
+                        ? 'border-black bg-white border-l'
+                        : 'border-neutral-300 hover:border-neutral-400'
                     }`}
                   >
                     Full Bleed
@@ -346,64 +352,60 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              {/* Boyut Seçimi */}
-              <div className="mb-10">
-                <h3 className="text-sm text-neutral-600 mb-4">
-                  Çerçeve Boyutu Seçin: <span className="text-black font-medium">{selectedSize.name}</span>
-                </h3>
-                <div className="space-y-2">
-                  {defaultSizes.map((size) => (
+              {/* Boyut Seçimi - States Gallery Tarzı */}
+              <div className="mb-6">
+                <p className="text-sm text-neutral-600 mb-3">
+                  Çerçeve Boyutu Seçin: <span className="text-black">{selectedSize.name}</span>
+                </p>
+                <div className="border border-neutral-200">
+                  {defaultSizes.map((size, index) => (
                     <button
                       key={size.id}
                       onClick={() => setSelectedSize(size)}
-                      className={`w-full flex items-center justify-between px-5 py-4 transition-all duration-300 border ${
-                        selectedSize.id === size.id 
-                          ? 'border-black' 
-                          : 'border-neutral-200 hover:border-neutral-400'
-                      }`}
+                      className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors relative ${
+                        index !== 0 ? 'border-t border-neutral-200' : ''
+                      } ${selectedSize.id === size.id ? 'bg-white' : 'hover:bg-neutral-50'}`}
                     >
-                      <span className="font-medium">{size.name}</span>
+                      {/* Sol kenar çizgisi - seçili için */}
+                      {selectedSize.id === size.id && (
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-black" />
+                      )}
+                      <span className={selectedSize.id === size.id ? 'font-medium' : ''}>{size.name}</span>
                       <span className="text-neutral-500">{size.dimensions}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Çerçeve Rengi - Ahşap dokulu butonlar */}
-              <div className="mb-10">
-                <h3 className="text-sm text-neutral-600 mb-4">
-                  Çerçeve Rengi Seçin: <span className="text-black font-medium">{selectedFrame.name}</span>
-                </h3>
-                <div className="flex gap-4">
+              {/* Çerçeve Rengi - States Gallery Tarzı */}
+              <div className="mb-8">
+                <p className="text-sm text-neutral-600 mb-3">
+                  Çerçeve Rengi Seçin: <span className="text-black">{selectedFrame.name}</span>
+                </p>
+                <div className="flex gap-3">
                   {defaultFrames.map((frame) => (
                     <button
                       key={frame.id}
                       onClick={() => setSelectedFrame(frame)}
-                      className={`relative w-14 h-14 rounded-full transition-all duration-300 ${
-                        selectedFrame.id === frame.id 
-                          ? 'ring-2 ring-offset-4 ring-black scale-110' 
-                          : 'hover:scale-105'
+                      className={`w-10 h-10 rounded-full transition-all ${
+                        selectedFrame.id === frame.id
+                          ? 'ring-2 ring-offset-2 ring-black'
+                          : ''
                       }`}
-                      style={{ 
+                      style={{
                         background: frame.buttonTexture,
                         border: frame.id === 'white' ? '1px solid #d0d0d0' : 'none',
-                        boxShadow: '0 4px 15px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.2)'
                       }}
-                    >
-                      {selectedFrame.id === frame.id && (
-                        <Check className={`absolute inset-0 m-auto w-5 h-5 ${
-                          frame.id === 'white' ? 'text-black' : 'text-white'
-                        }`} strokeWidth={2.5} />
-                      )}
-                    </button>
+                    />
                   ))}
                 </div>
               </div>
 
-              {/* Size Guide Link */}
-              <button className="flex items-center gap-2 text-sm text-neutral-700 hover:text-black mb-8 group">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+              {/* Size Guide Link - States Gallery Tarzı */}
+              <button className="flex items-center gap-2 text-sm text-neutral-700 hover:text-black mb-8">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M21 21H3M21 21V3M21 21L3 3" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M15 3h6v6" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <span className="underline underline-offset-4">Boyut Rehberi</span>
               </button>
@@ -411,35 +413,35 @@ export default function ProductPage() {
               {/* Sepete Ekle */}
               <button
                 onClick={handleAddToCart}
-                className="w-full py-5 bg-black text-white text-sm tracking-widest hover:bg-neutral-800 transition-all duration-300"
+                className="w-full py-4 bg-black text-white text-sm tracking-wider hover:bg-neutral-800 transition-colors"
               >
-                Sepete Ekle
+                SEPETE EKLE
               </button>
 
               {/* Ürün Bilgileri */}
-              <div className="mt-16 pt-10 border-t border-neutral-200">
-                <h3 className="text-2xl font-light mb-3 tracking-wide text-center">KALİTE KORUMASI</h3>
-                <p className="text-sm text-neutral-500 text-center mb-10">
+              <div className="mt-12 pt-8 border-t border-neutral-200">
+                <h3 className="text-lg font-medium mb-3 tracking-wide">KALİTE KORUMASI</h3>
+                <p className="text-sm text-neutral-500 mb-8">
                   Kendi bünyemizde yapılan baskı ve çerçeveleme sürecimiz, en yüksek müze kalitesinde çerçeveli parçalar üretir.
                 </p>
-                
-                <div className="space-y-8 text-sm">
+
+                <div className="space-y-6 text-sm">
                   <div>
-                    <h4 className="font-medium mb-2 tracking-wide">BASKI KALİTESİ</h4>
+                    <h4 className="font-medium mb-1">BASKI KALİTESİ</h4>
                     <p className="text-neutral-500 leading-relaxed">
                       Resimlerimizi bastığımız kağıt, mümkün olan en iyi görüntü kalitesini sunan gümüş halojenür fotoğraf substratıdır.
                     </p>
                   </div>
-                  
+
                   <div>
-                    <h4 className="font-medium mb-2 tracking-wide">MALZEME ÖNEMLİ</h4>
+                    <h4 className="font-medium mb-1">MALZEME ÖNEMLİ</h4>
                     <p className="text-neutral-500 leading-relaxed">
                       Müze camı gibi müze kalitesinde malzemeler kullanan ikonik çerçeveleme, parçanın korunmasını sağlar.
                     </p>
                   </div>
-                  
+
                   <div>
-                    <h4 className="font-medium mb-2 tracking-wide">SERTİFİKA</h4>
+                    <h4 className="font-medium mb-1">SERTİFİKA</h4>
                     <p className="text-neutral-500 leading-relaxed">
                       Her parça, sanatçı tarafından imzalanmış bir orijinallik sertifikası içerir.
                     </p>
