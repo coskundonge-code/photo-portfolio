@@ -16,7 +16,7 @@ interface LightboxProps {
   // Yeni API - fotoğraf dizisi ile çalışma
   photos?: Photo[];
   initialIndex?: number;
-  
+
   // Eski API - tekil fotoğraf ile çalışma (geriye uyumluluk)
   isOpen?: boolean;
   imageUrl?: string;
@@ -25,17 +25,17 @@ interface LightboxProps {
   onNext?: () => void;
   hasPrev?: boolean;
   hasNext?: boolean;
-  
+
   // Ortak
   onClose: () => void;
 }
 
 export default function Lightbox(props: LightboxProps) {
-  const { 
+  const {
     // Yeni API
-    photos, 
+    photos,
     initialIndex = 0,
-    
+
     // Eski API
     isOpen: isOpenProp,
     imageUrl: imageUrlProp,
@@ -44,26 +44,33 @@ export default function Lightbox(props: LightboxProps) {
     onNext: onNextProp,
     hasPrev: hasPrevProp = false,
     hasNext: hasNextProp = false,
-    
+
     // Ortak
-    onClose 
+    onClose
   } = props;
 
   // Dizi modu mu tekil mod mu?
   const isArrayMode = Boolean(photos && photos.length > 0);
-  
+
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [isVisible, setIsVisible] = useState(false);
 
   // initialIndex değişince güncelle
   useEffect(() => {
     setCurrentIndex(initialIndex);
   }, [initialIndex]);
 
+  // Fade in animation
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 50);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Mevcut fotoğraf bilgileri
   const currentPhoto = isArrayMode ? photos![currentIndex] : null;
   const imageUrl = isArrayMode ? currentPhoto?.url : imageUrlProp;
   const title = isArrayMode ? currentPhoto?.title : titleProp;
-  
+
   // Navigasyon durumları
   const hasPrev = isArrayMode ? currentIndex > 0 : hasPrevProp;
   const hasNext = isArrayMode ? currentIndex < (photos?.length || 0) - 1 : hasNextProp;
@@ -112,58 +119,98 @@ export default function Lightbox(props: LightboxProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center">
+    <div
+      className="fixed inset-0 z-50 bg-[#f5f5f5] flex items-center justify-center"
+      style={{
+        opacity: isVisible ? 1 : 0,
+        transition: 'opacity 0.4s ease',
+      }}
+    >
       {/* Close Button */}
       <button
         onClick={onClose}
-        className="absolute top-6 right-6 p-2 text-white/70 hover:text-white z-10 transition-colors"
+        className="absolute top-6 right-6 p-2 text-neutral-400 hover:text-neutral-800 z-10 transition-colors"
         aria-label="Kapat"
       >
-        <X className="w-8 h-8" />
+        <X className="w-7 h-7" strokeWidth={1.5} />
       </button>
-
-      {/* Title & Counter */}
-      <div className="absolute top-6 left-6 text-white/70 text-sm tracking-wide">
-        {title && <span>{title}</span>}
-        {isArrayMode && photos && (
-          <span className={title ? 'ml-4' : ''}>
-            {currentIndex + 1} / {photos.length}
-          </span>
-        )}
-      </div>
 
       {/* Previous Button */}
       {hasPrev && (
         <button
           onClick={goToPrev}
-          className="absolute left-6 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white transition-colors"
+          className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 p-3 text-neutral-400 hover:text-neutral-800 transition-colors z-10"
           aria-label="Önceki"
         >
-          <ChevronLeft className="w-10 h-10" />
+          <ChevronLeft className="w-10 h-10" strokeWidth={1.5} />
         </button>
       )}
 
-      {/* Image */}
-      <div className="relative max-w-[90vw] max-h-[90vh]">
-        <Image
-          src={imageUrl}
-          alt={title || 'Photo'}
-          width={1920}
-          height={1080}
-          className="max-w-full max-h-[90vh] object-contain"
-          priority
-        />
+      {/* Framed Image - hanging on wall effect */}
+      <div
+        className="relative mx-4"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          transform: isVisible ? 'scale(1)' : 'scale(0.95)',
+          transition: 'transform 0.4s ease',
+        }}
+      >
+        {/* States Gallery exact style frame with enhanced shadow for wall effect */}
+        <div
+          className="border-[12px] border-black"
+          style={{ boxShadow: '0 25px 60px rgba(0,0,0,0.35), 0 10px 20px rgba(0,0,0,0.2)' }}
+        >
+          {/* White inner border (passe-partout line) */}
+          <div className="border-2 border-white">
+            {/* White mat area */}
+            <div className="bg-white p-10 md:p-14">
+              {/* Photo with 3D inset border effect + padding for visibility */}
+              <div
+                className="p-[3px] bg-[#f0f0f0]"
+                style={{
+                  borderTop: '3px solid #e0e0e0',
+                  borderLeft: '3px solid #e0e0e0',
+                  borderBottom: '3px solid #888888',
+                  borderRight: '3px solid #888888',
+                }}
+              >
+                <Image
+                  src={imageUrl}
+                  alt={title || 'Photo'}
+                  width={1920}
+                  height={1280}
+                  quality={95}
+                  className="max-w-[85vw] max-h-[70vh] w-auto h-auto object-contain block"
+                  priority
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Next Button */}
       {hasNext && (
         <button
           onClick={goToNext}
-          className="absolute right-6 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white transition-colors"
+          className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 p-3 text-neutral-400 hover:text-neutral-800 transition-colors z-10"
           aria-label="Sonraki"
         >
-          <ChevronRight className="w-10 h-10" />
+          <ChevronRight className="w-10 h-10" strokeWidth={1.5} />
         </button>
+      )}
+
+      {/* Counter */}
+      {isArrayMode && photos && (
+        <div
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 text-neutral-400 text-sm tracking-[0.2em] font-light"
+          style={{
+            opacity: isVisible ? 1 : 0,
+            transition: 'opacity 0.4s ease 0.2s',
+          }}
+        >
+          {currentIndex + 1} / {photos.length}
+        </div>
       )}
 
       {/* Click outside to close */}

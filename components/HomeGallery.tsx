@@ -142,10 +142,10 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
         </div>
       </div>
 
-      {/* Lightbox */}
+      {/* Lightbox - White wall background */}
       {lightboxOpen && currentPhoto && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#1a1a1a]"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#f5f5f5]"
           onClick={closeLightbox}
           style={{
             opacity: lightboxVisible ? 1 : 0,
@@ -155,7 +155,7 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
           {/* Close button */}
           <button
             onClick={closeLightbox}
-            className="absolute top-6 right-6 z-50 p-2 text-white/40 hover:text-white/80 transition-colors"
+            className="absolute top-6 right-6 z-50 p-2 text-neutral-400 hover:text-neutral-800 transition-colors"
           >
             <X className="w-7 h-7" strokeWidth={1.5} />
           </button>
@@ -165,20 +165,20 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
             <>
               <button
                 onClick={goToPrevious}
-                className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-50 p-3 text-white/40 hover:text-white/80 transition-colors"
+                className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-50 p-3 text-neutral-400 hover:text-neutral-800 transition-colors"
               >
                 <ChevronLeft className="w-10 h-10" strokeWidth={1.5} />
               </button>
               <button
                 onClick={goToNext}
-                className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-50 p-3 text-white/40 hover:text-white/80 transition-colors"
+                className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-50 p-3 text-neutral-400 hover:text-neutral-800 transition-colors"
               >
                 <ChevronRight className="w-10 h-10" strokeWidth={1.5} />
               </button>
             </>
           )}
 
-          {/* Framed Image */}
+          {/* Framed Image - hanging on wall effect */}
           <div
             className="relative z-40 mx-4"
             onClick={(e) => e.stopPropagation()}
@@ -187,10 +187,10 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               transition: 'transform 0.4s ease',
             }}
           >
-            {/* States Gallery exact style frame */}
+            {/* States Gallery exact style frame with enhanced shadow for wall effect */}
             <div
               className="border-[12px] border-black"
-              style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
+              style={{ boxShadow: '0 25px 60px rgba(0,0,0,0.35), 0 10px 20px rgba(0,0,0,0.2)' }}
             >
               {/* White inner border (passe-partout line) */}
               <div className="border-2 border-white">
@@ -223,7 +223,7 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
 
           {/* Counter */}
           <div
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/50 text-sm tracking-[0.2em] font-light"
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 text-neutral-400 text-sm tracking-[0.2em] font-light"
             style={{
               opacity: lightboxVisible ? 1 : 0,
               transition: 'opacity 0.4s ease 0.2s',
