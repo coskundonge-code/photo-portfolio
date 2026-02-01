@@ -165,14 +165,14 @@ function WorkContent() {
                     <div
                       className="bg-white p-10 md:p-12 lg:p-14"
                       style={{
-                        boxShadow: 'inset 2px 2px 4px rgba(0, 0, 0, 0.12)',
+                        boxShadow: 'inset 3px 3px 8px rgba(0, 0, 0, 0.2)',
                       }}
                     >
                       {/* Photo container with recessed border for depth */}
                       <div
-                        className="relative"
+                        className="relative border border-neutral-300"
                         style={{
-                          boxShadow: 'inset 1px 1px 2px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.06)',
+                          boxShadow: 'inset 2px 2px 4px rgba(0, 0, 0, 0.1)',
                         }}
                       >
                         <Image
