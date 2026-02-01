@@ -114,8 +114,15 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                   <div className="border-2 border-white">
                     {/* White mat area */}
                     <div className="bg-white p-8 md:p-10 lg:p-12">
-                      {/* Photo with thin border for 3D depth */}
-                      <div className="border border-neutral-300">
+                      {/* Photo with 3D inset border effect */}
+                      <div
+                        style={{
+                          borderTop: '3px solid #e8e8e8',
+                          borderLeft: '3px solid #e8e8e8',
+                          borderBottom: '3px solid #a0a0a0',
+                          borderRight: '3px solid #a0a0a0',
+                        }}
+                      >
                         <Image
                           src={photo.url}
                           alt={photo.title || 'Photo'}
@@ -188,8 +195,15 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               <div className="border-2 border-white">
                 {/* White mat area */}
                 <div className="bg-white p-10 md:p-14">
-                  {/* Photo with thin border for 3D depth */}
-                  <div className="border border-neutral-300">
+                  {/* Photo with 3D inset border effect */}
+                  <div
+                    style={{
+                      borderTop: '3px solid #e8e8e8',
+                      borderLeft: '3px solid #e8e8e8',
+                      borderBottom: '3px solid #a0a0a0',
+                      borderRight: '3px solid #a0a0a0',
+                    }}
+                  >
                     <Image
                       src={currentPhoto.url}
                       alt=""
