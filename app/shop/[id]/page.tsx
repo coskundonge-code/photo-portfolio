@@ -56,7 +56,7 @@ const defaultFrames = [
 
 const formatPrice = (price: number) => price.toLocaleString('tr-TR');
 
-// Çerçeve dokusu stilleri - States Gallery tarzı gerçekçi ahşap
+// Çerçeve dokusu stilleri - States Gallery tarzı gerçekçi yatay ahşap damarları
 const getFrameStyle = (frameId: string) => {
   switch (frameId) {
     case 'black':
@@ -69,20 +69,46 @@ const getFrameStyle = (frameId: string) => {
         boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.08)',
       };
     case 'oak':
+      // Açık meşe - yatay doğal ahşap damarları
       return {
-        backgroundColor: '#c9a66b',
-        backgroundImage: `
-          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-opacity='0.15'%3E%3Cpath fill='%23000' d='M0 0h10v2H0zM20 0h15v1H20zM45 0h5v3h-5zM60 0h20v1H60zM90 0h10v2H90z'/%3E%3Cpath fill='%23fff' d='M5 5h8v1H5zM25 4h10v2H25zM50 3h8v2h-8zM70 5h15v1H70z'/%3E%3Cpath fill='%23000' d='M0 10h12v1H0zM30 8h20v2H30zM65 10h25v1H65z'/%3E%3Cpath fill='%23fff' d='M10 15h15v1H10zM40 12h10v2H40zM75 14h20v1H75z'/%3E%3Cpath fill='%23000' d='M0 20h8v2H0zM20 18h25v1H20zM55 20h30v1H55z'/%3E%3Cpath fill='%23fff' d='M5 25h20v1H5zM45 22h15v2H45zM80 24h15v1H80z'/%3E%3Cpath fill='%23000' d='M0 30h15v1H0zM25 28h20v2H25zM60 30h25v1H60z'/%3E%3Cpath fill='%23fff' d='M10 35h12v1H10zM35 32h18v2H35zM70 34h20v1H70z'/%3E%3Cpath fill='%23000' d='M0 40h20v1H0zM30 38h15v2H30zM55 40h35v1H55z'/%3E%3Cpath fill='%23fff' d='M8 45h15v1H8zM40 42h20v2H40zM75 44h18v1H75z'/%3E%3Cpath fill='%23000' d='M0 50h10v2H0zM22 48h25v1H22zM60 50h30v1H60z'/%3E%3Cpath fill='%23fff' d='M5 55h18v1H5zM35 52h15v2H35zM70 54h25v1H70z'/%3E%3Cpath fill='%23000' d='M0 60h25v1H0zM40 58h20v2H40zM75 60h20v1H75z'/%3E%3Cpath fill='%23fff' d='M12 65h15v1H12zM50 62h18v2H50zM82 64h15v1H82z'/%3E%3Cpath fill='%23000' d='M0 70h18v1H0zM28 68h22v2H28zM65 70h28v1H65z'/%3E%3Cpath fill='%23fff' d='M8 75h20v1H8zM42 72h15v2H42zM78 74h18v1H78z'/%3E%3Cpath fill='%23000' d='M0 80h12v2H0zM20 78h30v1H20zM58 80h35v1H58z'/%3E%3Cpath fill='%23fff' d='M5 85h22v1H5zM38 82h20v2H38zM72 84h22v1H72z'/%3E%3Cpath fill='%23000' d='M0 90h15v1H0zM25 88h18v2H25zM55 90h40v1H55z'/%3E%3Cpath fill='%23fff' d='M10 95h18v1H10zM45 92h15v2H45zM80 94h15v1H80z'/%3E%3C/g%3E%3C/svg%3E")
+        background: `
+          linear-gradient(180deg,
+            #d4b896 0%, #c9a66b 2%, #d9bc8a 4%, #c4a060 6%,
+            #d4b896 8%, #caa76c 10%, #dfca9e 12%, #c9a66b 14%,
+            #d4b896 16%, #c4a060 18%, #d9bc8a 20%, #c9a66b 22%,
+            #d0b080 24%, #c9a66b 26%, #d4b896 28%, #be9c5c 30%,
+            #d9bc8a 32%, #c9a66b 34%, #d4b896 36%, #c4a060 38%,
+            #caa76c 40%, #d9bc8a 42%, #c9a66b 44%, #d4b896 46%,
+            #c4a060 48%, #d0b080 50%, #c9a66b 52%, #d9bc8a 54%,
+            #c9a66b 56%, #d4b896 58%, #be9c5c 60%, #c9a66b 62%,
+            #d9bc8a 64%, #c4a060 66%, #d4b896 68%, #c9a66b 70%,
+            #caa76c 72%, #d9bc8a 74%, #c9a66b 76%, #d4b896 78%,
+            #c4a060 80%, #c9a66b 82%, #d9bc8a 84%, #be9c5c 86%,
+            #d4b896 88%, #c9a66b 90%, #d0b080 92%, #c4a060 94%,
+            #d9bc8a 96%, #c9a66b 98%, #d4b896 100%
+          )
         `,
-        backgroundSize: '100px 100px',
       };
     case 'walnut':
+      // Koyu ceviz - yatay doğal ahşap damarları
       return {
-        backgroundColor: '#6d4c3d',
-        backgroundImage: `
-          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-opacity='0.2'%3E%3Cpath fill='%23000' d='M0 0h8v3H0zM15 0h20v2H15zM42 0h8v3h-8zM58 0h25v2H58zM92 0h8v3H92z'/%3E%3Cpath fill='%23fff' d='M3 6h12v1H3zM22 5h18v2H22zM48 6h12v1H48zM68 5h20v2H68z'/%3E%3Cpath fill='%23000' d='M0 12h18v2H0zM25 10h22v3H25zM55 12h30v2H55z'/%3E%3Cpath fill='%23fff' d='M8 18h15v1H8zM35 16h15v2H35zM65 18h25v1H65z'/%3E%3Cpath fill='%23000' d='M0 24h12v3H0zM18 22h28v2H18zM52 24h38v2H52z'/%3E%3Cpath fill='%23fff' d='M5 30h22v1H5zM32 28h20v2H32zM70 30h22v1H70z'/%3E%3Cpath fill='%23000' d='M0 36h20v2H0zM28 34h25v3H28zM60 36h32v2H60z'/%3E%3Cpath fill='%23fff' d='M10 42h18v1H10zM38 40h18v2H38zM72 42h20v1H72z'/%3E%3Cpath fill='%23000' d='M0 48h15v3H0zM22 46h30v2H22zM58 48h35v2H58z'/%3E%3Cpath fill='%23fff' d='M6 54h20v1H6zM40 52h15v2H40zM68 54h25v1H68z'/%3E%3Cpath fill='%23000' d='M0 60h22v2H0zM30 58h22v3H30zM60 60h30v2H60z'/%3E%3Cpath fill='%23fff' d='M12 66h18v1H12zM42 64h15v2H42zM75 66h18v1H75z'/%3E%3Cpath fill='%23000' d='M0 72h18v3H0zM25 70h28v2H25zM62 72h32v2H62z'/%3E%3Cpath fill='%23fff' d='M8 78h22v1H8zM38 76h20v2H38zM78 78h18v1H78z'/%3E%3Cpath fill='%23000' d='M0 84h15v2H0zM22 82h25v3H22zM55 84h38v2H55z'/%3E%3Cpath fill='%23fff' d='M5 90h20v1H5zM35 88h18v2H35zM70 90h25v1H70z'/%3E%3Cpath fill='%23000' d='M0 96h12v3H0zM20 94h28v2H20zM58 96h35v2H58z'/%3E%3C/g%3E%3C/svg%3E")
+        background: `
+          linear-gradient(180deg,
+            #8b6b5a 0%, #7d5c4d 2%, #6d4c3d 4%, #5d3c2d 6%,
+            #7d5c4d 8%, #8b6b5a 10%, #6d4c3d 12%, #7d5c4d 14%,
+            #5d3c2d 16%, #6d4c3d 18%, #8b6b5a 20%, #7d5c4d 22%,
+            #6d4c3d 24%, #5d3c2d 26%, #7d5c4d 28%, #8b6b5a 30%,
+            #6d4c3d 32%, #7d5c4d 34%, #5d3c2d 36%, #6d4c3d 38%,
+            #8b6b5a 40%, #7d5c4d 42%, #6d4c3d 44%, #5d3c2d 46%,
+            #7d5c4d 48%, #6d4c3d 50%, #8b6b5a 52%, #7d5c4d 54%,
+            #5d3c2d 56%, #6d4c3d 58%, #7d5c4d 60%, #8b6b5a 62%,
+            #6d4c3d 64%, #5d3c2d 66%, #7d5c4d 68%, #6d4c3d 70%,
+            #8b6b5a 72%, #7d5c4d 74%, #6d4c3d 76%, #5d3c2d 78%,
+            #7d5c4d 80%, #8b6b5a 82%, #6d4c3d 84%, #7d5c4d 86%,
+            #5d3c2d 88%, #6d4c3d 90%, #7d5c4d 92%, #8b6b5a 94%,
+            #6d4c3d 96%, #7d5c4d 98%, #5d3c2d 100%
+          )
         `,
-        backgroundSize: '100px 100px',
       };
     default:
       return { background: '#1a1a1a' };
@@ -404,11 +430,19 @@ export default function ProductPage() {
                       style={{
                         backgroundColor: frame.buttonColor,
                         border: frame.buttonBorder,
-                        backgroundImage: frame.id === 'oak'
-                          ? 'radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.3) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(0,0,0,0.15) 0%, transparent 50%)'
+                        background: frame.id === 'oak'
+                          ? `linear-gradient(180deg,
+                              #d4b896 0%, #c9a66b 10%, #d9bc8a 20%, #c4a060 30%,
+                              #d4b896 40%, #caa76c 50%, #d9bc8a 60%, #c9a66b 70%,
+                              #d4b896 80%, #c4a060 90%, #c9a66b 100%
+                            )`
                           : frame.id === 'walnut'
-                          ? 'radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.2) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(0,0,0,0.2) 0%, transparent 50%)'
-                          : 'none',
+                          ? `linear-gradient(180deg,
+                              #8b6b5a 0%, #7d5c4d 10%, #6d4c3d 20%, #5d3c2d 30%,
+                              #7d5c4d 40%, #8b6b5a 50%, #6d4c3d 60%, #7d5c4d 70%,
+                              #5d3c2d 80%, #6d4c3d 90%, #7d5c4d 100%
+                            )`
+                          : undefined,
                       }}
                     />
                   ))}
