@@ -277,7 +277,7 @@ export default function ContactPage() {
 
               {/* Description */}
               <p className="text-neutral-500 text-sm mb-6">
-                Mesajınız başarıyla iletildi. En kısa sürede size dönüş yapacağım.
+                Mesajınız başarıyla iletildi.
               </p>
 
               {/* Close Button */}
