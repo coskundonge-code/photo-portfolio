@@ -428,9 +428,12 @@ export default function ProductPage() {
                           : ''
                       }`}
                       style={{
-                        backgroundColor: frame.buttonColor,
                         border: frame.buttonBorder,
-                        background: frame.id === 'oak'
+                        background: frame.id === 'black'
+                          ? '#1a1a1a'
+                          : frame.id === 'white'
+                          ? 'transparent'
+                          : frame.id === 'oak'
                           ? `linear-gradient(180deg,
                               #d4b896 0%, #c9a66b 10%, #d9bc8a 20%, #c4a060 30%,
                               #d4b896 40%, #caa76c 50%, #d9bc8a 60%, #c9a66b 70%,
@@ -442,7 +445,7 @@ export default function ProductPage() {
                               #7d5c4d 40%, #8b6b5a 50%, #6d4c3d 60%, #7d5c4d 70%,
                               #5d3c2d 80%, #6d4c3d 90%, #7d5c4d 100%
                             )`
-                          : undefined,
+                          : '#1a1a1a',
                       }}
                     />
                   ))}
