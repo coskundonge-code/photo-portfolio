@@ -243,16 +243,16 @@ export default function ShopPage() {
                     >
                       {/* Frame with shadow - States Gallery style */}
                       <div
-                        className="bg-[#222] p-[10px] transition-transform duration-300 group-hover:-translate-y-2"
+                        className="bg-[#2d2d2d] p-[8px] transition-transform duration-300 group-hover:-translate-y-1"
                         style={{
-                          boxShadow: '8px 12px 30px -5px rgba(0, 0, 0, 0.4)',
+                          boxShadow: '6px 6px 16px rgba(0, 0, 0, 0.4)',
                         }}
                       >
-                        {/* White Mat */}
+                        {/* White Mat - wide like States Gallery */}
                         <div
                           className="bg-white"
                           style={{
-                            padding: isPortrait ? '24px 20px' : '20px 24px'
+                            padding: isPortrait ? '40px 32px' : '32px 40px'
                           }}
                         >
                           <div

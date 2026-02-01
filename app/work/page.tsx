@@ -156,13 +156,13 @@ function WorkContent() {
                 >
                   {/* Frame with shadow - States Gallery style */}
                   <div
-                    className="bg-[#222] p-[10px] transition-transform duration-300 group-hover:-translate-y-2"
+                    className="bg-[#2d2d2d] p-[8px] transition-transform duration-300 group-hover:-translate-y-1"
                     style={{
-                      boxShadow: '8px 12px 30px -5px rgba(0, 0, 0, 0.4)',
+                      boxShadow: '6px 6px 16px rgba(0, 0, 0, 0.4)',
                     }}
                   >
-                    {/* White Mat */}
-                    <div className="bg-white p-6 md:p-8">
+                    {/* White Mat - wide like States Gallery */}
+                    <div className="bg-white p-10 md:p-12 lg:p-14">
                       <Image
                         src={photo.url}
                         alt={photo.title || 'Photo'}
