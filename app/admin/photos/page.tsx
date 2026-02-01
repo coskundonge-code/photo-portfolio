@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Loader2, Plus, Edit2, Trash2, X, Upload, ImageIcon, Star } from 'lucide-react';
-import { getPhotos, getProjects, createPhoto, updatePhoto, deletePhoto } from '@/lib/supabase';
+import { Loader2, Plus, Edit2, Trash2, X, Upload, ImageIcon, Star, ShoppingBag } from 'lucide-react';
+import { getPhotos, getProjects, createPhoto, updatePhoto, deletePhoto, getAllProducts, createProduct } from '@/lib/supabase';
 import { smartUploadToCloudinary } from '@/lib/cloudinary';
-import { Photo, Project } from '@/lib/types';
+import { Photo, Project, Product } from '@/lib/types';
 
 const themeOptions = [
   { id: '', label: 'Tema Seçin...' },
@@ -21,14 +21,15 @@ const themeOptions = [
 export default function AdminPhotosPage() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPhoto, setEditingPhoto] = useState<Photo | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [formData, setFormData] = useState({
     title: '',
     url: '',
@@ -36,6 +37,8 @@ export default function AdminPhotosPage() {
     theme: '',
     is_featured: false,
     orientation: 'landscape' as 'landscape' | 'portrait',
+    addToShop: true, // Mağazaya ekle checkbox
+    shopPrice: '1500', // Varsayılan fiyat
   });
 
   useEffect(() => {
@@ -43,10 +46,25 @@ export default function AdminPhotosPage() {
   }, []);
 
   const loadData = async () => {
-    const [photosData, projectsData] = await Promise.all([getPhotos(), getProjects()]);
+    const [photosData, projectsData, productsData] = await Promise.all([
+      getPhotos(),
+      getProjects(),
+      getAllProducts()
+    ]);
     setPhotos(photosData);
     setProjects(projectsData);
+    setProducts(productsData);
     setLoading(false);
+  };
+
+  // Check if a photo is in the shop
+  const isPhotoInShop = (photoId: string) => {
+    return products.some(p => p.photo_id === photoId);
+  };
+
+  // Get product for a photo
+  const getProductForPhoto = (photoId: string) => {
+    return products.find(p => p.photo_id === photoId);
   };
 
   const resetForm = () => {
@@ -57,6 +75,8 @@ export default function AdminPhotosPage() {
       theme: '',
       is_featured: false,
       orientation: 'landscape',
+      addToShop: true,
+      shopPrice: '1500',
     });
     setEditingPhoto(null);
     // File input'u sıfırla
@@ -72,6 +92,7 @@ export default function AdminPhotosPage() {
 
   const openEditModal = (photo: Photo) => {
     setEditingPhoto(photo);
+    const existingProduct = getProductForPhoto(photo.id);
     setFormData({
       title: photo.title || '',
       url: photo.url,
@@ -79,6 +100,8 @@ export default function AdminPhotosPage() {
       theme: (photo as any).theme || '',
       is_featured: photo.is_featured,
       orientation: (photo as any).orientation || 'landscape',
+      addToShop: false, // Edit modunda bu gösterilmez
+      shopPrice: existingProduct ? existingProduct.base_price.toString() : '1500',
     });
     setIsModalOpen(true);
   };
@@ -159,7 +182,7 @@ export default function AdminPhotosPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.url) {
       alert('Lütfen bir fotoğraf yükleyin.');
       return;
@@ -177,7 +200,19 @@ export default function AdminPhotosPage() {
     if (editingPhoto) {
       await updatePhoto(editingPhoto.id, photoData);
     } else {
-      await createPhoto(photoData);
+      // Yeni fotoğraf oluştur
+      const newPhoto = await createPhoto(photoData);
+
+      // Mağazaya da ekle seçiliyse ürün oluştur
+      if (newPhoto && formData.addToShop) {
+        await createProduct({
+          title: formData.title || 'İsimsiz Eser',
+          photo_id: newPhoto.id,
+          base_price: parseFloat(formData.shopPrice) || 1500,
+          edition_type: 'open',
+          is_available: true,
+        });
+      }
     }
 
     setIsModalOpen(false);
@@ -248,9 +283,17 @@ export default function AdminPhotosPage() {
                   </button>
                 </div>
 
+                {/* Featured star */}
                 {photo.is_featured && (
                   <div className="absolute top-2 left-2 p-1 bg-yellow-500 rounded-full">
                     <Star className="w-4 h-4 text-white" fill="white" />
+                  </div>
+                )}
+
+                {/* Shop indicator */}
+                {isPhotoInShop(photo.id) && (
+                  <div className="absolute top-2 right-2 p-1.5 bg-green-500 rounded-full" title="Mağazada">
+                    <ShoppingBag className="w-3.5 h-3.5 text-white" />
                   </div>
                 )}
 
@@ -420,6 +463,40 @@ export default function AdminPhotosPage() {
                 />
                 <label htmlFor="is_featured" className="text-neutral-300">Öne çıkan fotoğraf</label>
               </div>
+
+              {/* Mağazaya Ekle - Sadece yeni fotoğraf için göster */}
+              {!editingPhoto && (
+                <div className="p-4 bg-neutral-800/50 rounded-lg border border-neutral-700 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="addToShop"
+                      checked={formData.addToShop}
+                      onChange={(e) => setFormData({ ...formData, addToShop: e.target.checked })}
+                      className="w-5 h-5 rounded"
+                    />
+                    <label htmlFor="addToShop" className="text-neutral-300 flex items-center gap-2">
+                      <ShoppingBag className="w-4 h-4 text-green-500" />
+                      Mağazaya da ekle
+                    </label>
+                  </div>
+
+                  {formData.addToShop && (
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-400 mb-2">Başlangıç Fiyatı (₺)</label>
+                      <input
+                        type="number"
+                        value={formData.shopPrice}
+                        onChange={(e) => setFormData({ ...formData, shopPrice: e.target.value })}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white"
+                        placeholder="1500"
+                        min="0"
+                      />
+                      <p className="text-xs text-neutral-500 mt-1">Mağazada ürün detaylarını daha sonra düzenleyebilirsiniz.</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Butonlar */}
               <div className="flex justify-end gap-3 pt-4 border-t border-neutral-800">
