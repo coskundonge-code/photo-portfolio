@@ -52,11 +52,6 @@ export default function ContactPage() {
     // Show success popup
     setShowSuccess(true);
     setTimeout(() => setSuccessVisible(true), 50);
-
-    // Auto close after 5 seconds
-    setTimeout(() => {
-      closeSuccessPopup();
-    }, 5000);
   };
 
   const closeSuccessPopup = () => {
@@ -271,14 +266,9 @@ export default function ContactPage() {
               </div>
 
               {/* Title */}
-              <h3 className="text-xl font-medium mb-2">
+              <h3 className="text-xl font-medium mb-6">
                 Mesajınız Gönderildi
               </h3>
-
-              {/* Description */}
-              <p className="text-neutral-500 text-sm mb-6">
-                Mesajınız başarıyla iletildi.
-              </p>
 
               {/* Close Button */}
               <button
