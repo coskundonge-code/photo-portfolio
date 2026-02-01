@@ -105,10 +105,10 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
             >
               {/* States Gallery exact style frame */}
               <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
-                {/* Black frame border + shadow */}
+                {/* Frame border + shadow (light from top-left, shadow on right/bottom) */}
                 <div
                   className="border-[10px] border-black"
-                  style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
+                  style={{ boxShadow: '4px 4px 5px rgba(0,0,0,0.4)' }}
                 >
                   {/* White inner border (passe-partout line) */}
                   <div className="border-2 border-white">
@@ -187,10 +187,10 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               transition: 'transform 0.4s ease',
             }}
           >
-            {/* States Gallery exact style frame with enhanced shadow for wall effect */}
+            {/* Frame border + shadow (light from top-left, shadow on right/bottom) */}
             <div
-              className="border-[12px] border-black"
-              style={{ boxShadow: '0 25px 60px rgba(0,0,0,0.35), 0 10px 20px rgba(0,0,0,0.2)' }}
+              className="border-[10px] border-black"
+              style={{ boxShadow: '4px 4px 5px rgba(0,0,0,0.4)' }}
             >
               {/* White inner border (passe-partout line) */}
               <div className="border-2 border-white">

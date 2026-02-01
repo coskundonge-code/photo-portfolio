@@ -146,7 +146,7 @@ export default function Lightbox(props: LightboxProps) {
         </button>
       )}
 
-      {/* Framed Image - hanging on wall effect */}
+      {/* Framed Image - States Gallery exact style */}
       <div
         className="relative mx-4"
         onClick={(e) => e.stopPropagation()}
@@ -155,16 +155,16 @@ export default function Lightbox(props: LightboxProps) {
           transition: 'transform 0.4s ease',
         }}
       >
-        {/* States Gallery exact style frame with enhanced shadow for wall effect */}
+        {/* Frame border + shadow (light from top-left, shadow on right/bottom) */}
         <div
-          className="border-[12px] border-black"
-          style={{ boxShadow: '0 25px 60px rgba(0,0,0,0.35), 0 10px 20px rgba(0,0,0,0.2)' }}
+          className="border-[10px] border-black"
+          style={{ boxShadow: '4px 4px 5px rgba(0,0,0,0.4)' }}
         >
           {/* White inner border (passe-partout line) */}
           <div className="border-2 border-white">
             {/* White mat area */}
             <div className="bg-white p-10 md:p-14">
-              {/* Photo with 3D inset border effect + padding for visibility */}
+              {/* Photo with 3D inset border effect (light from top-left) */}
               <div
                 className="p-[3px] bg-[#f0f0f0]"
                 style={{

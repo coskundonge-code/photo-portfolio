@@ -243,10 +243,10 @@ export default function ShopPage() {
                     >
                       {/* States Gallery exact style frame */}
                       <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
-                        {/* Black frame border + shadow */}
+                        {/* Frame border + shadow (light from top-left, shadow on right/bottom) */}
                         <div
                           className="border-[8px] border-black"
-                          style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
+                          style={{ boxShadow: '4px 4px 5px rgba(0,0,0,0.4)' }}
                         >
                           {/* White inner border (passe-partout line) */}
                           <div className="border-2 border-white">

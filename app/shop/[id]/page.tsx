@@ -238,102 +238,56 @@ export default function ProductPage() {
                 </div>
 
                 {/* Çerçeve + Fotoğraf */}
-                <div 
+                <div
                   className="relative transition-all duration-700 ease-out"
                   style={{ transform: `scale(${selectedSize.scale})` }}
                 >
-                  {/* ===== ÇERÇEVE - States Gallery tarzı ===== */}
+                  {/* ===== States Gallery exact style frame ===== */}
+                  {/* Frame border + shadow (light from top-left, shadow on right/bottom) */}
                   <div
+                    className="border-[10px]"
                     style={{
+                      borderColor: selectedFrame.color,
                       ...getFrameStyle(selectedFrame.id),
-                      padding: '18px',
-                      position: 'relative',
-                      boxShadow: `
-                        0 30px 60px -20px rgba(0,0,0,0.35),
-                        0 15px 30px -15px rgba(0,0,0,0.25),
-                        inset 0 2px 0 0 rgba(255,255,255,0.15),
-                        inset 0 -2px 0 0 rgba(0,0,0,0.2),
-                        inset 2px 0 0 0 rgba(255,255,255,0.1),
-                        inset -2px 0 0 0 rgba(0,0,0,0.15)
-                      `
+                      boxShadow: '4px 4px 5px rgba(0,0,0,0.4)'
                     }}
                   >
-                    {/* İç çerçeve çizgisi */}
-                    <div 
-                      style={{
-                        position: 'absolute',
-                        inset: '6px',
-                        border: selectedFrame.id === 'white' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.15)',
-                        pointerEvents: 'none'
-                      }}
-                    />
-
-                    {/* ===== PASSEPARTOUT / MAT ===== */}
-                    <div 
-                      style={{ 
-                        background: selectedStyle === 'mat' ? '#ffffff' : 'transparent',
-                        padding: selectedStyle === 'mat' 
-                          ? (isPortrait ? '50px 40px' : '40px 50px') 
-                          : '0',
-                        position: 'relative',
-                        boxShadow: selectedStyle === 'mat' 
-                          ? 'inset 0 0 30px rgba(0,0,0,0.03)' 
-                          : 'none'
-                      }}
-                    >
-                      {/* V-Groove */}
-                      {selectedStyle === 'mat' && (
-                        <div 
-                          style={{
-                            position: 'absolute',
-                            top: isPortrait ? '45px' : '35px',
-                            left: isPortrait ? '35px' : '45px',
-                            right: isPortrait ? '35px' : '45px',
-                            bottom: isPortrait ? '45px' : '35px',
-                            boxShadow: `
-                              inset 1px 1px 0 0 rgba(0,0,0,0.06),
-                              inset -1px -1px 0 0 rgba(255,255,255,0.8)
-                            `,
-                            pointerEvents: 'none'
-                          }}
-                        />
-                      )}
-                      
-                      {/* ===== FOTOĞRAF ===== */}
-                      <div 
+                    {/* White inner border (passe-partout line) */}
+                    <div className="border-2 border-white">
+                      {/* White mat area */}
+                      <div
+                        className="bg-white"
                         style={{
-                          width: `${basePhotoWidth}px`,
-                          height: `${basePhotoHeight}px`,
-                          position: 'relative',
-                          overflow: 'hidden',
+                          padding: selectedStyle === 'mat'
+                            ? (isPortrait ? '50px 40px' : '40px 50px')
+                            : '0'
                         }}
                       >
-                        {product.photos?.url && (
-                          <Image
-                            src={product.photos.url}
-                            alt={product.title}
-                            fill
-                            className="object-cover"
-                            priority
-                          />
-                        )}
+                        {/* Photo with 3D inset border effect (light from top-left) */}
+                        <div
+                          className="relative overflow-hidden p-[3px] bg-[#f0f0f0]"
+                          style={{
+                            width: `${basePhotoWidth}px`,
+                            height: `${basePhotoHeight}px`,
+                            borderTop: '3px solid #e0e0e0',
+                            borderLeft: '3px solid #e0e0e0',
+                            borderBottom: '3px solid #888888',
+                            borderRight: '3px solid #888888',
+                          }}
+                        >
+                          {product.photos?.url && (
+                            <Image
+                              src={product.photos.url}
+                              alt={product.title}
+                              fill
+                              className="object-cover"
+                              priority
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-
-                  {/* Gölge */}
-                  <div 
-                    style={{
-                      position: 'absolute',
-                      bottom: '-30px',
-                      left: '10%',
-                      right: '10%',
-                      height: '40px',
-                      background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, transparent 70%)',
-                      filter: 'blur(10px)',
-                      zIndex: -1
-                    }}
-                  />
                 </div>
               </div>
             </div>
