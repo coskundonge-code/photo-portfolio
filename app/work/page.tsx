@@ -154,35 +154,26 @@ function WorkContent() {
                   onClick={() => openLightbox(index)}
                   className="block mb-12 md:mb-14 lg:mb-16 break-inside-avoid cursor-pointer group"
                 >
-                  {/* Frame with shadow - States Gallery style */}
-                  <div
-                    className="bg-[#2d2d2d] p-[12px] transition-transform duration-300 group-hover:-translate-y-1"
-                    style={{
-                      boxShadow: '4px 4px 5px rgba(0, 0, 0, 0.5)',
-                    }}
-                  >
-                    {/* White Mat with inner shadow from frame (top-left light source) */}
+                  {/* States Gallery exact style frame */}
+                  <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
+                    {/* Black frame border + shadow */}
                     <div
-                      className="bg-white p-10 md:p-12 lg:p-14"
-                      style={{
-                        boxShadow: 'inset 3px 3px 8px rgba(0, 0, 0, 0.2)',
-                      }}
+                      className="border-[10px] border-black"
+                      style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
                     >
-                      {/* Photo container with recessed border for depth */}
-                      <div
-                        className="relative border border-neutral-300"
-                        style={{
-                          boxShadow: 'inset 2px 2px 4px rgba(0, 0, 0, 0.1)',
-                        }}
-                      >
-                        <Image
-                          src={photo.url}
-                          alt={photo.title || 'Photo'}
-                          width={800}
-                          height={600}
-                          quality={90}
-                          className="w-full h-auto block"
-                        />
+                      {/* White inner border (passe-partout line) */}
+                      <div className="border-2 border-white">
+                        {/* White mat area */}
+                        <div className="bg-white p-8 md:p-10 lg:p-12">
+                          <Image
+                            src={photo.url}
+                            alt={photo.title || 'Photo'}
+                            width={800}
+                            height={600}
+                            quality={90}
+                            className="w-full h-auto block"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
