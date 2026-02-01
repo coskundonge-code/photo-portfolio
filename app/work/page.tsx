@@ -165,14 +165,17 @@ function WorkContent() {
                       <div className="border-2 border-white">
                         {/* White mat area */}
                         <div className="bg-white p-8 md:p-10 lg:p-12">
-                          <Image
-                            src={photo.url}
-                            alt={photo.title || 'Photo'}
-                            width={800}
-                            height={600}
-                            quality={90}
-                            className="w-full h-auto block"
-                          />
+                          {/* Photo with thin border for 3D depth */}
+                          <div className="border border-neutral-300">
+                            <Image
+                              src={photo.url}
+                              alt={photo.title || 'Photo'}
+                              width={800}
+                              height={600}
+                              quality={90}
+                              className="w-full h-auto block"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>

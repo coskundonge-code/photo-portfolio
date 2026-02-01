@@ -114,14 +114,17 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                   <div className="border-2 border-white">
                     {/* White mat area */}
                     <div className="bg-white p-8 md:p-10 lg:p-12">
-                      <Image
-                        src={photo.url}
-                        alt={photo.title || 'Photo'}
-                        width={800}
-                        height={600}
-                        quality={90}
-                        className="w-full h-auto block"
-                      />
+                      {/* Photo with thin border for 3D depth */}
+                      <div className="border border-neutral-300">
+                        <Image
+                          src={photo.url}
+                          alt={photo.title || 'Photo'}
+                          width={800}
+                          height={600}
+                          quality={90}
+                          className="w-full h-auto block"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -185,15 +188,18 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               <div className="border-2 border-white">
                 {/* White mat area */}
                 <div className="bg-white p-10 md:p-14">
-                  <Image
-                    src={currentPhoto.url}
-                    alt=""
-                    width={1920}
-                    height={1280}
-                    quality={95}
-                    className="max-w-[85vw] max-h-[70vh] w-auto h-auto object-contain block"
-                    priority
-                  />
+                  {/* Photo with thin border for 3D depth */}
+                  <div className="border border-neutral-300">
+                    <Image
+                      src={currentPhoto.url}
+                      alt=""
+                      width={1920}
+                      height={1280}
+                      quality={95}
+                      className="max-w-[85vw] max-h-[70vh] w-auto h-auto object-contain block"
+                      priority
+                    />
+                  </div>
                 </div>
               </div>
             </div>
