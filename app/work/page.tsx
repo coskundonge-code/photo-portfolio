@@ -161,16 +161,29 @@ function WorkContent() {
                       boxShadow: '4px 4px 5px rgba(0, 0, 0, 0.5)',
                     }}
                   >
-                    {/* White Mat - wide like States Gallery */}
-                    <div className="bg-white p-10 md:p-12 lg:p-14">
-                      <Image
-                        src={photo.url}
-                        alt={photo.title || 'Photo'}
-                        width={800}
-                        height={600}
-                        quality={90}
-                        className="w-full h-auto block"
-                      />
+                    {/* White Mat with inner shadow from frame (top-left light source) */}
+                    <div
+                      className="bg-white p-10 md:p-12 lg:p-14"
+                      style={{
+                        boxShadow: 'inset 2px 2px 4px rgba(0, 0, 0, 0.12)',
+                      }}
+                    >
+                      {/* Photo container with recessed border for depth */}
+                      <div
+                        className="relative"
+                        style={{
+                          boxShadow: 'inset 1px 1px 2px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.06)',
+                        }}
+                      >
+                        <Image
+                          src={photo.url}
+                          alt={photo.title || 'Photo'}
+                          width={800}
+                          height={600}
+                          quality={90}
+                          className="w-full h-auto block"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
