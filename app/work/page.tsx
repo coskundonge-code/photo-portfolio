@@ -147,105 +147,34 @@ function WorkContent() {
               <p className="text-neutral-500">Bu projede henüz fotoğraf yok.</p>
             </div>
           ) : (
-            <div className="columns-1 sm:columns-2 lg:columns-3 gap-8 md:gap-10 lg:gap-12">
-              {filteredPhotos.map((photo, index) => {
-                const isHovered = hoveredPhoto === photo.id;
-
-                return (
+            <div className="columns-1 sm:columns-2 lg:columns-3 gap-8 md:gap-10 lg:gap-12 bg-[#f5f5f5] p-6 -mx-4 lg:-mx-8">
+              {filteredPhotos.map((photo, index) => (
+                <div
+                  key={photo.id}
+                  onClick={() => openLightbox(index)}
+                  className="block mb-12 md:mb-14 lg:mb-16 break-inside-avoid cursor-pointer group"
+                >
+                  {/* Frame with shadow - States Gallery style */}
                   <div
-                    key={photo.id}
-                    onClick={() => openLightbox(index)}
-                    onMouseEnter={() => setHoveredPhoto(photo.id)}
-                    onMouseLeave={() => setHoveredPhoto(null)}
-                    className="block mb-10 md:mb-12 lg:mb-14 break-inside-avoid cursor-pointer"
+                    className="bg-[#222] p-[10px] transition-transform duration-300 group-hover:-translate-y-2"
+                    style={{
+                      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)',
+                    }}
                   >
-                    {/* Frame Container with realistic shadow */}
-                    <div
-                      className="relative"
-                      style={{
-                        transform: isHovered ? 'translateY(-8px)' : 'translateY(0)',
-                        transition: 'transform 0.5s cubic-bezier(0.33, 1, 0.68, 1)',
-                      }}
-                    >
-                      {/* Main Frame */}
-                      <div
-                        className="relative bg-[#1c1c1c]"
-                        style={{
-                          padding: '12px',
-                          boxShadow: isHovered
-                            ? `
-                              0 50px 100px -20px rgba(0,0,0,0.5),
-                              0 30px 60px -30px rgba(0,0,0,0.4),
-                              inset 0 1px 0 0 rgba(255,255,255,0.1),
-                              inset 0 -1px 0 0 rgba(0,0,0,0.3)
-                            `
-                            : `
-                              0 25px 50px -12px rgba(0,0,0,0.35),
-                              0 12px 24px -12px rgba(0,0,0,0.25),
-                              inset 0 1px 0 0 rgba(255,255,255,0.08),
-                              inset 0 -1px 0 0 rgba(0,0,0,0.2)
-                            `,
-                          transition: 'box-shadow 0.5s cubic-bezier(0.33, 1, 0.68, 1)',
-                        }}
-                      >
-                        {/* Inner frame edge for depth */}
-                        <div
-                          className="bg-[#0a0a0a]"
-                          style={{
-                            padding: '2px',
-                          }}
-                        >
-                          {/* White Mat / Passepartout */}
-                          <div
-                            className="bg-white relative"
-                            style={{
-                              padding: 'clamp(20px, 5vw, 40px)',
-                            }}
-                          >
-                            {/* Subtle mat texture shadow */}
-                            <div
-                              className="absolute inset-0 pointer-events-none"
-                              style={{
-                                boxShadow: 'inset 0 0 20px rgba(0,0,0,0.04)',
-                              }}
-                            />
-
-                            {/* Photo with subtle shadow */}
-                            <div className="relative">
-                              <Image
-                                src={photo.url}
-                                alt={photo.title || 'Photo'}
-                                width={800}
-                                height={600}
-                                quality={90}
-                                className="w-full h-auto block"
-                                style={{
-                                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                                }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Realistic floor/wall shadow */}
-                      <div
-                        className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
-                        style={{
-                          bottom: '-40px',
-                          width: '90%',
-                          height: '50px',
-                          background: 'radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.1) 40%, transparent 70%)',
-                          filter: 'blur(8px)',
-                          opacity: isHovered ? 0.9 : 0.7,
-                          transform: isHovered ? 'scaleX(1.05) scaleY(1.3)' : 'scaleX(1) scaleY(1)',
-                          transition: 'opacity 0.5s ease, transform 0.5s ease',
-                        }}
+                    {/* White Mat */}
+                    <div className="bg-white p-6 md:p-8">
+                      <Image
+                        src={photo.url}
+                        alt={photo.title || 'Photo'}
+                        width={800}
+                        height={600}
+                        quality={90}
+                        className="w-full h-auto block"
                       />
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
         </div>

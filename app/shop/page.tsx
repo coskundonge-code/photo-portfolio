@@ -224,121 +224,60 @@ export default function ShopPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
               {filteredProducts.map((product) => {
-                const isHovered = hoveredProduct === product.id;
                 const photo = product.photos;
                 const isPortrait = isPhotoPortrait(product);
 
                 const frameWidth = isPortrait ? 200 : 280;
                 const frameHeight = isPortrait ? 280 : 200;
-                const containerHeight = isPortrait ? 520 : 420;
+                const containerHeight = isPortrait ? 480 : 400;
 
                 return (
                   <Link
                     key={product.id}
                     href={`/shop/${product.id}`}
                     className="group block"
-                    onMouseEnter={() => setHoveredProduct(product.id)}
-                    onMouseLeave={() => setHoveredProduct(null)}
                   >
                     <div
                       className="bg-[#f5f5f5] flex items-center justify-center"
                       style={{ minHeight: `${containerHeight}px` }}
                     >
+                      {/* Frame with shadow - States Gallery style */}
                       <div
-                        className="relative"
+                        className="bg-[#222] p-[10px] transition-transform duration-300 group-hover:-translate-y-2"
                         style={{
-                          transform: isHovered ? 'translateY(-8px)' : 'translateY(0)',
-                          transition: 'transform 0.5s cubic-bezier(0.33, 1, 0.68, 1)',
+                          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)',
                         }}
                       >
-                        {/* Main Frame */}
+                        {/* White Mat */}
                         <div
-                          className="relative bg-[#1c1c1c]"
+                          className="bg-white"
                           style={{
-                            padding: '10px',
-                            boxShadow: isHovered
-                              ? `
-                                0 50px 100px -20px rgba(0,0,0,0.5),
-                                0 30px 60px -30px rgba(0,0,0,0.4),
-                                inset 0 1px 0 0 rgba(255,255,255,0.1),
-                                inset 0 -1px 0 0 rgba(0,0,0,0.3)
-                              `
-                              : `
-                                0 25px 50px -12px rgba(0,0,0,0.35),
-                                0 12px 24px -12px rgba(0,0,0,0.25),
-                                inset 0 1px 0 0 rgba(255,255,255,0.08),
-                                inset 0 -1px 0 0 rgba(0,0,0,0.2)
-                              `,
-                            transition: 'box-shadow 0.5s cubic-bezier(0.33, 1, 0.68, 1)',
+                            padding: isPortrait ? '24px 20px' : '20px 24px'
                           }}
                         >
-                          {/* Inner frame edge */}
                           <div
-                            className="bg-[#0a0a0a]"
-                            style={{ padding: '2px' }}
+                            className="relative overflow-hidden bg-neutral-100"
+                            style={{
+                              width: `${frameWidth}px`,
+                              height: `${frameHeight}px`,
+                            }}
                           >
-                            {/* White Mat */}
-                            <div
-                              className="bg-white relative"
-                              style={{
-                                padding: isPortrait ? '28px 22px' : '22px 28px'
-                              }}
-                            >
-                              {/* Mat texture */}
-                              <div
-                                className="absolute inset-0 pointer-events-none"
-                                style={{
-                                  boxShadow: 'inset 0 0 20px rgba(0,0,0,0.04)',
-                                }}
+                            {photo?.url && (
+                              <Image
+                                src={photo.url}
+                                alt={product.title}
+                                fill
+                                className="object-cover"
+                                sizes="(max-width: 768px) 100vw, 33vw"
                               />
-
-                              <div
-                                className="relative overflow-hidden bg-neutral-100"
-                                style={{
-                                  width: `${frameWidth}px`,
-                                  height: `${frameHeight}px`,
-                                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                                }}
-                              >
-                                {photo?.url && (
-                                  <Image
-                                    src={photo.url}
-                                    alt={product.title}
-                                    fill
-                                    className="object-cover"
-                                    sizes="(max-width: 768px) 100vw, 33vw"
-                                  />
-                                )}
-                              </div>
-                            </div>
+                            )}
                           </div>
                         </div>
-
-                        {/* Realistic floor shadow */}
-                        <div
-                          className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
-                          style={{
-                            bottom: '-35px',
-                            width: '85%',
-                            height: '45px',
-                            background: 'radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.1) 40%, transparent 70%)',
-                            filter: 'blur(8px)',
-                            opacity: isHovered ? 0.9 : 0.7,
-                            transform: isHovered ? 'scaleX(1.05) scaleY(1.3)' : 'scaleX(1) scaleY(1)',
-                            transition: 'opacity 0.5s ease, transform 0.5s ease',
-                          }}
-                        />
                       </div>
                     </div>
 
                     <div className="mt-5 text-center">
-                      <h3
-                        className="text-sm font-medium tracking-wide"
-                        style={{
-                          opacity: isHovered ? 0.7 : 1,
-                          transition: 'opacity 0.4s ease',
-                        }}
-                      >
+                      <h3 className="text-sm font-medium tracking-wide group-hover:opacity-70 transition-opacity">
                         {product.title.toUpperCase()}
                       </h3>
                       <p className="text-sm mt-2">₺{formatPrice(product.base_price)}'den başlayan</p>
