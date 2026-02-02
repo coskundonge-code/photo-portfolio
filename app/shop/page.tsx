@@ -50,8 +50,10 @@ export default function ShopPage() {
   const [selectedTheme, setSelectedTheme] = useState('all');
   const [sortBy, setSortBy] = useState('featured');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filterVisible, setFilterVisible] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
+  const [pageReady, setPageReady] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -63,32 +65,49 @@ export default function ShopPage() {
       setProducts(productsData);
       setFilteredProducts(productsData);
       setLoading(false);
+
+      // Simple page fade-in
+      setTimeout(() => setPageReady(true), 100);
     };
     loadData();
   }, []);
 
+  // Open filter with animation
+  const openFilter = () => {
+    setIsFilterOpen(true);
+    setTimeout(() => setFilterVisible(true), 50);
+  };
+
+  // Close filter with animation
+  const closeFilter = () => {
+    setFilterVisible(false);
+    setTimeout(() => setIsFilterOpen(false), 300);
+  };
+
   const themeCounts = useMemo(() => {
     const counts: Record<string, number> = { all: products.length };
-    
+
     themes.forEach(theme => {
       if (theme.id !== 'all') {
         counts[theme.id] = products.filter(p => {
-          const productTheme = (p as any).theme;
+          // Tema, photos içinde
+          const productTheme = (p.photos as any)?.theme;
           const normalizedProductTheme = normalizeTheme(productTheme);
           return normalizedProductTheme === theme.id;
         }).length;
       }
     });
-    
+
     return counts;
   }, [products]);
 
   useEffect(() => {
     let result = [...products];
-    
+
     if (selectedTheme !== 'all') {
       result = result.filter(p => {
-        const productTheme = (p as any).theme;
+        // Tema, photos içinde
+        const productTheme = (p.photos as any)?.theme;
         const normalizedProductTheme = normalizeTheme(productTheme);
         return normalizedProductTheme === selectedTheme;
       });
@@ -130,14 +149,21 @@ export default function ShopPage() {
   return (
     <main className="min-h-screen bg-white">
       <Navigation projects={projects} settings={settings} />
-      
-      <section className="pt-24 pb-16">
+
+      <section
+        className="pt-24 pb-16"
+        style={{
+          opacity: pageReady ? 1 : 0,
+          transition: 'opacity 1.2s ease',
+        }}
+      >
         <div className="max-w-[1800px] mx-auto px-4 lg:px-8">
-          
+
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-neutral-200">
-            <button 
-              onClick={() => setIsFilterOpen(true)}
-              className="flex items-center gap-2 text-sm text-neutral-600 hover:text-black transition-colors"
+            <button
+              onClick={openFilter}
+              className="flex items-center gap-2 text-sm text-neutral-600 hover:text-black"
+              style={{ transition: 'color 0.3s ease' }}
             >
               <SlidersHorizontal className="w-4 h-4" />
               <span>TEMALAR</span>
@@ -150,109 +176,103 @@ export default function ShopPage() {
               <button
                 onClick={() => setIsSortOpen(!isSortOpen)}
                 className="flex items-center gap-2 text-sm text-neutral-600 hover:text-black"
+                style={{ transition: 'color 0.3s ease' }}
               >
                 <span>{sortOptions.find(o => o.value === sortBy)?.label}</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  className="w-4 h-4"
+                  style={{
+                    transform: isSortOpen ? 'rotate(180deg)' : 'rotate(0)',
+                    transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+                  }}
+                />
               </button>
-              
-              {isSortOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsSortOpen(false)} />
-                  <div className="absolute right-0 top-full mt-2 bg-white border shadow-lg z-50 min-w-[220px]">
-                    {sortOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => { setSortBy(option.value); setIsSortOpen(false); }}
-                        className={`block w-full text-left px-4 py-3 text-sm hover:bg-neutral-50 ${
-                          sortBy === option.value ? 'font-medium' : 'text-neutral-600'
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
+
+              <div
+                className="absolute right-0 top-full mt-2 bg-white border shadow-lg z-50 min-w-[220px]"
+                style={{
+                  opacity: isSortOpen ? 1 : 0,
+                  transform: isSortOpen ? 'translateY(0)' : 'translateY(-8px)',
+                  pointerEvents: isSortOpen ? 'auto' : 'none',
+                  transition: 'opacity 0.25s cubic-bezier(0.22, 1, 0.36, 1), transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)',
+                }}
+              >
+                {sortOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => { setSortBy(option.value); setIsSortOpen(false); }}
+                    className={`block w-full text-left px-4 py-3 text-sm hover:bg-neutral-50 transition-colors duration-200 ${
+                      sortBy === option.value ? 'font-medium' : 'text-neutral-600'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              {isSortOpen && <div className="fixed inset-0 z-40" onClick={() => setIsSortOpen(false)} />}
             </div>
           </div>
 
-          <p className="text-sm text-neutral-400 mb-8">{filteredProducts.length} eser gösteriliyor</p>
+          <p className="text-sm text-neutral-400 mb-8">
+            {filteredProducts.length} eser gösteriliyor
+          </p>
 
           {filteredProducts.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-neutral-500">Bu kategoride eser bulunamadı.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
               {filteredProducts.map((product) => {
-                const isHovered = hoveredProduct === product.id;
                 const photo = product.photos;
                 const isPortrait = isPhotoPortrait(product);
-                
+
                 const frameWidth = isPortrait ? 200 : 280;
                 const frameHeight = isPortrait ? 280 : 200;
-                const containerHeight = isPortrait ? 520 : 420;
-                
+                const containerHeight = isPortrait ? 480 : 400;
+
                 return (
                   <Link
                     key={product.id}
                     href={`/shop/${product.id}`}
                     className="group block"
-                    onMouseEnter={() => setHoveredProduct(product.id)}
-                    onMouseLeave={() => setHoveredProduct(null)}
                   >
-                    <div 
-                      className="bg-[#e8e8e8] flex items-center justify-center"
+                    <div
+                      className="bg-[#f5f5f5] flex items-center justify-center"
                       style={{ minHeight: `${containerHeight}px` }}
                     >
-                      <div className={`relative transition-all duration-500 ${isHovered ? 'scale-[1.03]' : 'scale-100'}`}>
-                        {/* Outer Frame */}
+                      {/* States Gallery style frame */}
+                      <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
+                        {/* Frame with 3D depth */}
                         <div
-                          className="relative"
                           style={{
                             padding: '10px',
-                            background: 'linear-gradient(180deg, #2d2d2d 0%, #1a1a1a 8%, #1a1a1a 92%, #0d0d0d 100%)',
-                            boxShadow: isHovered
-                              ? '4px 6px 20px rgba(0,0,0,0.4), 1px 2px 8px rgba(0,0,0,0.3)'
-                              : '3px 5px 16px rgba(0,0,0,0.35), 1px 2px 6px rgba(0,0,0,0.25)',
+                            background: 'linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 10%, #1a1a1a 90%, #0a0a0a 100%)',
+                            boxShadow: '6px 8px 25px rgba(0,0,0,0.35), 2px 3px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.3)'
                           }}
                         >
-                          {/* Frame inner bevel */}
+                          {/* White mat area */}
                           <div
-                            className="absolute inset-0 pointer-events-none"
+                            className="bg-white relative"
                             style={{
-                              boxShadow: 'inset 1px 1px 0 rgba(255,255,255,0.08), inset -1px -1px 0 rgba(0,0,0,0.4)',
-                            }}
-                          />
-
-                          {/* Mat / Passepartout */}
-                          <div
-                            className="relative"
-                            style={{
-                              background: '#f8f8f8',
-                              padding: isPortrait ? '20px 16px' : '16px 20px',
-                              boxShadow: 'inset 1px 1px 4px rgba(0,0,0,0.06)',
+                              padding: isPortrait ? '32px 24px' : '24px 32px',
+                              boxShadow: 'inset 0 0 20px rgba(0,0,0,0.04)'
                             }}
                           >
                             {/* V-Groove bevel cut */}
                             <div
                               className="absolute pointer-events-none"
                               style={{
-                                top: isPortrait ? '17px' : '13px',
-                                left: isPortrait ? '13px' : '17px',
-                                right: isPortrait ? '13px' : '17px',
-                                bottom: isPortrait ? '17px' : '13px',
-                                boxShadow: `
-                                  inset 1px 1px 0 rgba(0,0,0,0.15),
-                                  inset -1px -1px 0 rgba(255,255,255,0.7),
-                                  inset 2px 2px 1px rgba(0,0,0,0.08),
-                                  inset -2px -2px 1px rgba(255,255,255,0.4)
-                                `,
+                                top: isPortrait ? '28px' : '20px',
+                                left: isPortrait ? '20px' : '28px',
+                                right: isPortrait ? '20px' : '28px',
+                                bottom: isPortrait ? '28px' : '20px',
+                                boxShadow: 'inset 1px 1px 0 rgba(0,0,0,0.12), inset -1px -1px 0 rgba(255,255,255,0.8)'
                               }}
                             />
-
+                            {/* Photo */}
                             <div
-                              className="relative overflow-hidden bg-neutral-100"
+                              className="relative overflow-hidden"
                               style={{
                                 width: `${frameWidth}px`,
                                 height: `${frameHeight}px`,
@@ -270,18 +290,11 @@ export default function ShopPage() {
                             </div>
                           </div>
                         </div>
-
-                        <div
-                          className={`absolute -bottom-3 left-[15%] right-[15%] h-6 -z-10 transition-opacity ${
-                            isHovered ? 'opacity-50' : 'opacity-30'
-                          }`}
-                          style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, transparent 70%)' }}
-                        />
                       </div>
                     </div>
 
                     <div className="mt-5 text-center">
-                      <h3 className="text-sm font-medium tracking-wide group-hover:opacity-70">
+                      <h3 className="text-sm font-medium tracking-wide group-hover:opacity-70 transition-opacity">
                         {product.title.toUpperCase()}
                       </h3>
                       <p className="text-sm mt-2">₺{formatPrice(product.base_price)}'den başlayan</p>
@@ -296,14 +309,32 @@ export default function ShopPage() {
 
       {isFilterOpen && (
         <>
-          <div className="fixed inset-0 bg-black/30 z-50" onClick={() => setIsFilterOpen(false)} />
-          <div className="fixed left-0 top-0 bottom-0 w-80 bg-white z-50 shadow-2xl overflow-y-auto">
+          <div
+            className="fixed inset-0 bg-black/30 z-50"
+            onClick={closeFilter}
+            style={{
+              opacity: filterVisible ? 1 : 0,
+              transition: 'opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+            }}
+          />
+          <div
+            className="fixed left-0 top-0 bottom-0 w-80 bg-white z-50 shadow-2xl overflow-y-auto"
+            style={{
+              transform: filterVisible ? 'translateX(0)' : 'translateX(-100%)',
+              transition: 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
+            }}
+          >
             <div className="p-6">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-sm font-medium">TEMALAR</h2>
-                <button onClick={() => setIsFilterOpen(false)}><X className="w-5 h-5" /></button>
+                <button
+                  onClick={closeFilter}
+                  className="p-1 hover:bg-neutral-100 rounded transition-colors duration-200"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              
+
               <div className="space-y-1">
                 {themes.map((theme) => {
                   const count = themeCounts[theme.id] || 0;
@@ -311,7 +342,7 @@ export default function ShopPage() {
                     <button
                       key={theme.id}
                       onClick={() => setSelectedTheme(theme.id)}
-                      className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between ${
+                      className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between transition-colors duration-200 ${
                         selectedTheme === theme.id ? 'bg-black text-white' : 'hover:bg-neutral-100'
                       }`}
                     >
@@ -326,10 +357,6 @@ export default function ShopPage() {
                 })}
               </div>
 
-              <div className="mt-8 pt-6 border-t flex gap-3">
-                <button onClick={() => setSelectedTheme('all')} className="flex-1 py-3 border text-sm">Temizle</button>
-                <button onClick={() => setIsFilterOpen(false)} className="flex-1 py-3 bg-black text-white text-sm">Uygula</button>
-              </div>
             </div>
           </div>
         </>
