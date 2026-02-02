@@ -251,7 +251,7 @@ export default function ShopPage() {
                             boxShadow: '6px 8px 25px rgba(0,0,0,0.35), 2px 3px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.3)'
                           }}
                         >
-                          {/* White mat area */}
+                          {/* White mat area with subtle inner shadow */}
                           <div
                             className="bg-white relative"
                             style={{
