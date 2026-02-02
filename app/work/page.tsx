@@ -15,7 +15,7 @@ import { Loader2 } from 'lucide-react';
 function WorkContent() {
   const searchParams = useSearchParams();
   const projectParam = searchParams.get('project');
-  
+
   const [settings, setSettings] = useState<Settings | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -24,6 +24,8 @@ function WorkContent() {
   const [selectedProject, setSelectedProject] = useState<string | null>(projectParam);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [pageReady, setPageReady] = useState(false);
+  const [hoveredPhoto, setHoveredPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -39,6 +41,14 @@ function WorkContent() {
     };
     loadData();
   }, []);
+
+  // Page fade-in on mount
+  useEffect(() => {
+    if (!loading) {
+      const timer = setTimeout(() => setPageReady(true), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
 
   // URL'den gelen project parametresi değişince
   useEffect(() => {
@@ -86,18 +96,24 @@ function WorkContent() {
   return (
     <main className="min-h-screen bg-white">
       <Navigation projects={projects} settings={settings} />
-      
-      <section className="pt-24 pb-16">
+
+      <section
+        className="pt-24 pb-16"
+        style={{
+          opacity: pageReady ? 1 : 0,
+          transition: 'opacity 1.2s ease',
+        }}
+      >
         <div className="max-w-[1800px] mx-auto px-4 lg:px-8">
-          
+
           {/* Proje Tabs */}
           <div className="mb-8 border-b border-neutral-200">
             <div className="flex items-center gap-8 overflow-x-auto pb-4">
               <button
                 onClick={() => handleProjectClick(null)}
                 className={`text-sm font-medium whitespace-nowrap pb-2 border-b-2 transition-colors ${
-                  !selectedProject 
-                    ? 'text-black border-black' 
+                  !selectedProject
+                    ? 'text-black border-black'
                     : 'text-neutral-500 border-transparent hover:text-black'
                 }`}
               >
@@ -108,8 +124,8 @@ function WorkContent() {
                   key={project.id}
                   onClick={() => handleProjectClick(project.id)}
                   className={`text-sm font-medium whitespace-nowrap pb-2 border-b-2 transition-colors ${
-                    selectedProject === project.id 
-                      ? 'text-black border-black' 
+                    selectedProject === project.id
+                      ? 'text-black border-black'
                       : 'text-neutral-500 border-transparent hover:text-black'
                   }`}
                 >
@@ -125,30 +141,51 @@ function WorkContent() {
             {selectedProject && ` • ${getSelectedProjectTitle()}`}
           </p>
 
-          {/* Fotoğraf Grid */}
+          {/* Fotoğraf Grid with 3D Frames */}
           {filteredPhotos.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-neutral-500">Bu projede henüz fotoğraf yok.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="columns-1 sm:columns-2 lg:columns-3 gap-8 md:gap-10 lg:gap-12 bg-[#f5f5f5] p-6 -mx-4 lg:-mx-8">
               {filteredPhotos.map((photo, index) => (
                 <div
                   key={photo.id}
-                  className="aspect-[4/3] relative overflow-hidden bg-neutral-100 cursor-pointer group"
                   onClick={() => openLightbox(index)}
+                  className="block mb-12 md:mb-14 lg:mb-16 break-inside-avoid cursor-pointer group"
                 >
-                  <Image
-                    src={photo.url}
-                    alt={photo.title || ''}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
-                  {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-end">
-                    <div className="p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                      <p className="font-medium">{photo.title}</p>
+                  {/* States Gallery exact style frame */}
+                  <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
+                    {/* Black frame border + shadow */}
+                    <div
+                      className="border-[10px] border-black"
+                      style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
+                    >
+                      {/* White inner border (passe-partout line) */}
+                      <div className="border-2 border-white">
+                        {/* White mat area */}
+                        <div className="bg-white p-8 md:p-10 lg:p-12">
+                          {/* Photo with 3D inset border effect + padding for visibility */}
+                          <div
+                            className="p-[3px] bg-[#f0f0f0]"
+                            style={{
+                              borderTop: '3px solid #e0e0e0',
+                              borderLeft: '3px solid #e0e0e0',
+                              borderBottom: '3px solid #888888',
+                              borderRight: '3px solid #888888',
+                            }}
+                          >
+                            <Image
+                              src={photo.url}
+                              alt={photo.title || 'Photo'}
+                              width={800}
+                              height={600}
+                              quality={90}
+                              className="w-full h-auto block"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
