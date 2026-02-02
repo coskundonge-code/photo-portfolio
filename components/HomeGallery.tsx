@@ -103,25 +103,34 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               onClick={() => openLightbox(index)}
               className="block mb-12 md:mb-14 lg:mb-16 break-inside-avoid cursor-pointer group"
             >
-              {/* States Gallery exact style frame */}
+              {/* Realistic frame - light from top-left */}
               <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
-                {/* Frame border + shadow (light from top-left, shadow on right/bottom) */}
+                {/* Frame border + realistic shadow (sharp right, soft bottom) */}
                 <div
                   className="border-[8px] border-black"
-                  style={{ boxShadow: '4px 4px 5px rgba(0,0,0,0.4)' }}
+                  style={{
+                    boxShadow: '6px 3px 8px rgba(0,0,0,0.5), 3px 6px 16px rgba(0,0,0,0.3)'
+                  }}
                 >
-                  {/* White inner border (passe-partout line) */}
-                  <div className="border-2 border-white">
-                    {/* White mat area */}
-                    <div className="bg-white p-5 md:p-6 lg:p-8">
-                      {/* Photo with 3D inset border effect + padding for visibility */}
+                  {/* White mat with inner shadow from top-left light */}
+                  <div
+                    className="bg-white p-5 md:p-6 lg:p-8"
+                    style={{
+                      boxShadow: 'inset 3px 3px 10px rgba(0,0,0,0.08), inset 1px 1px 4px rgba(0,0,0,0.05)'
+                    }}
+                  >
+                    {/* V-groove / bevel cut line */}
+                    <div
+                      style={{
+                        padding: '2px',
+                        background: 'linear-gradient(145deg, #c8c8c8 0%, #909090 100%)'
+                      }}
+                    >
+                      {/* Inner gray mat area for depth */}
                       <div
-                        className="p-[3px] bg-[#f0f0f0]"
+                        className="p-[3px]"
                         style={{
-                          borderTop: '3px solid #e0e0e0',
-                          borderLeft: '3px solid #e0e0e0',
-                          borderBottom: '3px solid #888888',
-                          borderRight: '3px solid #888888',
+                          background: '#e0e0e0'
                         }}
                       >
                         <Image
@@ -187,23 +196,32 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               transition: 'transform 0.4s ease',
             }}
           >
-            {/* Frame border + shadow (light from top-left, shadow on right/bottom) */}
+            {/* Frame border + realistic shadow (sharp right, soft bottom) */}
             <div
               className="border-[10px] border-black"
-              style={{ boxShadow: '4px 4px 5px rgba(0,0,0,0.4)' }}
+              style={{
+                boxShadow: '8px 4px 12px rgba(0,0,0,0.5), 4px 8px 24px rgba(0,0,0,0.3)'
+              }}
             >
-              {/* White inner border (passe-partout line) */}
-              <div className="border-2 border-white">
-                {/* White mat area */}
-                <div className="bg-white p-10 md:p-14">
-                  {/* Photo with 3D inset border effect + padding for visibility */}
+              {/* White mat with inner shadow from top-left light */}
+              <div
+                className="bg-white p-10 md:p-14"
+                style={{
+                  boxShadow: 'inset 4px 4px 12px rgba(0,0,0,0.08), inset 2px 2px 6px rgba(0,0,0,0.05)'
+                }}
+              >
+                {/* V-groove / bevel cut line */}
+                <div
+                  style={{
+                    padding: '3px',
+                    background: 'linear-gradient(145deg, #c8c8c8 0%, #909090 100%)'
+                  }}
+                >
+                  {/* Inner gray mat area for depth */}
                   <div
-                    className="p-[3px] bg-[#f0f0f0]"
                     style={{
-                      borderTop: '3px solid #e0e0e0',
-                      borderLeft: '3px solid #e0e0e0',
-                      borderBottom: '3px solid #888888',
-                      borderRight: '3px solid #888888',
+                      padding: '4px',
+                      background: '#e0e0e0'
                     }}
                   >
                     <Image
