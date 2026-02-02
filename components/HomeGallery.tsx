@@ -116,21 +116,24 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                   <div
                     className="bg-white p-5 md:p-6 lg:p-8"
                     style={{
-                      boxShadow: 'inset 3px 3px 10px rgba(0,0,0,0.08), inset 1px 1px 4px rgba(0,0,0,0.05)'
+                      boxShadow: 'inset 4px 4px 12px rgba(0,0,0,0.12), inset 2px 2px 6px rgba(0,0,0,0.08)'
                     }}
                   >
-                    {/* V-groove / bevel cut line */}
+                    {/* V-groove / bevel cut line - darker on top-left, lighter on bottom-right */}
                     <div
                       style={{
-                        padding: '2px',
-                        background: 'linear-gradient(145deg, #c8c8c8 0%, #909090 100%)'
+                        borderTop: '2px solid #888',
+                        borderLeft: '2px solid #888',
+                        borderBottom: '2px solid #ccc',
+                        borderRight: '2px solid #ccc',
+                        boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.15)'
                       }}
                     >
                       {/* Inner gray mat area for depth */}
                       <div
-                        className="p-[3px]"
                         style={{
-                          background: '#e0e0e0'
+                          padding: '4px',
+                          background: 'linear-gradient(135deg, #e8e8e8 0%, #d8d8d8 100%)'
                         }}
                       >
                         <Image
@@ -207,21 +210,24 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               <div
                 className="bg-white p-10 md:p-14"
                 style={{
-                  boxShadow: 'inset 4px 4px 12px rgba(0,0,0,0.08), inset 2px 2px 6px rgba(0,0,0,0.05)'
+                  boxShadow: 'inset 5px 5px 15px rgba(0,0,0,0.12), inset 2px 2px 8px rgba(0,0,0,0.08)'
                 }}
               >
-                {/* V-groove / bevel cut line */}
+                {/* V-groove / bevel cut line - darker on top-left, lighter on bottom-right */}
                 <div
                   style={{
-                    padding: '3px',
-                    background: 'linear-gradient(145deg, #c8c8c8 0%, #909090 100%)'
+                    borderTop: '3px solid #888',
+                    borderLeft: '3px solid #888',
+                    borderBottom: '3px solid #ccc',
+                    borderRight: '3px solid #ccc',
+                    boxShadow: 'inset 1px 1px 3px rgba(0,0,0,0.15)'
                   }}
                 >
                   {/* Inner gray mat area for depth */}
                   <div
                     style={{
-                      padding: '4px',
-                      background: '#e0e0e0'
+                      padding: '5px',
+                      background: 'linear-gradient(135deg, #e8e8e8 0%, #d8d8d8 100%)'
                     }}
                   >
                     <Image
