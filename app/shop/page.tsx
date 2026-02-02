@@ -218,13 +218,13 @@ export default function ShopPage() {
               <p className="text-neutral-500">Bu kategoride eser bulunamadı.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {filteredProducts.map((product) => {
                 const photo = product.photos;
                 const isPortrait = isPhotoPortrait(product);
 
-                const frameWidth = isPortrait ? 200 : 280;
-                const frameHeight = isPortrait ? 280 : 200;
+                const frameWidth = isPortrait ? 280 : 380;
+                const frameHeight = isPortrait ? 380 : 280;
 
                 return (
                   <Link
@@ -234,7 +234,7 @@ export default function ShopPage() {
                   >
                     <div
                       className="bg-[#f5f5f5] flex items-center justify-center"
-                      style={{ height: '420px' }}
+                      style={{ height: 'calc((100vh - 180px))' }}
                     >
                       {/* States Gallery style frame */}
                       <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
@@ -249,7 +249,7 @@ export default function ShopPage() {
                           <div
                             className="bg-white"
                             style={{
-                              padding: isPortrait ? '32px 24px' : '24px 32px',
+                              padding: isPortrait ? '40px 32px' : '32px 40px',
                               boxShadow: 'inset 0 0 20px rgba(0,0,0,0.04)'
                             }}
                           >
