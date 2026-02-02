@@ -107,9 +107,6 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-neutral-600 text-sm mt-6">
-            Varsayılan şifre: admin123
-          </p>
         </div>
 
         {/* Back to site */}
