@@ -132,7 +132,7 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                       {/* Inner gray mat area for depth */}
                       <div
                         style={{
-                          padding: '4px',
+                          padding: '6px',
                           background: 'linear-gradient(135deg, #e8e8e8 0%, #d8d8d8 100%)'
                         }}
                       >
@@ -226,7 +226,7 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                   {/* Inner gray mat area for depth */}
                   <div
                     style={{
-                      padding: '5px',
+                      padding: '8px',
                       background: 'linear-gradient(135deg, #e8e8e8 0%, #d8d8d8 100%)'
                     }}
                   >
