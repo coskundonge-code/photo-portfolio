@@ -206,39 +206,58 @@ export default function ShopPage() {
                       style={{ minHeight: `${containerHeight}px` }}
                     >
                       <div className={`relative transition-all duration-500 ${isHovered ? 'scale-[1.03]' : 'scale-100'}`}>
+                        {/* Outer Frame - Black with 3D depth */}
                         <div
                           className="relative"
                           style={{
-                            padding: '14px',
-                            background: 'linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 50%, #0f0f0f 100%)',
+                            padding: '12px',
+                            background: 'linear-gradient(180deg, #3a3a3a 0%, #1a1a1a 15%, #1a1a1a 85%, #0a0a0a 100%)',
                             boxShadow: isHovered
-                              ? '0 35px 70px -15px rgba(0,0,0,0.6), 0 15px 30px -10px rgba(0,0,0,0.4), inset 0 1px 0 0 rgba(255,255,255,0.1)'
-                              : '0 25px 50px -15px rgba(0,0,0,0.5), 0 10px 20px -10px rgba(0,0,0,0.3), inset 0 1px 0 0 rgba(255,255,255,0.08)'
+                              ? '8px 12px 28px rgba(0,0,0,0.45), 2px 4px 12px rgba(0,0,0,0.3)'
+                              : '6px 10px 24px rgba(0,0,0,0.35), 2px 3px 10px rgba(0,0,0,0.25)',
                           }}
                         >
+                          {/* Inner frame edge highlight */}
                           <div
-                            className="bg-white relative"
+                            className="absolute inset-0 pointer-events-none"
                             style={{
-                              padding: isPortrait ? '40px 32px' : '32px 40px',
-                              boxShadow: 'inset 0 0 20px rgba(0,0,0,0.03)'
+                              boxShadow: 'inset 1px 1px 0 rgba(255,255,255,0.12), inset -1px -1px 0 rgba(0,0,0,0.3)',
+                            }}
+                          />
+
+                          {/* Mat / Passepartout */}
+                          <div
+                            className="relative"
+                            style={{
+                              background: '#fafafa',
+                              padding: isPortrait ? '36px 28px' : '28px 36px',
+                              boxShadow: 'inset 2px 2px 8px rgba(0,0,0,0.08), inset 1px 1px 4px rgba(0,0,0,0.05)',
                             }}
                           >
+                            {/* V-Groove - Beveled cut line */}
                             <div
                               className="absolute pointer-events-none"
                               style={{
-                                top: isPortrait ? '36px' : '28px',
-                                left: isPortrait ? '28px' : '36px',
-                                right: isPortrait ? '28px' : '36px',
-                                bottom: isPortrait ? '36px' : '28px',
-                                boxShadow: 'inset 1px 1px 0 0 rgba(0,0,0,0.05), inset -1px -1px 0 0 rgba(255,255,255,0.8)',
+                                top: isPortrait ? '32px' : '24px',
+                                left: isPortrait ? '24px' : '32px',
+                                right: isPortrait ? '24px' : '32px',
+                                bottom: isPortrait ? '32px' : '24px',
+                                boxShadow: `
+                                  inset 2px 2px 0 rgba(255,255,255,0.9),
+                                  inset -2px -2px 0 rgba(0,0,0,0.12),
+                                  inset 3px 3px 2px rgba(255,255,255,0.5),
+                                  inset -3px -3px 2px rgba(0,0,0,0.08)
+                                `,
                               }}
                             />
-                            
-                            <div 
+
+                            {/* Photo container */}
+                            <div
                               className="relative overflow-hidden bg-neutral-100"
                               style={{
                                 width: `${frameWidth}px`,
                                 height: `${frameHeight}px`,
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                               }}
                             >
                               {photo?.url && (
@@ -254,11 +273,12 @@ export default function ShopPage() {
                           </div>
                         </div>
 
+                        {/* Floor shadow */}
                         <div
                           className={`absolute -bottom-4 left-[10%] right-[10%] h-8 -z-10 transition-opacity duration-500 ${
-                            isHovered ? 'opacity-60' : 'opacity-40'
+                            isHovered ? 'opacity-50' : 'opacity-35'
                           }`}
-                          style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, transparent 70%)' }}
+                          style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.4) 0%, transparent 70%)' }}
                         />
                       </div>
                     </div>
