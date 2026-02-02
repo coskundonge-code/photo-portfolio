@@ -213,10 +213,6 @@ export default function ShopPage() {
             </div>
           </div>
 
-          <p className="text-sm text-neutral-400 mb-8">
-            {filteredProducts.length} eser gösteriliyor
-          </p>
-
           {filteredProducts.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-neutral-500">Bu kategoride eser bulunamadı.</p>
@@ -229,7 +225,6 @@ export default function ShopPage() {
 
                 const frameWidth = isPortrait ? 200 : 280;
                 const frameHeight = isPortrait ? 280 : 200;
-                const containerHeight = isPortrait ? 480 : 400;
 
                 return (
                   <Link
@@ -238,8 +233,10 @@ export default function ShopPage() {
                     className="group block"
                   >
                     <div
-                      className="bg-[#f5f5f5] flex items-center justify-center"
-                      style={{ minHeight: `${containerHeight}px` }}
+                      className="bg-[#f5f5f5] flex items-center justify-center py-10"
+                      style={{
+                        aspectRatio: isPortrait ? '3/4' : '4/3'
+                      }}
                     >
                       {/* States Gallery style frame */}
                       <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
