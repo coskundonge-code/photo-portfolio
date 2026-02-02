@@ -189,9 +189,9 @@ export default function ShopPage() {
                 const photo = product.photos;
                 const isPortrait = isPhotoPortrait(product);
                 
-                const frameWidth = isPortrait ? 200 : 280;
-                const frameHeight = isPortrait ? 280 : 200;
-                const containerHeight = isPortrait ? 520 : 420;
+                const frameWidth = isPortrait ? 220 : 320;
+                const frameHeight = isPortrait ? 320 : 220;
+                const containerHeight = isPortrait ? 580 : 480;
                 
                 return (
                   <Link
@@ -206,29 +206,31 @@ export default function ShopPage() {
                       style={{ minHeight: `${containerHeight}px` }}
                     >
                       <div className={`relative transition-all duration-500 ${isHovered ? 'scale-[1.03]' : 'scale-100'}`}>
-                        <div 
-                          className="relative bg-[#1a1a1a]"
+                        <div
+                          className="relative"
                           style={{
-                            padding: '6px',
-                            boxShadow: isHovered 
-                              ? '0 30px 60px -10px rgba(0,0,0,0.5)'
-                              : '0 20px 40px -10px rgba(0,0,0,0.4)'
+                            padding: '14px',
+                            background: 'linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 50%, #0f0f0f 100%)',
+                            boxShadow: isHovered
+                              ? '0 35px 70px -15px rgba(0,0,0,0.6), 0 15px 30px -10px rgba(0,0,0,0.4), inset 0 1px 0 0 rgba(255,255,255,0.1)'
+                              : '0 25px 50px -15px rgba(0,0,0,0.5), 0 10px 20px -10px rgba(0,0,0,0.3), inset 0 1px 0 0 rgba(255,255,255,0.08)'
                           }}
                         >
-                          <div 
+                          <div
                             className="bg-white relative"
-                            style={{ 
-                              padding: isPortrait ? '20px 16px' : '16px 20px'
+                            style={{
+                              padding: isPortrait ? '40px 32px' : '32px 40px',
+                              boxShadow: 'inset 0 0 20px rgba(0,0,0,0.03)'
                             }}
                           >
-                            <div 
+                            <div
                               className="absolute pointer-events-none"
                               style={{
-                                top: isPortrait ? '18px' : '14px',
-                                left: isPortrait ? '14px' : '18px',
-                                right: isPortrait ? '14px' : '18px',
-                                bottom: isPortrait ? '18px' : '14px',
-                                boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.06)',
+                                top: isPortrait ? '36px' : '28px',
+                                left: isPortrait ? '28px' : '36px',
+                                right: isPortrait ? '28px' : '36px',
+                                bottom: isPortrait ? '36px' : '28px',
+                                boxShadow: 'inset 1px 1px 0 0 rgba(0,0,0,0.05), inset -1px -1px 0 0 rgba(255,255,255,0.8)',
                               }}
                             />
                             
@@ -252,20 +254,27 @@ export default function ShopPage() {
                           </div>
                         </div>
 
-                        <div 
-                          className={`absolute -bottom-3 left-[15%] right-[15%] h-6 -z-10 transition-opacity ${
-                            isHovered ? 'opacity-50' : 'opacity-30'
+                        <div
+                          className={`absolute -bottom-4 left-[10%] right-[10%] h-8 -z-10 transition-opacity duration-500 ${
+                            isHovered ? 'opacity-60' : 'opacity-40'
                           }`}
-                          style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, transparent 70%)' }}
+                          style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, transparent 70%)' }}
                         />
                       </div>
                     </div>
 
-                    <div className="mt-5 text-center">
-                      <h3 className="text-sm font-medium tracking-wide group-hover:opacity-70">
+                    <div className="mt-6 text-left px-2">
+                      {(product as any).artist && (
+                        <p className="text-xs text-neutral-500 tracking-wider uppercase mb-1">
+                          {(product as any).artist}
+                        </p>
+                      )}
+                      <h3 className="text-base font-medium tracking-wide group-hover:opacity-70 transition-opacity">
                         {product.title.toUpperCase()}
                       </h3>
-                      <p className="text-sm mt-2">₺{formatPrice(product.base_price)}'den başlayan</p>
+                      <p className="text-sm text-neutral-600 mt-2">
+                        From ₺{formatPrice(product.base_price)}
+                      </p>
                     </div>
                   </Link>
                 );
