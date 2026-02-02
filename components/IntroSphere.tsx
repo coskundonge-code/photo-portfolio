@@ -46,17 +46,12 @@ export default function IntroSphere({ photos }: IntroSphereProps) {
       <SphereImageGrid
         images={sphereImages}
         containerSize={containerSize}
-        sphereRadius={containerSize * 0.4}
-        dragSensitivity={0.6}
-        momentumDecay={0.96}
-        maxRotationSpeed={8}
-        baseImageScale={0.12}
-        hoverScale={1.3}
-        perspective={1200}
+        sphereRadius={containerSize * 0.38}
+        dragSensitivity={0.008}
+        baseImageScale={0.1}
         autoRotate={true}
-        autoRotateSpeed={0.4}
+        autoRotateSpeed={0.003}
         onImageClick={handleImageClick}
-        showModal={false}
       />
     </div>
   );
