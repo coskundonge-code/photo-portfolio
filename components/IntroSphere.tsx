@@ -35,10 +35,10 @@ export default function IntroSphere({ photos }: IntroSphereProps) {
     description: photo.projects?.title
   }));
 
-  // Handle image click - navigate to home and scroll to photo
+  // Handle image click - navigate to gallery and scroll to photo
   const handleImageClick = (image: ImageData) => {
-    // Navigate to home page with photo ID as query parameter
-    router.push(`/?photoId=${image.id}`);
+    // Navigate to gallery page with photo ID as query parameter
+    router.push(`/gallery?photoId=${image.id}`);
   };
 
   return (
