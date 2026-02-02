@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Loader2, Plus, Edit2, Trash2, X, Upload, ImageIcon, Star } from 'lucide-react';
-import { getPhotos, getProjects, createPhoto, updatePhoto, deletePhoto, uploadImage } from '@/lib/supabase';
-import { Photo, Project } from '@/lib/types';
+import { Loader2, Plus, Edit2, Trash2, X, Upload, ImageIcon, Star, ShoppingBag } from 'lucide-react';
+import { getPhotos, getProjects, createPhoto, updatePhoto, deletePhoto, getAllProducts, createProduct, createProductSize } from '@/lib/supabase';
+import { smartUploadToCloudinary } from '@/lib/cloudinary';
+import { Photo, Project, Product } from '@/lib/types';
 
 const themeOptions = [
   { id: '', label: 'Tema Seçin...' },
@@ -20,14 +21,15 @@ const themeOptions = [
 export default function AdminPhotosPage() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPhoto, setEditingPhoto] = useState<Photo | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [formData, setFormData] = useState({
     title: '',
     url: '',
@@ -35,6 +37,12 @@ export default function AdminPhotosPage() {
     theme: '',
     is_featured: false,
     orientation: 'landscape' as 'landscape' | 'portrait',
+    addToShop: true, // Mağazaya ekle checkbox
+    // 4 boyut için fiyatlar
+    price20x30: '1500',
+    price40x60: '2500',
+    price60x90: '3500',
+    price100x150: '5000',
   });
 
   useEffect(() => {
@@ -42,10 +50,25 @@ export default function AdminPhotosPage() {
   }, []);
 
   const loadData = async () => {
-    const [photosData, projectsData] = await Promise.all([getPhotos(), getProjects()]);
+    const [photosData, projectsData, productsData] = await Promise.all([
+      getPhotos(),
+      getProjects(),
+      getAllProducts()
+    ]);
     setPhotos(photosData);
     setProjects(projectsData);
+    setProducts(productsData);
     setLoading(false);
+  };
+
+  // Check if a photo is in the shop
+  const isPhotoInShop = (photoId: string) => {
+    return products.some(p => p.photo_id === photoId);
+  };
+
+  // Get product for a photo
+  const getProductForPhoto = (photoId: string) => {
+    return products.find(p => p.photo_id === photoId);
   };
 
   const resetForm = () => {
@@ -56,8 +79,17 @@ export default function AdminPhotosPage() {
       theme: '',
       is_featured: false,
       orientation: 'landscape',
+      addToShop: true,
+      price20x30: '1500',
+      price40x60: '2500',
+      price60x90: '3500',
+      price100x150: '5000',
     });
     setEditingPhoto(null);
+    // File input'u sıfırla
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const openCreateModal = () => {
@@ -74,57 +106,81 @@ export default function AdminPhotosPage() {
       theme: (photo as any).theme || '',
       is_featured: photo.is_featured,
       orientation: (photo as any).orientation || 'landscape',
+      addToShop: false, // Edit modunda bu gösterilmez
+      price20x30: '1500',
+      price40x60: '2500',
+      price60x90: '3500',
+      price100x150: '5000',
     });
     setIsModalOpen(true);
   };
 
-  // DOSYA YÜKLEME - ÇALIŞAN VERSİYON
+  // DOSYA YÜKLEME - CLOUDINARY İLE ÇALIŞAN VERSİYON
+  // Çözünürlük ve kalite korunarak yükleme yapılır
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Dosya boyutu kontrolü (100MB sınırı)
+    const fileSizeMB = file.size / (1024 * 1024);
+    if (fileSizeMB > 100) {
+      alert(`Dosya çok büyük (${fileSizeMB.toFixed(1)} MB). Maksimum 100 MB yüklenebilir.`);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+
     setUploading(true);
-    setUploadProgress(10);
+    setUploadProgress(5);
 
     try {
       // Resim boyutlarını al
       const img = document.createElement('img');
       const objectUrl = URL.createObjectURL(file);
-      
+
       img.onload = async () => {
         const width = img.width;
         const height = img.height;
         const orientation = height > width ? 'portrait' : 'landscape';
-        
+
         URL.revokeObjectURL(objectUrl);
-        setUploadProgress(30);
-        
-        // Supabase'e yükle
-        const uploadedUrl = await uploadImage(file);
-        setUploadProgress(90);
-        
+        setUploadProgress(10);
+
+        // Cloudinary'ye yükle - çözünürlük korunur
+        const uploadedUrl = await smartUploadToCloudinary(file, (progress) => {
+          // Progress: 10-90 arası Cloudinary upload
+          const mappedProgress = 10 + Math.round(progress.percent * 0.8);
+          setUploadProgress(mappedProgress);
+        });
+
         if (uploadedUrl) {
-          setFormData(prev => ({ 
-            ...prev, 
+          setFormData(prev => ({
+            ...prev,
             url: uploadedUrl,
             orientation: orientation,
           }));
           setUploadProgress(100);
         } else {
-          alert('Yükleme başarısız oldu. Lütfen tekrar deneyin.');
+          alert(`Yükleme başarısız oldu.\n\nDosya: ${file.name}\nBoyut: ${fileSizeMB.toFixed(1)} MB\n\nLütfen tekrar deneyin veya daha küçük bir dosya seçin.`);
         }
-        
+
+        // File input'u sıfırla (yeni yükleme için)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+
         setTimeout(() => {
           setUploading(false);
           setUploadProgress(0);
         }, 500);
       };
-      
+
       img.onerror = () => {
         alert('Görsel okunamadı.');
         setUploading(false);
       };
-      
+
       img.src = objectUrl;
     } catch (error) {
       console.error('Upload error:', error);
@@ -135,7 +191,7 @@ export default function AdminPhotosPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.url) {
       alert('Lütfen bir fotoğraf yükleyin.');
       return;
@@ -153,7 +209,36 @@ export default function AdminPhotosPage() {
     if (editingPhoto) {
       await updatePhoto(editingPhoto.id, photoData);
     } else {
-      await createPhoto(photoData);
+      // Yeni fotoğraf oluştur
+      const newPhoto = await createPhoto(photoData);
+
+      // Mağazaya da ekle seçiliyse ürün ve boyutları oluştur
+      if (newPhoto && formData.addToShop) {
+        const newProduct = await createProduct({
+          title: formData.title || 'İsimsiz Eser',
+          photo_id: newPhoto.id,
+          base_price: parseFloat(formData.price20x30) || 1500,
+          edition_type: 'open',
+          is_available: true,
+        });
+
+        // 4 boyut için fiyatları oluştur
+        if (newProduct) {
+          const sizes = [
+            { name: 'Classic', dimensions: '20×30 cm', price: parseFloat(formData.price20x30) || 1500, order_index: 0 },
+            { name: 'Medium', dimensions: '40×60 cm', price: parseFloat(formData.price40x60) || 2500, order_index: 1 },
+            { name: 'Large', dimensions: '60×90 cm', price: parseFloat(formData.price60x90) || 3500, order_index: 2 },
+            { name: 'Luxe', dimensions: '100×150 cm', price: parseFloat(formData.price100x150) || 5000, order_index: 3 },
+          ];
+
+          for (const size of sizes) {
+            await createProductSize({
+              product_id: newProduct.id,
+              ...size,
+            });
+          }
+        }
+      }
     }
 
     setIsModalOpen(false);
@@ -208,7 +293,7 @@ export default function AdminPhotosPage() {
             <div key={photo.id} className="relative group bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden">
               <div className="aspect-square relative">
                 <Image src={photo.url} alt={photo.title || ''} fill className="object-cover" />
-                
+
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <button
                     onClick={() => openEditModal(photo)}
@@ -224,9 +309,17 @@ export default function AdminPhotosPage() {
                   </button>
                 </div>
 
+                {/* Featured star */}
                 {photo.is_featured && (
                   <div className="absolute top-2 left-2 p-1 bg-yellow-500 rounded-full">
                     <Star className="w-4 h-4 text-white" fill="white" />
+                  </div>
+                )}
+
+                {/* Shop indicator */}
+                {isPhotoInShop(photo.id) && (
+                  <div className="absolute top-2 right-2 p-1.5 bg-green-500 rounded-full" title="Mağazada">
+                    <ShoppingBag className="w-3.5 h-3.5 text-white" />
                   </div>
                 )}
 
@@ -262,11 +355,11 @@ export default function AdminPhotosPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              
+
               {/* Fotoğraf Yükleme */}
               <div>
                 <label className="block text-sm font-medium text-neutral-300 mb-2">Fotoğraf</label>
-                
+
                 {formData.url ? (
                   <div className="relative">
                     <div className="relative aspect-video rounded-lg overflow-hidden bg-neutral-800">
@@ -290,7 +383,7 @@ export default function AdminPhotosPage() {
                         <Loader2 className="w-10 h-10 text-blue-500 mx-auto animate-spin" />
                         <p className="text-sm text-neutral-500">Yükleniyor... {uploadProgress}%</p>
                         <div className="w-full bg-neutral-700 rounded-full h-2">
-                          <div 
+                          <div
                             className="bg-blue-500 h-2 rounded-full transition-all"
                             style={{ width: `${uploadProgress}%` }}
                           />
@@ -305,7 +398,7 @@ export default function AdminPhotosPage() {
                     )}
                   </div>
                 )}
-                
+
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -396,6 +489,78 @@ export default function AdminPhotosPage() {
                 />
                 <label htmlFor="is_featured" className="text-neutral-300">Öne çıkan fotoğraf</label>
               </div>
+
+              {/* Mağazaya Ekle - Sadece yeni fotoğraf için göster */}
+              {!editingPhoto && (
+                <div className="p-4 bg-neutral-800/50 rounded-lg border border-neutral-700 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="addToShop"
+                      checked={formData.addToShop}
+                      onChange={(e) => setFormData({ ...formData, addToShop: e.target.checked })}
+                      className="w-5 h-5 rounded"
+                    />
+                    <label htmlFor="addToShop" className="text-neutral-300 flex items-center gap-2">
+                      <ShoppingBag className="w-4 h-4 text-green-500" />
+                      Mağazaya da ekle
+                    </label>
+                  </div>
+
+                  {formData.addToShop && (
+                    <div className="space-y-3">
+                      <label className="block text-sm font-medium text-neutral-400">Boyut Fiyatları (₺)</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">20×30 cm</label>
+                          <input
+                            type="number"
+                            value={formData.price20x30}
+                            onChange={(e) => setFormData({ ...formData, price20x30: e.target.value })}
+                            className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm"
+                            placeholder="1500"
+                            min="0"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">40×60 cm</label>
+                          <input
+                            type="number"
+                            value={formData.price40x60}
+                            onChange={(e) => setFormData({ ...formData, price40x60: e.target.value })}
+                            className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm"
+                            placeholder="2500"
+                            min="0"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">60×90 cm</label>
+                          <input
+                            type="number"
+                            value={formData.price60x90}
+                            onChange={(e) => setFormData({ ...formData, price60x90: e.target.value })}
+                            className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm"
+                            placeholder="3500"
+                            min="0"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">100×150 cm</label>
+                          <input
+                            type="number"
+                            value={formData.price100x150}
+                            onChange={(e) => setFormData({ ...formData, price100x150: e.target.value })}
+                            className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm"
+                            placeholder="5000"
+                            min="0"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-neutral-500">Mağazada ürün detaylarını daha sonra düzenleyebilirsiniz.</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Butonlar */}
               <div className="flex justify-end gap-3 pt-4 border-t border-neutral-800">
