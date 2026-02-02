@@ -189,9 +189,9 @@ export default function ShopPage() {
                 const photo = product.photos;
                 const isPortrait = isPhotoPortrait(product);
                 
-                const frameWidth = isPortrait ? 220 : 320;
-                const frameHeight = isPortrait ? 320 : 220;
-                const containerHeight = isPortrait ? 580 : 480;
+                const frameWidth = isPortrait ? 200 : 280;
+                const frameHeight = isPortrait ? 280 : 200;
+                const containerHeight = isPortrait ? 520 : 420;
                 
                 return (
                   <Link
@@ -206,22 +206,22 @@ export default function ShopPage() {
                       style={{ minHeight: `${containerHeight}px` }}
                     >
                       <div className={`relative transition-all duration-500 ${isHovered ? 'scale-[1.03]' : 'scale-100'}`}>
-                        {/* Outer Frame - Black with 3D depth */}
+                        {/* Outer Frame */}
                         <div
                           className="relative"
                           style={{
-                            padding: '12px',
-                            background: 'linear-gradient(180deg, #3a3a3a 0%, #1a1a1a 15%, #1a1a1a 85%, #0a0a0a 100%)',
+                            padding: '10px',
+                            background: 'linear-gradient(180deg, #2d2d2d 0%, #1a1a1a 8%, #1a1a1a 92%, #0d0d0d 100%)',
                             boxShadow: isHovered
-                              ? '8px 12px 28px rgba(0,0,0,0.45), 2px 4px 12px rgba(0,0,0,0.3)'
-                              : '6px 10px 24px rgba(0,0,0,0.35), 2px 3px 10px rgba(0,0,0,0.25)',
+                              ? '4px 6px 20px rgba(0,0,0,0.4), 1px 2px 8px rgba(0,0,0,0.3)'
+                              : '3px 5px 16px rgba(0,0,0,0.35), 1px 2px 6px rgba(0,0,0,0.25)',
                           }}
                         >
-                          {/* Inner frame edge highlight */}
+                          {/* Frame inner bevel */}
                           <div
                             className="absolute inset-0 pointer-events-none"
                             style={{
-                              boxShadow: 'inset 1px 1px 0 rgba(255,255,255,0.12), inset -1px -1px 0 rgba(0,0,0,0.3)',
+                              boxShadow: 'inset 1px 1px 0 rgba(255,255,255,0.08), inset -1px -1px 0 rgba(0,0,0,0.4)',
                             }}
                           />
 
@@ -229,35 +229,33 @@ export default function ShopPage() {
                           <div
                             className="relative"
                             style={{
-                              background: '#fafafa',
-                              padding: isPortrait ? '36px 28px' : '28px 36px',
-                              boxShadow: 'inset 2px 2px 8px rgba(0,0,0,0.08), inset 1px 1px 4px rgba(0,0,0,0.05)',
+                              background: '#f8f8f8',
+                              padding: isPortrait ? '20px 16px' : '16px 20px',
+                              boxShadow: 'inset 1px 1px 4px rgba(0,0,0,0.06)',
                             }}
                           >
-                            {/* V-Groove - Beveled cut line */}
+                            {/* V-Groove bevel cut */}
                             <div
                               className="absolute pointer-events-none"
                               style={{
-                                top: isPortrait ? '32px' : '24px',
-                                left: isPortrait ? '24px' : '32px',
-                                right: isPortrait ? '24px' : '32px',
-                                bottom: isPortrait ? '32px' : '24px',
+                                top: isPortrait ? '17px' : '13px',
+                                left: isPortrait ? '13px' : '17px',
+                                right: isPortrait ? '13px' : '17px',
+                                bottom: isPortrait ? '17px' : '13px',
                                 boxShadow: `
-                                  inset 2px 2px 0 rgba(255,255,255,0.9),
-                                  inset -2px -2px 0 rgba(0,0,0,0.12),
-                                  inset 3px 3px 2px rgba(255,255,255,0.5),
-                                  inset -3px -3px 2px rgba(0,0,0,0.08)
+                                  inset 1px 1px 0 rgba(0,0,0,0.15),
+                                  inset -1px -1px 0 rgba(255,255,255,0.7),
+                                  inset 2px 2px 1px rgba(0,0,0,0.08),
+                                  inset -2px -2px 1px rgba(255,255,255,0.4)
                                 `,
                               }}
                             />
 
-                            {/* Photo container */}
                             <div
                               className="relative overflow-hidden bg-neutral-100"
                               style={{
                                 width: `${frameWidth}px`,
                                 height: `${frameHeight}px`,
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                               }}
                             >
                               {photo?.url && (
@@ -273,28 +271,20 @@ export default function ShopPage() {
                           </div>
                         </div>
 
-                        {/* Floor shadow */}
                         <div
-                          className={`absolute -bottom-4 left-[10%] right-[10%] h-8 -z-10 transition-opacity duration-500 ${
-                            isHovered ? 'opacity-50' : 'opacity-35'
+                          className={`absolute -bottom-3 left-[15%] right-[15%] h-6 -z-10 transition-opacity ${
+                            isHovered ? 'opacity-50' : 'opacity-30'
                           }`}
-                          style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.4) 0%, transparent 70%)' }}
+                          style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, transparent 70%)' }}
                         />
                       </div>
                     </div>
 
-                    <div className="mt-6 text-left px-2">
-                      {(product as any).artist && (
-                        <p className="text-xs text-neutral-500 tracking-wider uppercase mb-1">
-                          {(product as any).artist}
-                        </p>
-                      )}
-                      <h3 className="text-base font-medium tracking-wide group-hover:opacity-70 transition-opacity">
+                    <div className="mt-5 text-center">
+                      <h3 className="text-sm font-medium tracking-wide group-hover:opacity-70">
                         {product.title.toUpperCase()}
                       </h3>
-                      <p className="text-sm text-neutral-600 mt-2">
-                        From ₺{formatPrice(product.base_price)}
-                      </p>
+                      <p className="text-sm mt-2">₺{formatPrice(product.base_price)}'den başlayan</p>
                     </div>
                   </Link>
                 );
