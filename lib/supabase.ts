@@ -881,8 +881,10 @@ export interface Member {
   name?: string;
   phone?: string;
   is_active: boolean;
+  role?: 'member' | 'admin';
   membership_type?: string;
   notes?: string;
+  last_login?: string;
   created_at?: string;
   updated_at?: string;
 }
