@@ -139,3 +139,15 @@ export interface CartItem {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface Member {
+  id: string;
+  email: string;
+  name?: string;
+  phone?: string;
+  is_active: boolean;
+  membership_type?: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+}

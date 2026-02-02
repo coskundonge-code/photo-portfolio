@@ -871,3 +871,78 @@ export const deleteImage = async (url: string, bucket: string = 'photos'): Promi
 
   return true;
 };
+
+// ================================================
+// MEMBERS
+// ================================================
+export interface Member {
+  id: string;
+  email: string;
+  name?: string;
+  phone?: string;
+  is_active: boolean;
+  membership_type?: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export const getMembers = async (): Promise<Member[]> => {
+  const { data, error } = await supabase
+    .from('members')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching members:', error);
+    return [];
+  }
+
+  return data || [];
+};
+
+export const updateMember = async (id: string, member: Partial<Member>): Promise<Member | null> => {
+  const { data, error } = await supabase
+    .from('members')
+    .update({ ...member, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating member:', error);
+    return null;
+  }
+
+  return data;
+};
+
+export const toggleMemberStatus = async (id: string, is_active: boolean): Promise<Member | null> => {
+  const { data, error } = await supabase
+    .from('members')
+    .update({ is_active, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error toggling member status:', error);
+    return null;
+  }
+
+  return data;
+};
+
+export const deleteMember = async (id: string): Promise<boolean> => {
+  const { error } = await supabase
+    .from('members')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting member:', error);
+    return false;
+  }
+
+  return true;
+};
