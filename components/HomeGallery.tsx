@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Photo, Project } from '@/lib/types';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -11,10 +12,31 @@ interface HomeGalleryProps {
 }
 
 export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
+  const searchParams = useSearchParams();
+  const scrollToPhotoId = searchParams.get('photoId');
+  const photoRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
   const [pageReady, setPageReady] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxVisible, setLightboxVisible] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [highlightedPhoto, setHighlightedPhoto] = useState<string | null>(null);
+
+  // Scroll to photo when coming from intro page
+  useEffect(() => {
+    if (scrollToPhotoId && pageReady) {
+      const timer = setTimeout(() => {
+        const photoElement = photoRefs.current.get(scrollToPhotoId);
+        if (photoElement) {
+          photoElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setHighlightedPhoto(scrollToPhotoId);
+          // Remove highlight after animation
+          setTimeout(() => setHighlightedPhoto(null), 2000);
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [scrollToPhotoId, pageReady]);
 
   useEffect(() => {
     const timer = setTimeout(() => setPageReady(true), 100);
@@ -100,8 +122,14 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
           {photos.map((photo, index) => (
             <div
               key={photo.id}
+              ref={(el) => {
+                if (el) photoRefs.current.set(photo.id, el);
+              }}
+              data-photo-id={photo.id}
               onClick={() => openLightbox(index)}
-              className="block mb-12 md:mb-14 lg:mb-16 break-inside-avoid cursor-pointer group"
+              className={`block mb-12 md:mb-14 lg:mb-16 break-inside-avoid cursor-pointer group transition-all duration-500 ${
+                highlightedPhoto === photo.id ? 'ring-4 ring-neutral-400 ring-offset-4 rounded-sm' : ''
+              }`}
             >
               {/* Realistic frame - light from top-left */}
               <div className="relative transition-transform duration-300 group-hover:-translate-y-1">

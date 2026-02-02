@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import HomeGallery from '@/components/HomeGallery';
@@ -12,16 +13,18 @@ export default async function HomePage() {
     getPhotos(),
     getFeaturedPhotos()
   ]);
-  
+
   // Featured fotoğraflar varsa onları göster, yoksa tümünü göster
   const photos = featuredPhotos.length > 0 ? featuredPhotos : allPhotos;
 
   return (
     <main className="min-h-screen bg-white">
       <Navigation projects={projects} settings={settings} />
-      
+
       <section className="pt-20 lg:pt-24">
-        <HomeGallery photos={photos} projects={projects} />
+        <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="animate-pulse text-neutral-400">Loading...</div></div>}>
+          <HomeGallery photos={photos} projects={projects} />
+        </Suspense>
       </section>
 
       <Footer settings={settings} />
