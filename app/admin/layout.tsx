@@ -13,7 +13,8 @@ import {
   LogOut,
   ChevronRight,
   Globe,
-  Package
+  Package,
+  Users
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -51,6 +52,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/projects', label: 'Projeler', icon: FolderOpen },
     { href: '/admin/products', label: 'Ürünler', icon: ShoppingBag },
     { href: '/admin/orders', label: 'Siparişler', icon: Package },
+    { href: '/admin/members', label: 'Üyeler', icon: Users },
     { href: '/admin/settings', label: 'Ayarlar', icon: Settings },
   ];
 
