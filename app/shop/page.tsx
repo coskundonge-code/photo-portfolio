@@ -223,8 +223,8 @@ export default function ShopPage() {
                 const photo = product.photos;
                 const isPortrait = isPhotoPortrait(product);
 
-                const frameWidth = isPortrait ? 280 : 380;
-                const frameHeight = isPortrait ? 380 : 280;
+                const frameWidth = isPortrait ? 240 : 340;
+                const frameHeight = isPortrait ? 340 : 240;
 
                 return (
                   <Link
@@ -234,7 +234,7 @@ export default function ShopPage() {
                   >
                     <div
                       className="bg-[#f5f5f5] flex items-center justify-center"
-                      style={{ height: 'calc(100vh - 350px)' }}
+                      style={{ height: 'calc(100vh - 260px)' }}
                     >
                       {/* States Gallery style frame */}
                       <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
