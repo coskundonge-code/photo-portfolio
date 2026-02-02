@@ -234,7 +234,7 @@ export default function ShopPage() {
                   >
                     <div
                       className="bg-[#f5f5f5] flex items-center justify-center"
-                      style={{ height: 'calc((100vh - 180px))' }}
+                      style={{ height: 'calc((100vh - 300px))' }}
                     >
                       {/* States Gallery style frame */}
                       <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
