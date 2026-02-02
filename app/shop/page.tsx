@@ -225,6 +225,9 @@ export default function ShopPage() {
 
                 const frameWidth = isPortrait ? 200 : 280;
                 const frameHeight = isPortrait ? 280 : 200;
+                // Container boyutları - çerçeve etrafında eşit boşluk
+                const containerWidth = isPortrait ? 360 : 440;
+                const containerHeight = isPortrait ? 500 : 360;
 
                 return (
                   <Link
@@ -233,9 +236,10 @@ export default function ShopPage() {
                     className="group block"
                   >
                     <div
-                      className="bg-[#f5f5f5] flex items-center justify-center py-10"
+                      className="bg-[#f5f5f5] flex items-center justify-center mx-auto"
                       style={{
-                        aspectRatio: isPortrait ? '3/4' : '4/3'
+                        width: `${containerWidth}px`,
+                        height: `${containerHeight}px`
                       }}
                     >
                       {/* States Gallery style frame */}
