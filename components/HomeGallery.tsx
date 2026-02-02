@@ -107,13 +107,13 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
                 {/* Frame border + shadow (light from top-left, shadow on right/bottom) */}
                 <div
-                  className="border-[10px] border-black"
+                  className="border-[8px] border-black"
                   style={{ boxShadow: '4px 4px 5px rgba(0,0,0,0.4)' }}
                 >
                   {/* White inner border (passe-partout line) */}
                   <div className="border-2 border-white">
                     {/* White mat area */}
-                    <div className="bg-white p-8 md:p-10 lg:p-12">
+                    <div className="bg-white p-5 md:p-6 lg:p-8">
                       {/* Photo with 3D inset border effect + padding for visibility */}
                       <div
                         className="p-[3px] bg-[#f0f0f0]"
