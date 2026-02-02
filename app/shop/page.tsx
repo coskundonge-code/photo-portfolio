@@ -243,33 +243,21 @@ export default function ShopPage() {
                     >
                       {/* States Gallery style frame */}
                       <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
-                        {/* Frame with 3D depth */}
+                        {/* Frame with soft realistic shadow */}
                         <div
+                          className="border-8 border-black"
                           style={{
-                            padding: '10px',
-                            background: 'linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 10%, #1a1a1a 90%, #0a0a0a 100%)',
-                            boxShadow: '6px 8px 25px rgba(0,0,0,0.35), 2px 3px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.3)'
+                            boxShadow: '6px 8px 25px rgba(0,0,0,0.35), 2px 3px 8px rgba(0,0,0,0.2)'
                           }}
                         >
                           {/* White mat area with subtle inner shadow */}
                           <div
-                            className="bg-white relative"
+                            className="bg-white"
                             style={{
                               padding: isPortrait ? '32px 24px' : '24px 32px',
                               boxShadow: 'inset 0 0 20px rgba(0,0,0,0.04)'
                             }}
                           >
-                            {/* V-Groove bevel cut */}
-                            <div
-                              className="absolute pointer-events-none"
-                              style={{
-                                top: isPortrait ? '28px' : '20px',
-                                left: isPortrait ? '20px' : '28px',
-                                right: isPortrait ? '20px' : '28px',
-                                bottom: isPortrait ? '28px' : '20px',
-                                boxShadow: 'inset 1px 1px 0 rgba(0,0,0,0.12), inset -1px -1px 0 rgba(255,255,255,0.8)'
-                              }}
-                            />
                             {/* Photo */}
                             <div
                               className="relative overflow-hidden"
