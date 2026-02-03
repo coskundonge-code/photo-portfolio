@@ -134,7 +134,7 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               {/* Realistic frame - light from top-left, scaled down 15% */}
               <div
                 className="relative transition-transform duration-300 group-hover:-translate-y-1"
-                style={{ transform: 'scale(0.85)' }}
+                style={{ transform: 'scale(0.85)', transformOrigin: 'top center' }}
               >
                 {/* Frame border - black */}
                 <div
