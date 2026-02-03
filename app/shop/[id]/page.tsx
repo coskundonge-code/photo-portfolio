@@ -203,44 +203,25 @@ export default function ProductPage() {
                 </div>
 
                 {/* Çerçeve + Fotoğraf */}
-                <div 
+                <div
                   className="relative transition-all duration-700 ease-out"
                   style={{ transform: `scale(${selectedSize.scale})` }}
                 >
-                  {/* ===== ÇERÇEVE - Ahşap dokulu ===== */}
-                  <div 
+                  {/* ===== ÇERÇEVE - Ana sayfa ile aynı yapı ===== */}
+                  <div
                     style={{
                       background: selectedFrame.texture,
-                      padding: '18px',
-                      position: 'relative',
-                      boxShadow: `
-                        0 30px 60px -20px rgba(0,0,0,0.35),
-                        0 15px 30px -15px rgba(0,0,0,0.25),
-                        inset 0 2px 0 0 rgba(255,255,255,0.15),
-                        inset 0 -2px 0 0 rgba(0,0,0,0.2),
-                        inset 2px 0 0 0 rgba(255,255,255,0.1),
-                        inset -2px 0 0 0 rgba(0,0,0,0.15)
-                      `
+                      padding: '12px',
+                      boxShadow: '6px 6px 20px rgba(0,0,0,0.35), 3px 3px 10px rgba(0,0,0,0.2)'
                     }}
                   >
-                    {/* İç çerçeve çizgisi */}
-                    <div 
-                      style={{
-                        position: 'absolute',
-                        inset: '6px',
-                        border: selectedFrame.id === 'white' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.15)',
-                        pointerEvents: 'none'
-                      }}
-                    />
-
                     {/* ===== PASSEPARTOUT / MAT ===== */}
-                    <div 
-                      style={{ 
+                    <div
+                      style={{
                         background: selectedStyle === 'mat' ? '#ffffff' : 'transparent',
-                        padding: selectedStyle === 'mat' 
-                          ? (isPortrait ? '50px 40px' : '40px 50px') 
+                        padding: selectedStyle === 'mat'
+                          ? (isPortrait ? '50px 40px' : '40px 50px')
                           : '0',
-                        position: 'relative',
                         boxShadow: selectedStyle === 'mat'
                           ? 'inset 15px 15px 35px rgba(0,0,0,0.18), inset 5px 5px 15px rgba(0,0,0,0.12)'
                           : 'none'
