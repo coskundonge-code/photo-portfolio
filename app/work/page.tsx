@@ -165,24 +165,32 @@ function WorkContent() {
                       <div className="border-2 border-white">
                         {/* White mat area */}
                         <div className="bg-white p-8 md:p-10 lg:p-12">
-                          {/* Photo with 3D inset border effect + padding for visibility */}
+                          {/* Photo with 3D inset border effect - darker on top-left, lighter on bottom-right */}
                           <div
-                            className="p-[3px] bg-[#f0f0f0]"
                             style={{
-                              borderTop: '3px solid #e0e0e0',
-                              borderLeft: '3px solid #e0e0e0',
-                              borderBottom: '3px solid #888888',
-                              borderRight: '3px solid #888888',
+                              borderTop: '2px solid #888',
+                              borderLeft: '2px solid #888',
+                              borderBottom: '2px solid #ccc',
+                              borderRight: '2px solid #ccc',
+                              boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.15)'
                             }}
                           >
-                            <Image
-                              src={photo.url}
-                              alt={photo.title || 'Photo'}
-                              width={800}
-                              height={600}
-                              quality={90}
-                              className="w-full h-auto block"
-                            />
+                            {/* Inner gray mat area for depth */}
+                            <div
+                              style={{
+                                padding: '6px',
+                                background: 'linear-gradient(135deg, #e8e8e8 0%, #d8d8d8 100%)'
+                              }}
+                            >
+                              <Image
+                                src={photo.url}
+                                alt={photo.title || 'Photo'}
+                                width={800}
+                                height={600}
+                                quality={90}
+                                className="w-full h-auto block"
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
