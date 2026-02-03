@@ -154,43 +154,46 @@ function WorkContent() {
                   onClick={() => openLightbox(index)}
                   className="block mb-12 md:mb-14 lg:mb-16 break-inside-avoid cursor-pointer group"
                 >
-                  {/* States Gallery exact style frame */}
+                  {/* Realistic frame - same as home page */}
                   <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
-                    {/* Black frame border + shadow */}
+                    {/* Frame border - black */}
                     <div
-                      className="border-[10px] border-black"
-                      style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
+                      className="border-[8px] border-black"
+                      style={{
+                        boxShadow: '4px 4px 12px rgba(0,0,0,0.35), 2px 2px 6px rgba(0,0,0,0.2)'
+                      }}
                     >
-                      {/* White inner border (passe-partout line) */}
-                      <div className="border-2 border-white">
-                        {/* White mat area */}
-                        <div className="bg-white p-8 md:p-10 lg:p-12">
-                          {/* Photo with 3D inset border effect - darker on top-left, lighter on bottom-right */}
+                      {/* White mat with subtle inner shadow */}
+                      <div
+                        className="bg-white p-5 md:p-6 lg:p-8"
+                        style={{
+                          boxShadow: 'inset 2px 2px 8px rgba(0,0,0,0.08)'
+                        }}
+                      >
+                        {/* V-groove - realistic bevel with depth */}
+                        <div
+                          style={{
+                            padding: '3px',
+                            background: 'linear-gradient(145deg, #909090 0%, #b0b0b0 30%, #d0d0d0 70%, #e8e8e8 100%)',
+                            boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.4), inset -1px -1px 1px rgba(255,255,255,0.6)'
+                          }}
+                        >
+                          {/* Inner recessed area */}
                           <div
                             style={{
-                              borderTop: '2px solid #888',
-                              borderLeft: '2px solid #888',
-                              borderBottom: '2px solid #ccc',
-                              borderRight: '2px solid #ccc',
-                              boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.15)'
+                              padding: '8px',
+                              background: '#e8e8e8',
+                              boxShadow: 'inset 2px 2px 6px rgba(0,0,0,0.15), inset 1px 1px 3px rgba(0,0,0,0.1)'
                             }}
                           >
-                            {/* Inner gray mat area for depth */}
-                            <div
-                              style={{
-                                padding: '6px',
-                                background: 'linear-gradient(135deg, #e8e8e8 0%, #d8d8d8 100%)'
-                              }}
-                            >
-                              <Image
-                                src={photo.url}
-                                alt={photo.title || 'Photo'}
-                                width={800}
-                                height={600}
-                                quality={90}
-                                className="w-full h-auto block"
-                              />
-                            </div>
+                            <Image
+                              src={photo.url}
+                              alt={photo.title || 'Photo'}
+                              width={800}
+                              height={600}
+                              quality={90}
+                              className="w-full h-auto block"
+                            />
                           </div>
                         </div>
                       </div>

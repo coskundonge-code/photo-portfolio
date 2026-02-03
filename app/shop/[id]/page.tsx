@@ -246,43 +246,65 @@ export default function ProductPage() {
                           : 'none'
                       }}
                     >
-                      {/* V-Groove */}
-                      {selectedStyle === 'mat' && (
-                        <div 
+                      {/* V-groove - realistic bevel with depth */}
+                      {selectedStyle === 'mat' ? (
+                        <div
                           style={{
-                            position: 'absolute',
-                            top: isPortrait ? '45px' : '35px',
-                            left: isPortrait ? '35px' : '45px',
-                            right: isPortrait ? '35px' : '45px',
-                            bottom: isPortrait ? '45px' : '35px',
-                            boxShadow: `
-                              inset 1px 1px 0 0 rgba(0,0,0,0.06),
-                              inset -1px -1px 0 0 rgba(255,255,255,0.8)
-                            `,
-                            pointerEvents: 'none'
+                            padding: '4px',
+                            background: 'linear-gradient(145deg, #909090 0%, #b0b0b0 30%, #d0d0d0 70%, #e8e8e8 100%)',
+                            boxShadow: 'inset 1px 1px 3px rgba(0,0,0,0.4), inset -1px -1px 2px rgba(255,255,255,0.6)'
                           }}
-                        />
+                        >
+                          {/* Inner recessed area */}
+                          <div
+                            style={{
+                              padding: '10px',
+                              background: '#e8e8e8',
+                              boxShadow: 'inset 3px 3px 8px rgba(0,0,0,0.15), inset 1px 1px 4px rgba(0,0,0,0.1)'
+                            }}
+                          >
+                            {/* ===== FOTOĞRAF ===== */}
+                            <div
+                              style={{
+                                width: `${basePhotoWidth}px`,
+                                height: `${basePhotoHeight}px`,
+                                position: 'relative',
+                                overflow: 'hidden',
+                              }}
+                            >
+                              {product.photos?.url && (
+                                <Image
+                                  src={product.photos.url}
+                                  alt={product.title}
+                                  fill
+                                  className="object-cover"
+                                  priority
+                                />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        /* Full bleed - no V-groove */
+                        <div
+                          style={{
+                            width: `${basePhotoWidth}px`,
+                            height: `${basePhotoHeight}px`,
+                            position: 'relative',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          {product.photos?.url && (
+                            <Image
+                              src={product.photos.url}
+                              alt={product.title}
+                              fill
+                              className="object-cover"
+                              priority
+                            />
+                          )}
+                        </div>
                       )}
-                      
-                      {/* ===== FOTOĞRAF ===== */}
-                      <div 
-                        style={{
-                          width: `${basePhotoWidth}px`,
-                          height: `${basePhotoHeight}px`,
-                          position: 'relative',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        {product.photos?.url && (
-                          <Image
-                            src={product.photos.url}
-                            alt={product.title}
-                            fill
-                            className="object-cover"
-                            priority
-                          />
-                        )}
-                      </div>
                     </div>
                   </div>
 

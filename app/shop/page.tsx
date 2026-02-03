@@ -236,40 +236,58 @@ export default function ShopPage() {
                       className="bg-[#f5f5f5] flex items-center justify-center"
                       style={{ height: 'calc(100vh - 260px)' }}
                     >
-                      {/* States Gallery style frame */}
+                      {/* Realistic frame - same as home page */}
                       <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
-                        {/* Frame with soft realistic shadow */}
+                        {/* Frame border - black */}
                         <div
-                          className="border-8 border-black"
+                          className="border-[8px] border-black"
                           style={{
-                            boxShadow: '6px 8px 25px rgba(0,0,0,0.35), 2px 3px 8px rgba(0,0,0,0.2)'
+                            boxShadow: '4px 4px 12px rgba(0,0,0,0.35), 2px 2px 6px rgba(0,0,0,0.2)'
                           }}
                         >
-                          {/* White mat area with subtle inner shadow */}
+                          {/* White mat with subtle inner shadow */}
                           <div
                             className="bg-white"
                             style={{
                               padding: isPortrait ? '40px 32px' : '32px 40px',
-                              boxShadow: 'inset 0 0 20px rgba(0,0,0,0.04)'
+                              boxShadow: 'inset 2px 2px 8px rgba(0,0,0,0.08)'
                             }}
                           >
-                            {/* Photo */}
+                            {/* V-groove - realistic bevel with depth */}
                             <div
-                              className="relative overflow-hidden"
                               style={{
-                                width: `${frameWidth}px`,
-                                height: `${frameHeight}px`,
+                                padding: '3px',
+                                background: 'linear-gradient(145deg, #909090 0%, #b0b0b0 30%, #d0d0d0 70%, #e8e8e8 100%)',
+                                boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.4), inset -1px -1px 1px rgba(255,255,255,0.6)'
                               }}
                             >
-                              {photo?.url && (
-                                <Image
-                                  src={photo.url}
-                                  alt={product.title}
-                                  fill
-                                  className="object-cover"
-                                  sizes="(max-width: 768px) 100vw, 33vw"
-                                />
-                              )}
+                              {/* Inner recessed area */}
+                              <div
+                                style={{
+                                  padding: '8px',
+                                  background: '#e8e8e8',
+                                  boxShadow: 'inset 2px 2px 6px rgba(0,0,0,0.15), inset 1px 1px 3px rgba(0,0,0,0.1)'
+                                }}
+                              >
+                                {/* Photo */}
+                                <div
+                                  className="relative overflow-hidden"
+                                  style={{
+                                    width: `${frameWidth}px`,
+                                    height: `${frameHeight}px`,
+                                  }}
+                                >
+                                  {photo?.url && (
+                                    <Image
+                                      src={photo.url}
+                                      alt={product.title}
+                                      fill
+                                      className="object-cover"
+                                      sizes="(max-width: 768px) 100vw, 33vw"
+                                    />
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
