@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -26,6 +26,7 @@ function WorkContent() {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [pageReady, setPageReady] = useState(false);
   const [hoveredPhoto, setHoveredPhoto] = useState<string | null>(null);
+  const initialLoadDone = useRef(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -37,6 +38,13 @@ function WorkContent() {
       setSettings(settingsData);
       setProjects(projectsData);
       setPhotos(photosData);
+
+      // URL'de proje parametresi yoksa ilk projeyi seç
+      if (!projectParam && projectsData.length > 0) {
+        setSelectedProject(projectsData[0].id);
+      }
+
+      initialLoadDone.current = true;
       setLoading(false);
     };
     loadData();
@@ -50,9 +58,12 @@ function WorkContent() {
     }
   }, [loading]);
 
-  // URL'den gelen project parametresi değişince
+  // URL'den gelen project parametresi değişince (kullanıcı Tümü'ye tıkladığında)
   useEffect(() => {
-    setSelectedProject(projectParam);
+    // Sadece ilk yükleme tamamlandıktan sonra URL değişikliklerini dinle
+    if (initialLoadDone.current) {
+      setSelectedProject(projectParam);
+    }
   }, [projectParam]);
 
   // Fotoğrafları filtrele
@@ -79,12 +90,6 @@ function WorkContent() {
     setLightboxOpen(true);
   };
 
-  const getSelectedProjectTitle = () => {
-    if (!selectedProject) return 'Tümü';
-    const project = projects.find(p => p.id === selectedProject);
-    return project?.title || 'Tümü';
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -109,16 +114,6 @@ function WorkContent() {
           {/* Proje Tabs */}
           <div className="mb-8 border-b border-neutral-200">
             <div className="flex items-center gap-8 overflow-x-auto pb-4">
-              <button
-                onClick={() => handleProjectClick(null)}
-                className={`text-sm font-medium whitespace-nowrap pb-2 border-b-2 transition-colors ${
-                  !selectedProject
-                    ? 'text-black border-black'
-                    : 'text-neutral-500 border-transparent hover:text-black'
-                }`}
-              >
-                Tümü
-              </button>
               {projects.map((project) => (
                 <button
                   key={project.id}
@@ -132,14 +127,18 @@ function WorkContent() {
                   {project.title}
                 </button>
               ))}
+              <button
+                onClick={() => handleProjectClick(null)}
+                className={`text-sm font-medium whitespace-nowrap pb-2 border-b-2 transition-colors ${
+                  !selectedProject
+                    ? 'text-black border-black'
+                    : 'text-neutral-500 border-transparent hover:text-black'
+                }`}
+              >
+                Tümü
+              </button>
             </div>
           </div>
-
-          {/* Fotoğraf Sayısı */}
-          <p className="text-sm text-neutral-400 mb-8">
-            {filteredPhotos.length} fotoğraf
-            {selectedProject && ` • ${getSelectedProjectTitle()}`}
-          </p>
 
           {/* Fotoğraf Grid with 3D Frames */}
           {filteredPhotos.length === 0 ? (
