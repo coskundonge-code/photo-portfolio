@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Photo, Project } from '@/lib/types';
@@ -22,52 +22,6 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [highlightedPhoto, setHighlightedPhoto] = useState<string | null>(null);
 
-  // Fotoğrafın dikey mi yatay mı olduğunu belirle
-  const isPortrait = (photo: Photo) => {
-    if (photo.orientation === 'portrait') return true;
-    if (photo.orientation === 'landscape') return false;
-    if (photo.width && photo.height) {
-      return photo.height > photo.width;
-    }
-    return false; // varsayılan yatay
-  };
-
-  // Fotoğrafları dikey ve yatay olarak ayır, sonra 3'lü gruplar halinde sırala
-  const organizedPhotos = useMemo(() => {
-    const portraits = photos.filter(p => isPortrait(p));
-    const landscapes = photos.filter(p => !isPortrait(p));
-
-    const result: Photo[] = [];
-    let pIndex = 0;
-    let lIndex = 0;
-    let usePortrait = true; // İlk önce dikey fotoğraflarla başla
-
-    while (pIndex < portraits.length || lIndex < landscapes.length) {
-      if (usePortrait && pIndex < portraits.length) {
-        // 3 dikey fotoğraf ekle
-        for (let i = 0; i < 3 && pIndex < portraits.length; i++) {
-          result.push(portraits[pIndex++]);
-        }
-      } else if (!usePortrait && lIndex < landscapes.length) {
-        // 3 yatay fotoğraf ekle
-        for (let i = 0; i < 3 && lIndex < landscapes.length; i++) {
-          result.push(landscapes[lIndex++]);
-        }
-      }
-
-      // Eğer bir grup bittiyse diğerine geç
-      if (usePortrait && pIndex >= portraits.length && lIndex < landscapes.length) {
-        usePortrait = false;
-      } else if (!usePortrait && lIndex >= landscapes.length && pIndex < portraits.length) {
-        usePortrait = true;
-      } else {
-        usePortrait = !usePortrait;
-      }
-    }
-
-    return result;
-  }, [photos]);
-
   // Scroll to photo when coming from intro page
   useEffect(() => {
     if (scrollToPhotoId && pageReady) {
@@ -76,6 +30,7 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
         if (photoElement) {
           photoElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
           setHighlightedPhoto(scrollToPhotoId);
+          // Remove highlight after animation
           setTimeout(() => setHighlightedPhoto(null), 2000);
         }
       }, 300);
@@ -94,11 +49,11 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
     if (e.key === 'Escape') {
       closeLightbox();
     } else if (e.key === 'ArrowLeft') {
-      setCurrentIndex(prev => (prev === 0 ? organizedPhotos.length - 1 : prev - 1));
+      setCurrentIndex(prev => (prev === 0 ? photos.length - 1 : prev - 1));
     } else if (e.key === 'ArrowRight') {
-      setCurrentIndex(prev => (prev === organizedPhotos.length - 1 ? 0 : prev + 1));
+      setCurrentIndex(prev => (prev === photos.length - 1 ? 0 : prev + 1));
     }
-  }, [lightboxOpen, organizedPhotos.length]);
+  }, [lightboxOpen, photos.length]);
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
@@ -129,12 +84,12 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
 
   const goToPrevious = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentIndex(prev => (prev === 0 ? organizedPhotos.length - 1 : prev - 1));
+    setCurrentIndex(prev => (prev === 0 ? photos.length - 1 : prev - 1));
   };
 
   const goToNext = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentIndex(prev => (prev === organizedPhotos.length - 1 ? 0 : prev + 1));
+    setCurrentIndex(prev => (prev === photos.length - 1 ? 0 : prev + 1));
   };
 
   if (photos.length === 0) {
@@ -151,13 +106,7 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
     );
   }
 
-  const currentPhoto = organizedPhotos[currentIndex];
-
-  // 3'lü gruplar halinde fotoğrafları ayır
-  const photoGroups: Photo[][] = [];
-  for (let i = 0; i < organizedPhotos.length; i += 3) {
-    photoGroups.push(organizedPhotos.slice(i, i + 3));
-  }
+  const currentPhoto = photos[currentIndex];
 
   return (
     <>
@@ -169,90 +118,67 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
           transition: 'opacity 1.2s ease',
         }}
       >
-        {photoGroups.map((group, groupIndex) => {
-          const groupIsPortrait = isPortrait(group[0]);
-
-          return (
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-8 md:gap-10 lg:gap-12">
+          {photos.map((photo, index) => (
             <div
-              key={groupIndex}
-              className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 lg:gap-10 mb-10 md:mb-12"
+              key={photo.id}
+              ref={(el) => {
+                if (el) photoRefs.current.set(photo.id, el);
+              }}
+              data-photo-id={photo.id}
+              onClick={() => openLightbox(index)}
+              className={`block mb-12 md:mb-14 lg:mb-16 break-inside-avoid cursor-pointer group transition-all duration-500 ${
+                highlightedPhoto === photo.id ? 'ring-4 ring-neutral-400 ring-offset-4 rounded-sm' : ''
+              }`}
             >
-              {group.map((photo) => {
-                const photoIndex = organizedPhotos.findIndex(p => p.id === photo.id);
-                const photoIsPortrait = isPortrait(photo);
-
-                return (
+              {/* Realistic frame - light from top-left */}
+              <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
+                {/* Frame border - black */}
+                <div
+                  className="border-[8px] border-black"
+                  style={{
+                    boxShadow: '4px 4px 12px rgba(0,0,0,0.35), 2px 2px 6px rgba(0,0,0,0.2)'
+                  }}
+                >
+                  {/* White mat with inner shadow from top-left light */}
                   <div
-                    key={photo.id}
-                    ref={(el) => {
-                      if (el) photoRefs.current.set(photo.id, el);
+                    className="bg-white p-5 md:p-6 lg:p-8"
+                    style={{
+                      boxShadow: 'inset 15px 15px 35px rgba(0,0,0,0.18), inset 5px 5px 15px rgba(0,0,0,0.12)'
                     }}
-                    data-photo-id={photo.id}
-                    onClick={() => openLightbox(photoIndex)}
-                    className={`cursor-pointer group transition-all duration-500 flex justify-center ${
-                      highlightedPhoto === photo.id ? 'ring-4 ring-neutral-400 ring-offset-4 rounded-sm' : ''
-                    }`}
                   >
-                    {/* Realistic frame - light from top-left */}
-                    <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
-                      {/* Frame border - black */}
+                    {/* V-groove - realistic bevel with depth */}
+                    <div
+                      style={{
+                        padding: '3px',
+                        background: 'linear-gradient(145deg, #909090 0%, #b0b0b0 30%, #d0d0d0 70%, #e8e8e8 100%)',
+                        boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.4), inset -1px -1px 1px rgba(255,255,255,0.6)'
+                      }}
+                    >
+                      {/* Inner recessed area */}
                       <div
-                        className="border-[8px] border-black"
                         style={{
-                          boxShadow: '4px 4px 12px rgba(0,0,0,0.35), 2px 2px 6px rgba(0,0,0,0.2)'
+                          padding: '8px',
+                          background: '#e8e8e8',
+                          boxShadow: 'inset 2px 2px 6px rgba(0,0,0,0.15), inset 1px 1px 3px rgba(0,0,0,0.1)'
                         }}
                       >
-                        {/* White mat with inner shadow from top-left light */}
-                        <div
-                          className="bg-white"
-                          style={{
-                            padding: photoIsPortrait ? '24px 20px' : '20px 24px',
-                            boxShadow: 'inset 15px 15px 35px rgba(0,0,0,0.18), inset 5px 5px 15px rgba(0,0,0,0.12)'
-                          }}
-                        >
-                          {/* V-groove - realistic bevel with depth */}
-                          <div
-                            style={{
-                              padding: '3px',
-                              background: 'linear-gradient(145deg, #909090 0%, #b0b0b0 30%, #d0d0d0 70%, #e8e8e8 100%)',
-                              boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.4), inset -1px -1px 1px rgba(255,255,255,0.6)'
-                            }}
-                          >
-                            {/* Inner recessed area */}
-                            <div
-                              style={{
-                                padding: '8px',
-                                background: '#e8e8e8',
-                                boxShadow: 'inset 2px 2px 6px rgba(0,0,0,0.15), inset 1px 1px 3px rgba(0,0,0,0.1)'
-                              }}
-                            >
-                              {/* Fixed size container for consistent layout */}
-                              <div
-                                className="relative overflow-hidden"
-                                style={{
-                                  width: photoIsPortrait ? '200px' : '280px',
-                                  height: photoIsPortrait ? '280px' : '200px',
-                                }}
-                              >
-                                <Image
-                                  src={photo.url}
-                                  alt={photo.title || 'Photo'}
-                                  fill
-                                  quality={90}
-                                  className="object-cover"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                        <Image
+                          src={photo.url}
+                          alt={photo.title || 'Photo'}
+                          width={800}
+                          height={600}
+                          quality={90}
+                          className="w-full h-auto block"
+                        />
                       </div>
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              </div>
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
 
       {/* Lightbox - White wall background */}
