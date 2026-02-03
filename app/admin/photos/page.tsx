@@ -288,7 +288,8 @@ export default function AdminPhotosPage() {
     if (confirm(`${selectedPhotos.size} fotoğrafı silmek istediğinize emin misiniz?`)) {
       setIsDeleting(true);
       try {
-        for (const id of selectedPhotos) {
+        const idsToDelete = Array.from(selectedPhotos);
+        for (const id of idsToDelete) {
           await deletePhoto(id);
         }
         setSelectedPhotos(new Set());

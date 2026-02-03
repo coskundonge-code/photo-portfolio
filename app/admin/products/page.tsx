@@ -136,7 +136,8 @@ export default function ProductsPage() {
       setIsDeleting(true);
       try {
         let successCount = 0;
-        for (const id of selectedProducts) {
+        const idsToDelete = Array.from(selectedProducts);
+        for (const id of idsToDelete) {
           const success = await deleteProduct(id);
           if (success) successCount++;
         }
