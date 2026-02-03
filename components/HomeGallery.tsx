@@ -131,10 +131,10 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                 highlightedPhoto === photo.id ? 'ring-4 ring-neutral-400 ring-offset-4 rounded-sm' : ''
               }`}
             >
-              {/* Realistic frame - light from top-left, scaled down 10% */}
+              {/* Realistic frame - light from top-left, scaled down 15% */}
               <div
                 className="relative transition-transform duration-300 group-hover:-translate-y-1"
-                style={{ transform: 'scale(0.90)' }}
+                style={{ transform: 'scale(0.85)' }}
               >
                 {/* Frame border - black */}
                 <div
