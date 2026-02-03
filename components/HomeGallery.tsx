@@ -133,12 +133,11 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
             >
               {/* Realistic frame - light from top-left */}
               <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
-                {/* Frame border - silver/gray like reference image */}
+                {/* Frame border - black */}
                 <div
+                  className="border-[8px] border-black"
                   style={{
-                    border: '8px solid',
-                    borderColor: '#a8a8a8 #888888 #888888 #a8a8a8',
-                    boxShadow: '4px 4px 12px rgba(0,0,0,0.25), 2px 2px 6px rgba(0,0,0,0.15)'
+                    boxShadow: '4px 4px 12px rgba(0,0,0,0.35), 2px 2px 6px rgba(0,0,0,0.2)'
                   }}
                 >
                   {/* White mat with subtle inner shadow */}
@@ -227,12 +226,11 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               transition: 'transform 0.4s ease',
             }}
           >
-            {/* Frame border - silver/gray like reference image */}
+            {/* Frame border - black */}
             <div
+              className="border-[10px] border-black"
               style={{
-                border: '10px solid',
-                borderColor: '#a8a8a8 #888888 #888888 #a8a8a8',
-                boxShadow: '6px 6px 20px rgba(0,0,0,0.25), 3px 3px 10px rgba(0,0,0,0.15)'
+                boxShadow: '6px 6px 20px rgba(0,0,0,0.35), 3px 3px 10px rgba(0,0,0,0.2)'
               }}
             >
               {/* White mat with subtle inner shadow */}
