@@ -147,20 +147,20 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                       boxShadow: 'inset 2px 2px 8px rgba(0,0,0,0.08)'
                     }}
                   >
-                    {/* V-groove / bevel cut line - subtle gray tones */}
+                    {/* V-groove - realistic bevel with depth */}
                     <div
                       style={{
-                        borderTop: '2px solid #999',
-                        borderLeft: '2px solid #999',
-                        borderBottom: '2px solid #d0d0d0',
-                        borderRight: '2px solid #d0d0d0',
+                        padding: '3px',
+                        background: 'linear-gradient(145deg, #909090 0%, #b0b0b0 30%, #d0d0d0 70%, #e8e8e8 100%)',
+                        boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.4), inset -1px -1px 1px rgba(255,255,255,0.6)'
                       }}
                     >
-                      {/* Inner gray mat area for depth */}
+                      {/* Inner recessed area */}
                       <div
                         style={{
-                          padding: '12px',
-                          background: 'linear-gradient(135deg, #e8e8e8 0%, #dcdcdc 100%)'
+                          padding: '8px',
+                          background: '#e8e8e8',
+                          boxShadow: 'inset 2px 2px 6px rgba(0,0,0,0.15), inset 1px 1px 3px rgba(0,0,0,0.1)'
                         }}
                       >
                         <Image
@@ -240,20 +240,20 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                   boxShadow: 'inset 2px 2px 10px rgba(0,0,0,0.08)'
                 }}
               >
-                {/* V-groove / bevel cut line - subtle gray tones */}
+                {/* V-groove - realistic bevel with depth */}
                 <div
                   style={{
-                    borderTop: '3px solid #999',
-                    borderLeft: '3px solid #999',
-                    borderBottom: '3px solid #d0d0d0',
-                    borderRight: '3px solid #d0d0d0',
+                    padding: '4px',
+                    background: 'linear-gradient(145deg, #909090 0%, #b0b0b0 30%, #d0d0d0 70%, #e8e8e8 100%)',
+                    boxShadow: 'inset 1px 1px 3px rgba(0,0,0,0.4), inset -1px -1px 2px rgba(255,255,255,0.6)'
                   }}
                 >
-                  {/* Inner gray mat area for depth */}
+                  {/* Inner recessed area */}
                   <div
                     style={{
-                      padding: '16px',
-                      background: 'linear-gradient(135deg, #e8e8e8 0%, #dcdcdc 100%)'
+                      padding: '12px',
+                      background: '#e8e8e8',
+                      boxShadow: 'inset 3px 3px 8px rgba(0,0,0,0.15), inset 1px 1px 4px rgba(0,0,0,0.1)'
                     }}
                   >
                     <Image
