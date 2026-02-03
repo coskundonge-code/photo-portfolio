@@ -133,35 +133,35 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
             >
               {/* Realistic frame - light from top-left */}
               <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
-                {/* Frame border + realistic shadow (sharp right, soft bottom) */}
+                {/* Frame border - silver/gray like reference image */}
                 <div
-                  className="border-[8px] border-black"
                   style={{
-                    boxShadow: '6px 3px 8px rgba(0,0,0,0.5), 3px 6px 16px rgba(0,0,0,0.3)'
+                    border: '8px solid',
+                    borderColor: '#a8a8a8 #888888 #888888 #a8a8a8',
+                    boxShadow: '4px 4px 12px rgba(0,0,0,0.25), 2px 2px 6px rgba(0,0,0,0.15)'
                   }}
                 >
-                  {/* White mat with inner shadow from top-left light */}
+                  {/* White mat with subtle inner shadow */}
                   <div
                     className="bg-white p-5 md:p-6 lg:p-8"
                     style={{
-                      boxShadow: 'inset 4px 4px 12px rgba(0,0,0,0.12), inset 2px 2px 6px rgba(0,0,0,0.08)'
+                      boxShadow: 'inset 2px 2px 8px rgba(0,0,0,0.08)'
                     }}
                   >
-                    {/* V-groove / bevel cut line - darker on top-left, lighter on bottom-right */}
+                    {/* V-groove / bevel cut line - subtle gray tones */}
                     <div
                       style={{
-                        borderTop: '2px solid #888',
-                        borderLeft: '2px solid #888',
-                        borderBottom: '2px solid #ccc',
-                        borderRight: '2px solid #ccc',
-                        boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.15)'
+                        borderTop: '2px solid #999',
+                        borderLeft: '2px solid #999',
+                        borderBottom: '2px solid #d0d0d0',
+                        borderRight: '2px solid #d0d0d0',
                       }}
                     >
                       {/* Inner gray mat area for depth */}
                       <div
                         style={{
                           padding: '12px',
-                          background: 'linear-gradient(135deg, #e8e8e8 0%, #d8d8d8 100%)'
+                          background: 'linear-gradient(135deg, #e8e8e8 0%, #dcdcdc 100%)'
                         }}
                       >
                         <Image
@@ -227,35 +227,35 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               transition: 'transform 0.4s ease',
             }}
           >
-            {/* Frame border + realistic shadow (sharp right, soft bottom) */}
+            {/* Frame border - silver/gray like reference image */}
             <div
-              className="border-[10px] border-black"
               style={{
-                boxShadow: '8px 4px 12px rgba(0,0,0,0.5), 4px 8px 24px rgba(0,0,0,0.3)'
+                border: '10px solid',
+                borderColor: '#a8a8a8 #888888 #888888 #a8a8a8',
+                boxShadow: '6px 6px 20px rgba(0,0,0,0.25), 3px 3px 10px rgba(0,0,0,0.15)'
               }}
             >
-              {/* White mat with inner shadow from top-left light */}
+              {/* White mat with subtle inner shadow */}
               <div
                 className="bg-white p-10 md:p-14"
                 style={{
-                  boxShadow: 'inset 5px 5px 15px rgba(0,0,0,0.12), inset 2px 2px 8px rgba(0,0,0,0.08)'
+                  boxShadow: 'inset 2px 2px 10px rgba(0,0,0,0.08)'
                 }}
               >
-                {/* V-groove / bevel cut line - darker on top-left, lighter on bottom-right */}
+                {/* V-groove / bevel cut line - subtle gray tones */}
                 <div
                   style={{
-                    borderTop: '3px solid #888',
-                    borderLeft: '3px solid #888',
-                    borderBottom: '3px solid #ccc',
-                    borderRight: '3px solid #ccc',
-                    boxShadow: 'inset 1px 1px 3px rgba(0,0,0,0.15)'
+                    borderTop: '3px solid #999',
+                    borderLeft: '3px solid #999',
+                    borderBottom: '3px solid #d0d0d0',
+                    borderRight: '3px solid #d0d0d0',
                   }}
                 >
                   {/* Inner gray mat area for depth */}
                   <div
                     style={{
                       padding: '16px',
-                      background: 'linear-gradient(135deg, #e8e8e8 0%, #d8d8d8 100%)'
+                      background: 'linear-gradient(135deg, #e8e8e8 0%, #dcdcdc 100%)'
                     }}
                   >
                     <Image
