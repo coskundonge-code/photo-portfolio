@@ -153,8 +153,11 @@ function WorkContent() {
                   onClick={() => openLightbox(index)}
                   className="block mb-12 md:mb-14 lg:mb-16 break-inside-avoid cursor-pointer group"
                 >
-                  {/* Realistic frame - same as home page */}
-                  <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
+                  {/* Realistic frame - same as home page, scaled down 5% */}
+                  <div
+                    className="relative transition-transform duration-300 group-hover:-translate-y-1"
+                    style={{ transform: 'scale(0.95)' }}
+                  >
                     {/* Frame border - black */}
                     <div
                       className="border-[8px] border-black"
