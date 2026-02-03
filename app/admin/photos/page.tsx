@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Loader2, Plus, Edit2, Trash2, X, Upload, ImageIcon, Star, ShoppingBag, CheckSquare, Square } from 'lucide-react';
-import { getPhotos, getProjects, createPhoto, updatePhoto, deletePhoto, getAllProducts, createProduct, createProductSize } from '@/lib/supabase';
+import { getPhotos, getProjects, createPhoto, updatePhoto, deletePhoto, getAllProducts, createProduct, createProductSize, updateProduct } from '@/lib/supabase';
 import { smartUploadToCloudinary } from '@/lib/cloudinary';
 import { Photo, Project, Product } from '@/lib/types';
 
@@ -31,7 +31,14 @@ export default function AdminPhotosPage() {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Multi-upload state
+  const [isMultiUploadOpen, setIsMultiUploadOpen] = useState(false);
+  const [multiUploadFiles, setMultiUploadFiles] = useState<File[]>([]);
+  const [multiUploadProgress, setMultiUploadProgress] = useState<{[key: string]: number}>({});
+  const [isMultiUploading, setIsMultiUploading] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const multiFileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -211,6 +218,12 @@ export default function AdminPhotosPage() {
 
     if (editingPhoto) {
       await updatePhoto(editingPhoto.id, photoData);
+
+      // Eğer bu fotoğrafa bağlı bir ürün varsa, ürün başlığını da güncelle
+      const linkedProduct = getProductForPhoto(editingPhoto.id);
+      if (linkedProduct && formData.title) {
+        await updateProduct(linkedProduct.id, { title: formData.title });
+      }
     } else {
       // Yeni fotoğraf oluştur
       const newPhoto = await createPhoto(photoData);
@@ -304,6 +317,104 @@ export default function AdminPhotosPage() {
     }
   };
 
+  // Multi-upload functions
+  const handleMultiFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const fileArray = Array.from(files);
+    setMultiUploadFiles(fileArray);
+    setIsMultiUploadOpen(true);
+
+    // Reset file input
+    if (multiFileInputRef.current) {
+      multiFileInputRef.current.value = '';
+    }
+  };
+
+  const handleMultiUpload = async () => {
+    if (multiUploadFiles.length === 0) return;
+
+    setIsMultiUploading(true);
+    const initialProgress: {[key: string]: number} = {};
+    multiUploadFiles.forEach((file, index) => {
+      initialProgress[`file_${index}`] = 0;
+    });
+    setMultiUploadProgress(initialProgress);
+
+    for (let i = 0; i < multiUploadFiles.length; i++) {
+      const file = multiUploadFiles[i];
+      const fileKey = `file_${i}`;
+
+      try {
+        // Get image dimensions
+        const img = document.createElement('img');
+        const objectUrl = URL.createObjectURL(file);
+
+        await new Promise<void>((resolve, reject) => {
+          img.onload = async () => {
+            const width = img.width;
+            const height = img.height;
+            const orientation = height > width ? 'portrait' : 'landscape';
+            URL.revokeObjectURL(objectUrl);
+
+            // Upload to Cloudinary
+            const uploadedUrl = await smartUploadToCloudinary(file, (progress) => {
+              setMultiUploadProgress(prev => ({
+                ...prev,
+                [fileKey]: Math.round(progress.percent)
+              }));
+            });
+
+            if (uploadedUrl) {
+              // Create photo in database (no title, just the image)
+              await createPhoto({
+                title: '',
+                url: uploadedUrl,
+                project_id: null,
+                theme: null,
+                is_featured: false,
+                orientation: orientation,
+              });
+
+              setMultiUploadProgress(prev => ({
+                ...prev,
+                [fileKey]: 100
+              }));
+            }
+            resolve();
+          };
+
+          img.onerror = () => {
+            reject(new Error('Image load failed'));
+          };
+
+          img.src = objectUrl;
+        });
+      } catch (error) {
+        console.error(`Error uploading file ${file.name}:`, error);
+        setMultiUploadProgress(prev => ({
+          ...prev,
+          [fileKey]: -1 // -1 indicates error
+        }));
+      }
+    }
+
+    setIsMultiUploading(false);
+    await loadData();
+  };
+
+  const closeMultiUpload = () => {
+    setIsMultiUploadOpen(false);
+    setMultiUploadFiles([]);
+    setMultiUploadProgress({});
+    setIsMultiUploading(false);
+  };
+
+  const removeFileFromMultiUpload = (index: number) => {
+    setMultiUploadFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -357,11 +468,18 @@ export default function AdminPhotosPage() {
                 <span>Seç</span>
               </button>
               <button
+                onClick={() => multiFileInputRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg"
+              >
+                <Upload className="w-5 h-5" />
+                <span>Çoklu Yükle</span>
+              </button>
+              <button
                 onClick={openCreateModal}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
               >
                 <Plus className="w-5 h-5" />
-                <span>Fotoğraf Yükle</span>
+                <span>Tek Fotoğraf</span>
               </button>
             </>
           )}
@@ -697,8 +815,133 @@ export default function AdminPhotosPage() {
           </div>
         </div>
       )}
+
+      {/* Hidden Multi File Input */}
+      <input
+        ref={multiFileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handleMultiFileSelect}
+        className="hidden"
+      />
+
+      {/* Multi Upload Modal */}
+      {isMultiUploadOpen && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-neutral-800">
+              <h2 className="text-xl font-semibold text-white">
+                Çoklu Fotoğraf Yükle ({multiUploadFiles.length} dosya)
+              </h2>
+              <button
+                onClick={closeMultiUpload}
+                disabled={isMultiUploading}
+                className="text-neutral-400 hover:text-white disabled:opacity-50"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {/* File List */}
+              <div className="space-y-3 mb-6 max-h-[400px] overflow-y-auto">
+                {multiUploadFiles.map((file, index) => {
+                  const fileKey = `file_${index}`;
+                  const progress = multiUploadProgress[fileKey] || 0;
+                  const isError = progress === -1;
+                  const isComplete = progress === 100;
+
+                  return (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-4 p-3 rounded-lg ${
+                        isError ? 'bg-red-900/30 border border-red-700' :
+                        isComplete ? 'bg-green-900/30 border border-green-700' :
+                        'bg-neutral-800 border border-neutral-700'
+                      }`}
+                    >
+                      <div className="w-12 h-12 rounded overflow-hidden bg-neutral-700 flex-shrink-0">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={file.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white truncate">{file.name}</p>
+                        <p className="text-xs text-neutral-500">
+                          {(file.size / (1024 * 1024)).toFixed(1)} MB
+                        </p>
+                        {isMultiUploading && !isComplete && !isError && (
+                          <div className="w-full bg-neutral-700 rounded-full h-1.5 mt-2">
+                            <div
+                              className="bg-blue-500 h-1.5 rounded-full transition-all"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                        )}
+                        {isError && (
+                          <p className="text-xs text-red-400 mt-1">Yükleme başarısız</p>
+                        )}
+                        {isComplete && (
+                          <p className="text-xs text-green-400 mt-1">Yüklendi ✓</p>
+                        )}
+                      </div>
+                      {!isMultiUploading && (
+                        <button
+                          onClick={() => removeFileFromMultiUpload(index)}
+                          className="p-1 text-neutral-500 hover:text-red-400"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      )}
+                      {isMultiUploading && !isComplete && !isError && (
+                        <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Info Text */}
+              <p className="text-sm text-neutral-400 mb-6">
+                Fotoğraflar yüklendikten sonra her birinin başlık, proje ve tema bilgilerini düzenleyebilirsiniz.
+              </p>
+
+              {/* Buttons */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-neutral-800">
+                <button
+                  onClick={closeMultiUpload}
+                  disabled={isMultiUploading}
+                  className="px-6 py-2 text-neutral-400 hover:text-white disabled:opacity-50"
+                >
+                  {Object.values(multiUploadProgress).some(p => p === 100) ? 'Kapat' : 'İptal'}
+                </button>
+                {!Object.values(multiUploadProgress).every(p => p === 100 || p === -1) && (
+                  <button
+                    onClick={handleMultiUpload}
+                    disabled={isMultiUploading || multiUploadFiles.length === 0}
+                    className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:bg-neutral-600"
+                  >
+                    {isMultiUploading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Yükleniyor...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-5 h-5" />
+                        <span>Tümünü Yükle</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-// v2
