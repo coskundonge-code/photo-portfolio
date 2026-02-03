@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import HomeGallery from '@/components/HomeGallery';
@@ -21,7 +22,9 @@ export default async function HomePage() {
       <Navigation projects={projects} settings={settings} />
 
       <section className="pt-20 lg:pt-24">
-        <HomeGallery photos={photos} projects={projects} />
+        <Suspense fallback={<div className="min-h-screen" />}>
+          <HomeGallery photos={photos} projects={projects} />
+        </Suspense>
       </section>
 
       <Footer settings={settings} />
