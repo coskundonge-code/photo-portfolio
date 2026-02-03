@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Plus, Trash2, Edit2, Loader2, Save, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, Loader2, Save, X, CheckSquare, Square } from 'lucide-react';
 import { getPhotos, getAllProducts, createProduct, updateProduct, deleteProduct } from '@/lib/supabase';
 import { Photo, Product } from '@/lib/types';
 import toast from 'react-hot-toast';
@@ -13,6 +13,9 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [selectedPhotoId, setSelectedPhotoId] = useState('');
   const [title, setTitle] = useState('');
@@ -100,6 +103,56 @@ export default function ProductsPage() {
     }
   };
 
+  // Selection functions
+  const toggleProductSelection = (id: string) => {
+    setSelectedProducts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedProducts.size === products.length) {
+      setSelectedProducts(new Set());
+    } else {
+      setSelectedProducts(new Set(products.map(p => p.id)));
+    }
+  };
+
+  const cancelSelection = () => {
+    setSelectedProducts(new Set());
+    setIsSelectionMode(false);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedProducts.size === 0) return;
+
+    if (confirm(`${selectedProducts.size} ürünü silmek istediğinize emin misiniz?`)) {
+      setIsDeleting(true);
+      try {
+        let successCount = 0;
+        for (const id of selectedProducts) {
+          const success = await deleteProduct(id);
+          if (success) successCount++;
+        }
+        toast.success(`${successCount} ürün silindi!`);
+        setSelectedProducts(new Set());
+        setIsSelectionMode(false);
+        await loadData();
+      } catch (error) {
+        console.error('Bulk delete error:', error);
+        toast.error('Silme işlemi sırasında bir hata oluştu.');
+      } finally {
+        setIsDeleting(false);
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center min-h-screen">
@@ -115,10 +168,49 @@ export default function ProductsPage() {
           <h1 className="text-3xl font-display text-white mb-2">Ürünler</h1>
           <p className="text-neutral-400">Satışa sunulan ürünleri yönetin</p>
         </div>
-        <button onClick={() => openModal()} className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg hover:bg-neutral-200 transition-colors">
-          <Plus className="w-5 h-5" />
-          <span>Yeni Ürün</span>
-        </button>
+        <div className="flex items-center gap-3">
+          {isSelectionMode ? (
+            <>
+              <span className="text-neutral-400 text-sm">{selectedProducts.size} seçili</span>
+              <button
+                onClick={toggleSelectAll}
+                className="flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors"
+              >
+                {selectedProducts.size === products.length ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
+                <span>{selectedProducts.size === products.length ? 'Seçimi Kaldır' : 'Tümünü Seç'}</span>
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={selectedProducts.size === 0 || isDeleting}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isDeleting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                <span>Sil ({selectedProducts.size})</span>
+              </button>
+              <button
+                onClick={cancelSelection}
+                className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+                <span>İptal</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setIsSelectionMode(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors"
+              >
+                <CheckSquare className="w-5 h-5" />
+                <span>Seç</span>
+              </button>
+              <button onClick={() => openModal()} className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg hover:bg-neutral-200 transition-colors">
+                <Plus className="w-5 h-5" />
+                <span>Yeni Ürün</span>
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {products.length === 0 ? (
@@ -129,21 +221,45 @@ export default function ProductsPage() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {products.map((product) => (
-            <div key={product.id} className="admin-card group">
+            <div
+              key={product.id}
+              className={`admin-card group cursor-pointer transition-all ${
+                isSelectionMode && selectedProducts.has(product.id)
+                  ? 'ring-2 ring-blue-500'
+                  : ''
+              }`}
+              onClick={isSelectionMode ? () => toggleProductSelection(product.id) : undefined}
+            >
               <div className="relative aspect-square mb-4 overflow-hidden rounded-lg bg-neutral-800">
                 {product.photos?.url ? (
                   <Image src={product.photos.url} alt={product.title} fill className="object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-neutral-600">No Image</div>
                 )}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <button onClick={() => openModal(product)} className="p-2 bg-white text-black rounded-lg hover:bg-neutral-200">
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => handleDelete(product.id)} className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                {isSelectionMode ? (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
+                      selectedProducts.has(product.id)
+                        ? 'bg-blue-500 border-blue-500'
+                        : 'border-white bg-black/30'
+                    }`}>
+                      {selectedProducts.has(product.id) && (
+                        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <button onClick={() => openModal(product)} className="p-2 bg-white text-black rounded-lg hover:bg-neutral-200">
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(product.id)} className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
               <h3 className="text-white font-medium truncate">{product.title}</h3>
               <p className="text-neutral-400 text-sm">₺{product.base_price}</p>

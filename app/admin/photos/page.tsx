@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Loader2, Plus, Edit2, Trash2, X, Upload, ImageIcon, Star, ShoppingBag } from 'lucide-react';
+import { Loader2, Plus, Edit2, Trash2, X, Upload, ImageIcon, Star, ShoppingBag, CheckSquare, Square } from 'lucide-react';
 import { getPhotos, getProjects, createPhoto, updatePhoto, deletePhoto, getAllProducts, createProduct, createProductSize } from '@/lib/supabase';
 import { smartUploadToCloudinary } from '@/lib/cloudinary';
 import { Photo, Project, Product } from '@/lib/types';
@@ -27,6 +27,9 @@ export default function AdminPhotosPage() {
   const [editingPhoto, setEditingPhoto] = useState<Photo | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -253,6 +256,53 @@ export default function AdminPhotosPage() {
     }
   };
 
+  // Selection functions
+  const togglePhotoSelection = (id: string) => {
+    setSelectedPhotos(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedPhotos.size === photos.length) {
+      setSelectedPhotos(new Set());
+    } else {
+      setSelectedPhotos(new Set(photos.map(p => p.id)));
+    }
+  };
+
+  const cancelSelection = () => {
+    setSelectedPhotos(new Set());
+    setIsSelectionMode(false);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedPhotos.size === 0) return;
+
+    if (confirm(`${selectedPhotos.size} fotoğrafı silmek istediğinize emin misiniz?`)) {
+      setIsDeleting(true);
+      try {
+        for (const id of selectedPhotos) {
+          await deletePhoto(id);
+        }
+        setSelectedPhotos(new Set());
+        setIsSelectionMode(false);
+        await loadData();
+      } catch (error) {
+        console.error('Bulk delete error:', error);
+        alert('Silme işlemi sırasında bir hata oluştu.');
+      } finally {
+        setIsDeleting(false);
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -269,13 +319,52 @@ export default function AdminPhotosPage() {
           <h1 className="text-2xl font-semibold text-white">Fotoğraflar</h1>
           <p className="text-neutral-400 mt-1">{photos.length} fotoğraf</p>
         </div>
-        <button
-          onClick={openCreateModal}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Fotoğraf Yükle</span>
-        </button>
+        <div className="flex items-center gap-3">
+          {isSelectionMode ? (
+            <>
+              <span className="text-neutral-400 text-sm">{selectedPhotos.size} seçili</span>
+              <button
+                onClick={toggleSelectAll}
+                className="flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg"
+              >
+                {selectedPhotos.size === photos.length ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
+                <span>{selectedPhotos.size === photos.length ? 'Seçimi Kaldır' : 'Tümünü Seç'}</span>
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={selectedPhotos.size === 0 || isDeleting}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                <span>Sil ({selectedPhotos.size})</span>
+              </button>
+              <button
+                onClick={cancelSelection}
+                className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg"
+              >
+                <X className="w-5 h-5" />
+                <span>İptal</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setIsSelectionMode(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg"
+              >
+                <CheckSquare className="w-5 h-5" />
+                <span>Seç</span>
+              </button>
+              <button
+                onClick={openCreateModal}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Fotoğraf Yükle</span>
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Fotoğraf Grid */}
@@ -290,24 +379,48 @@ export default function AdminPhotosPage() {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {photos.map((photo) => (
-            <div key={photo.id} className="relative group bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden">
+            <div
+              key={photo.id}
+              className={`relative group bg-neutral-900 border rounded-lg overflow-hidden cursor-pointer transition-all ${
+                isSelectionMode && selectedPhotos.has(photo.id)
+                  ? 'border-blue-500 ring-2 ring-blue-500/50'
+                  : 'border-neutral-800'
+              }`}
+              onClick={isSelectionMode ? () => togglePhotoSelection(photo.id) : undefined}
+            >
               <div className="aspect-square relative">
                 <Image src={photo.url} alt={photo.title || ''} fill className="object-cover" />
 
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <button
-                    onClick={() => openEditModal(photo)}
-                    className="p-2 bg-white/20 hover:bg-white/30 rounded-full"
-                  >
-                    <Edit2 className="w-5 h-5 text-white" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(photo.id)}
-                    className="p-2 bg-white/20 hover:bg-red-500/50 rounded-full"
-                  >
-                    <Trash2 className="w-5 h-5 text-white" />
-                  </button>
-                </div>
+                {isSelectionMode ? (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
+                      selectedPhotos.has(photo.id)
+                        ? 'bg-blue-500 border-blue-500'
+                        : 'border-white bg-black/30'
+                    }`}>
+                      {selectedPhotos.has(photo.id) && (
+                        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => openEditModal(photo)}
+                      className="p-2 bg-white/20 hover:bg-white/30 rounded-full"
+                    >
+                      <Edit2 className="w-5 h-5 text-white" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(photo.id)}
+                      className="p-2 bg-white/20 hover:bg-red-500/50 rounded-full"
+                    >
+                      <Trash2 className="w-5 h-5 text-white" />
+                    </button>
+                  </div>
+                )}
 
                 {/* Featured star */}
                 {photo.is_featured && (
@@ -317,13 +430,13 @@ export default function AdminPhotosPage() {
                 )}
 
                 {/* Shop indicator */}
-                {isPhotoInShop(photo.id) && (
+                {!isSelectionMode && isPhotoInShop(photo.id) && (
                   <div className="absolute top-2 right-2 p-1.5 bg-green-500 rounded-full" title="Mağazada">
                     <ShoppingBag className="w-3.5 h-3.5 text-white" />
                   </div>
                 )}
 
-                {(photo as any).theme && (
+                {!isSelectionMode && (photo as any).theme && (
                   <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 rounded text-xs text-white">
                     {themeOptions.find(t => t.id === (photo as any).theme)?.label}
                   </div>
