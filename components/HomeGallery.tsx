@@ -140,11 +140,11 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                     boxShadow: '4px 4px 12px rgba(0,0,0,0.35), 2px 2px 6px rgba(0,0,0,0.2)'
                   }}
                 >
-                  {/* White mat with subtle inner shadow */}
+                  {/* White mat with inner shadow from top-left light */}
                   <div
                     className="bg-white p-5 md:p-6 lg:p-8"
                     style={{
-                      boxShadow: 'inset 2px 2px 8px rgba(0,0,0,0.08)'
+                      boxShadow: 'inset 8px 8px 20px rgba(0,0,0,0.1), inset 3px 3px 8px rgba(0,0,0,0.06)'
                     }}
                   >
                     {/* V-groove - realistic bevel with depth */}
@@ -233,11 +233,11 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                 boxShadow: '6px 6px 20px rgba(0,0,0,0.35), 3px 3px 10px rgba(0,0,0,0.2)'
               }}
             >
-              {/* White mat with subtle inner shadow */}
+              {/* White mat with inner shadow from top-left light */}
               <div
                 className="bg-white p-10 md:p-14"
                 style={{
-                  boxShadow: 'inset 2px 2px 10px rgba(0,0,0,0.08)'
+                  boxShadow: 'inset 12px 12px 30px rgba(0,0,0,0.1), inset 5px 5px 12px rgba(0,0,0,0.06)'
                 }}
               >
                 {/* V-groove - realistic bevel with depth */}

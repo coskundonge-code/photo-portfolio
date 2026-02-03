@@ -163,11 +163,11 @@ function WorkContent() {
                         boxShadow: '4px 4px 12px rgba(0,0,0,0.35), 2px 2px 6px rgba(0,0,0,0.2)'
                       }}
                     >
-                      {/* White mat with subtle inner shadow */}
+                      {/* White mat with inner shadow from top-left light */}
                       <div
                         className="bg-white p-5 md:p-6 lg:p-8"
                         style={{
-                          boxShadow: 'inset 2px 2px 8px rgba(0,0,0,0.08)'
+                          boxShadow: 'inset 8px 8px 20px rgba(0,0,0,0.1), inset 3px 3px 8px rgba(0,0,0,0.06)'
                         }}
                       >
                         {/* V-groove - realistic bevel with depth */}

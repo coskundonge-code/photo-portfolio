@@ -241,8 +241,8 @@ export default function ProductPage() {
                           ? (isPortrait ? '50px 40px' : '40px 50px') 
                           : '0',
                         position: 'relative',
-                        boxShadow: selectedStyle === 'mat' 
-                          ? 'inset 0 0 30px rgba(0,0,0,0.03)' 
+                        boxShadow: selectedStyle === 'mat'
+                          ? 'inset 10px 10px 25px rgba(0,0,0,0.1), inset 4px 4px 10px rgba(0,0,0,0.06)'
                           : 'none'
                       }}
                     >
