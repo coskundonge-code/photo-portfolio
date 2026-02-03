@@ -242,7 +242,7 @@ export default function ProductPage() {
                           : '0',
                         position: 'relative',
                         boxShadow: selectedStyle === 'mat'
-                          ? 'inset 10px 10px 25px rgba(0,0,0,0.1), inset 4px 4px 10px rgba(0,0,0,0.06)'
+                          ? 'inset 15px 15px 35px rgba(0,0,0,0.18), inset 5px 5px 15px rgba(0,0,0,0.12)'
                           : 'none'
                       }}
                     >

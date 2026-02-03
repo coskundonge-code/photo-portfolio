@@ -167,7 +167,7 @@ function WorkContent() {
                       <div
                         className="bg-white p-5 md:p-6 lg:p-8"
                         style={{
-                          boxShadow: 'inset 8px 8px 20px rgba(0,0,0,0.1), inset 3px 3px 8px rgba(0,0,0,0.06)'
+                          boxShadow: 'inset 15px 15px 35px rgba(0,0,0,0.18), inset 5px 5px 15px rgba(0,0,0,0.12)'
                         }}
                       >
                         {/* V-groove - realistic bevel with depth */}

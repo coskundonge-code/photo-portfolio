@@ -144,7 +144,7 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                   <div
                     className="bg-white p-5 md:p-6 lg:p-8"
                     style={{
-                      boxShadow: 'inset 8px 8px 20px rgba(0,0,0,0.1), inset 3px 3px 8px rgba(0,0,0,0.06)'
+                      boxShadow: 'inset 15px 15px 35px rgba(0,0,0,0.18), inset 5px 5px 15px rgba(0,0,0,0.12)'
                     }}
                   >
                     {/* V-groove - realistic bevel with depth */}
@@ -237,7 +237,7 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
               <div
                 className="bg-white p-10 md:p-14"
                 style={{
-                  boxShadow: 'inset 12px 12px 30px rgba(0,0,0,0.1), inset 5px 5px 12px rgba(0,0,0,0.06)'
+                  boxShadow: 'inset 20px 20px 45px rgba(0,0,0,0.18), inset 8px 8px 20px rgba(0,0,0,0.12)'
                 }}
               >
                 {/* V-groove - realistic bevel with depth */}
