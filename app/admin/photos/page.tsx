@@ -372,7 +372,6 @@ export default function AdminPhotosPage() {
                 title: '',
                 url: uploadedUrl,
                 project_id: undefined,
-                theme: null,
                 is_featured: false,
                 orientation: orientation,
               });
