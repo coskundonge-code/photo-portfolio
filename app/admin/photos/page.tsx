@@ -155,7 +155,6 @@ export default function AdminPhotosPage() {
        setUploadProgress(30);
       const uploadedUrl = await uploadImage(file);
       setUploadProgress(90);
-        });
 
         if (uploadedUrl) {
           setFormData(prev => ({
