@@ -371,7 +371,7 @@ export default function AdminPhotosPage() {
               await createPhoto({
                 title: '',
                 url: uploadedUrl,
-                project_id: null,
+                project_id: undefined,
                 theme: null,
                 is_featured: false,
                 orientation: orientation,
