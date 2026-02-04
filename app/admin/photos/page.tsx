@@ -145,6 +145,39 @@ export default function AdminPhotosPage() {
     setUploadProgress(5);
 
     try {
+    // RAW dosya kontrolü
+      const rawExtensions = ['.raw', '.cr2', '.cr3', '.nef', '.arw', '.dng', '.orf', '.rw2'];
+      const fileExt = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+      const isRawFile = rawExtensions.includes(fileExt);
+
+      if (isRawFile) {
+        // RAW dosyalar için direkt yükle (boyut algılama yapma)
+        setUploadProgress(10);
+        const uploadedUrl = await smartUploadToCloudinary(file, (progress) => {
+          const mappedProgress = 10 + Math.round(progress.percent * 0.8);
+          setUploadProgress(mappedProgress);
+        });
+
+        if (uploadedUrl) {
+          setFormData(prev => ({
+            ...prev,
+            url: uploadedUrl,
+          }));
+          setUploadProgress(100);
+        } else {
+          alert('RAW yükleme başarısız oldu.');
+        }
+
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+
+        setTimeout(() => {
+          setUploading(false);
+          setUploadProgress(0);
+        }, 500);
+        return;
+      }
       // Resim boyutlarını al
       const img = document.createElement('img');
       const objectUrl = URL.createObjectURL(file);
