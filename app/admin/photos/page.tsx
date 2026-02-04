@@ -152,10 +152,9 @@ export default function AdminPhotosPage() {
 
       if (isRawFile) {
         // RAW dosyalar için direkt yükle (boyut algılama yapma)
-        setUploadProgress(10);
-        const uploadedUrl = await smartUploadToCloudinary(file, (progress) => {
-          const mappedProgress = 10 + Math.round(progress.percent * 0.8);
-          setUploadProgress(mappedProgress);
+       setUploadProgress(30);
+      const uploadedUrl = await uploadImage(file);
+      setUploadProgress(90);
         });
 
         if (uploadedUrl) {
