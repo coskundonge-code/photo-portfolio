@@ -86,46 +86,73 @@ export default function AdminPhotosPage() {
     setUploading(true);
     setUploadProgress(10);
 
+    // RAW dosya kontrolü
+    const rawExtensions = ['.raw', '.cr2', '.cr3', '.nef', '.arw', '.dng', '.orf', '.rw2', '.raf', '.pef', '.srw'];
+    const fileExt = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+    const isRawFile = rawExtensions.includes(fileExt);
+
     try {
-      // Resim boyutlarını al
-      const img = document.createElement('img');
-      const objectUrl = URL.createObjectURL(file);
-      
-      img.onload = async () => {
-        const width = img.width;
-        const height = img.height;
-        const orientation = height > width ? 'portrait' : 'landscape';
-        
-        URL.revokeObjectURL(objectUrl);
+      if (isRawFile) {
+        // RAW dosyalar için direkt yükle
         setUploadProgress(30);
-        
-        // Supabase'e yükle
         const uploadedUrl = await uploadImage(file);
         setUploadProgress(90);
-        
+
         if (uploadedUrl) {
-          setFormData(prev => ({ 
-            ...prev, 
+          setFormData(prev => ({
+            ...prev,
             url: uploadedUrl,
-            orientation: orientation,
           }));
           setUploadProgress(100);
         } else {
           alert('Yükleme başarısız oldu. Lütfen tekrar deneyin.');
         }
-        
+
         setTimeout(() => {
           setUploading(false);
           setUploadProgress(0);
         }, 500);
-      };
-      
-      img.onerror = () => {
-        alert('Görsel okunamadı.');
-        setUploading(false);
-      };
-      
-      img.src = objectUrl;
+      } else {
+        // Resim boyutlarını al
+        const img = document.createElement('img');
+        const objectUrl = URL.createObjectURL(file);
+
+        img.onload = async () => {
+          const width = img.width;
+          const height = img.height;
+          const orientation = height > width ? 'portrait' : 'landscape';
+
+          URL.revokeObjectURL(objectUrl);
+          setUploadProgress(30);
+
+          // Supabase'e yükle
+          const uploadedUrl = await uploadImage(file);
+          setUploadProgress(90);
+
+          if (uploadedUrl) {
+            setFormData(prev => ({
+              ...prev,
+              url: uploadedUrl,
+              orientation: orientation,
+            }));
+            setUploadProgress(100);
+          } else {
+            alert('Yükleme başarısız oldu. Lütfen tekrar deneyin.');
+          }
+
+          setTimeout(() => {
+            setUploading(false);
+            setUploadProgress(0);
+          }, 500);
+        };
+
+        img.onerror = () => {
+          alert('Görsel okunamadı.');
+          setUploading(false);
+        };
+
+        img.src = objectUrl;
+      }
     } catch (error) {
       console.error('Upload error:', error);
       alert('Yükleme sırasında bir hata oluştu.');
@@ -300,7 +327,7 @@ export default function AdminPhotosPage() {
                       <>
                         <Upload className="w-10 h-10 text-neutral-600 mx-auto mb-2" />
                         <p className="text-neutral-500">Fotoğraf seçmek için tıklayın</p>
-                        <p className="text-xs text-neutral-600 mt-1">JPG, PNG, WebP</p>
+                        <p className="text-xs text-neutral-600 mt-1">JPG, PNG, WebP, RAW</p>
                       </>
                     )}
                   </div>
@@ -309,7 +336,7 @@ export default function AdminPhotosPage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*,.raw,.cr2,.cr3,.nef,.arw,.dng,.orf,.rw2,.raf,.pef,.srw"
                   onChange={handleFileUpload}
                   className="hidden"
                 />
