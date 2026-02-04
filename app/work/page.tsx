@@ -9,12 +9,14 @@ import Footer from '@/components/Footer';
 import Lightbox from '@/components/Lightbox';
 import { getSettings, getProjects, getPhotos } from '@/lib/supabase';
 import { Settings, Project, Photo } from '@/lib/types';
+import { useLanguage } from '@/lib/language';
 import { Loader2 } from 'lucide-react';
 
 // Ana içerik bileşeni - useSearchParams burada
 function WorkContent() {
   const searchParams = useSearchParams();
   const projectParam = searchParams.get('project');
+  const { t, language } = useLanguage();
 
   const [settings, setSettings] = useState<Settings | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -27,6 +29,13 @@ function WorkContent() {
   const [pageReady, setPageReady] = useState(false);
   const [hoveredPhoto, setHoveredPhoto] = useState<string | null>(null);
   const initialLoadDone = useRef(false);
+
+  // Proje başlığını çevir
+  const getProjectTitle = (title: string) => {
+    const translatedTitle = t(`projects.${title}`);
+    // Eğer çeviri bulunamazsa orijinal başlığı döndür
+    return translatedTitle === `projects.${title}` ? title : translatedTitle;
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -124,7 +133,7 @@ function WorkContent() {
                       : 'text-neutral-500 border-transparent hover:text-black'
                   }`}
                 >
-                  {project.title}
+                  {getProjectTitle(project.title)}
                 </button>
               ))}
               <button
@@ -135,7 +144,7 @@ function WorkContent() {
                     : 'text-neutral-500 border-transparent hover:text-black'
                 }`}
               >
-                Tümü
+                {t('work.all')}
               </button>
             </div>
           </div>
@@ -143,7 +152,7 @@ function WorkContent() {
           {/* Fotoğraf Grid with 3D Frames */}
           {filteredPhotos.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-neutral-500">Bu projede henüz fotoğraf yok.</p>
+              <p className="text-neutral-500">{t('work.noPhotos')}</p>
             </div>
           ) : (
             <div className="columns-1 sm:columns-2 lg:columns-3 gap-8 md:gap-10 lg:gap-12 bg-[#f5f5f5] p-6 -mx-4 lg:-mx-8">

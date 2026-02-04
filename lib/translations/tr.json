@@ -9,6 +9,14 @@
     "myAccount": "Hesabım",
     "myCart": "Sepetim"
   },
+  "work": {
+    "all": "Tümü",
+    "noPhotos": "Bu projede henüz fotoğraf yok."
+  },
+  "projects": {
+    "İnsan ve Hikaye": "İnsan ve Hikaye",
+    "Yeryüzünün Ritmi": "Yeryüzünün Ritmi"
+  },
   "footer": {
     "description": "Sınırlı sayıda üretilen, müze kalitesinde giclée baskılar ve el yapımı çerçeveler ile fotoğraf sanatını evinize taşıyın.",
     "menu": "MENÜ",

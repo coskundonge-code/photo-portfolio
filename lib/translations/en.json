@@ -9,6 +9,14 @@
     "myAccount": "My Account",
     "myCart": "My Cart"
   },
+  "work": {
+    "all": "All",
+    "noPhotos": "No photos in this project yet."
+  },
+  "projects": {
+    "İnsan ve Hikaye": "Human and Story",
+    "Yeryüzünün Ritmi": "Rhythm of the Earth"
+  },
   "footer": {
     "description": "Bring photography art into your home with limited edition, museum-quality giclée prints and handcrafted frames.",
     "menu": "MENU",
@@ -81,7 +89,8 @@
     "defaultText1": "Hello, I am a photography artist. I try to capture the beauty of nature, the soul of cities, and the magic of moments.",
     "defaultText2": "Every photograph is an opportunity for me to tell a story. Using the dance of light and shadow, the harmony of colors, and the power of composition, I aim to create images that form emotional connections.",
     "defaultText3": "My works are printed and framed with museum-quality materials. Each piece is carefully prepared to bring art and meaning to your home.",
-    "linkedinProfile": "LinkedIn Profile"
+    "linkedinProfile": "LinkedIn Profile",
+    "bioText": "Hello, I am a photography artist based in Turkey. I capture the beauty of nature, the soul of cities, and the magic of moments through my lens.\n\nEvery photograph is an opportunity for me to tell a story. Using the dance of light and shadow, the harmony of colors, and the power of composition, I aim to create images that form emotional connections.\n\nMy works are printed and framed with museum-quality materials. Each piece is carefully prepared to bring art and meaning to your home."
   },
   "contact": {
     "title": "Contact",

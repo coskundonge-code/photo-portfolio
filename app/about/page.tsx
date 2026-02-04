@@ -10,7 +10,7 @@ import { Settings, Project } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 
 export default function AboutPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [settings, setSettings] = useState<Settings | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,7 +71,14 @@ export default function AboutPage() {
               </h1>
 
               <div className="prose prose-neutral max-w-none">
-                {settings?.about_text ? (
+                {language === 'en' ? (
+                  <div
+                    className="text-neutral-600 leading-relaxed space-y-6"
+                    dangerouslySetInnerHTML={{
+                      __html: t('about.bioText').replace(/\n/g, '<br/><br/>')
+                    }}
+                  />
+                ) : settings?.about_text ? (
                   <div
                     className="text-neutral-600 leading-relaxed space-y-6"
                     dangerouslySetInnerHTML={{

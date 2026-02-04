@@ -53,6 +53,12 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
 
   const siteName = settings?.site_name || 'COŞKUN DÖNGE';
 
+  // Proje başlığını çevir
+  const getProjectTitle = (title: string) => {
+    const translatedTitle = t(`projects.${title}`);
+    return translatedTitle === `projects.${title}` ? title : translatedTitle;
+  };
+
   return (
     <>
       <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
@@ -111,7 +117,7 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
                           href={`/work?project=${project.id}`}
                           className="block px-4 py-3 text-sm hover:bg-neutral-50 text-neutral-600 hover:text-black"
                         >
-                          {project.title}
+                          {getProjectTitle(project.title)}
                         </Link>
                       ))}
                     </div>
@@ -203,7 +209,7 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
                   className="block text-base pl-4 text-neutral-500"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  {project.title}
+                  {getProjectTitle(project.title)}
                 </Link>
               ))}
               <Link href="/shop" className="block text-lg" onClick={() => setIsMenuOpen(false)}>{t('nav.shop')}</Link>
