@@ -300,7 +300,7 @@ export default function AdminPhotosPage() {
                       <>
                         <Upload className="w-10 h-10 text-neutral-600 mx-auto mb-2" />
                         <p className="text-neutral-500">Fotoğraf seçmek için tıklayın</p>
-                        <p className="text-xs text-neutral-600 mt-1">JPG, PNG, WebP</p>
+                        <p className="text-xs text-neutral-600 mt-1">JPG, PNG, WebP, RAW</p>
                       </>
                     )}
                   </div>
@@ -309,7 +309,7 @@ export default function AdminPhotosPage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*, .raw, .cr2, .cr3, .nef, .arw, .dng"
                   onChange={handleFileUpload}
                   className="hidden"
                 />
