@@ -203,86 +203,89 @@ export default function ProductPage() {
                 </div>
 
                 {/* Çerçeve + Fotoğraf */}
-                <div 
+                <div
                   className="relative transition-all duration-700 ease-out"
                   style={{ transform: `scale(${selectedSize.scale})` }}
                 >
-                  {/* ===== ÇERÇEVE - Ahşap dokulu ===== */}
-                  <div 
+                  {/* ===== ÇERÇEVE - Ana sayfa ile aynı yapı ===== */}
+                  <div
                     style={{
                       background: selectedFrame.texture,
-                      padding: '18px',
-                      position: 'relative',
-                      boxShadow: `
-                        0 30px 60px -20px rgba(0,0,0,0.35),
-                        0 15px 30px -15px rgba(0,0,0,0.25),
-                        inset 0 2px 0 0 rgba(255,255,255,0.15),
-                        inset 0 -2px 0 0 rgba(0,0,0,0.2),
-                        inset 2px 0 0 0 rgba(255,255,255,0.1),
-                        inset -2px 0 0 0 rgba(0,0,0,0.15)
-                      `
+                      padding: '12px',
+                      boxShadow: '6px 6px 20px rgba(0,0,0,0.35), 3px 3px 10px rgba(0,0,0,0.2)'
                     }}
                   >
-                    {/* İç çerçeve çizgisi */}
-                    <div 
-                      style={{
-                        position: 'absolute',
-                        inset: '6px',
-                        border: selectedFrame.id === 'white' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.15)',
-                        pointerEvents: 'none'
-                      }}
-                    />
-
                     {/* ===== PASSEPARTOUT / MAT ===== */}
-                    <div 
-                      style={{ 
+                    <div
+                      style={{
                         background: selectedStyle === 'mat' ? '#ffffff' : 'transparent',
-                        padding: selectedStyle === 'mat' 
-                          ? (isPortrait ? '50px 40px' : '40px 50px') 
+                        padding: selectedStyle === 'mat'
+                          ? (isPortrait ? '50px 40px' : '40px 50px')
                           : '0',
-                        position: 'relative',
-                        boxShadow: selectedStyle === 'mat' 
-                          ? 'inset 0 0 30px rgba(0,0,0,0.03)' 
+                        boxShadow: selectedStyle === 'mat'
+                          ? 'inset 15px 15px 35px rgba(0,0,0,0.18), inset 5px 5px 15px rgba(0,0,0,0.12)'
                           : 'none'
                       }}
                     >
-                      {/* V-Groove */}
-                      {selectedStyle === 'mat' && (
-                        <div 
+                      {/* V-groove - realistic bevel with depth */}
+                      {selectedStyle === 'mat' ? (
+                        <div
                           style={{
-                            position: 'absolute',
-                            top: isPortrait ? '45px' : '35px',
-                            left: isPortrait ? '35px' : '45px',
-                            right: isPortrait ? '35px' : '45px',
-                            bottom: isPortrait ? '45px' : '35px',
-                            boxShadow: `
-                              inset 1px 1px 0 0 rgba(0,0,0,0.06),
-                              inset -1px -1px 0 0 rgba(255,255,255,0.8)
-                            `,
-                            pointerEvents: 'none'
+                            padding: '4px',
+                            background: 'linear-gradient(145deg, #909090 0%, #b0b0b0 30%, #d0d0d0 70%, #e8e8e8 100%)',
+                            boxShadow: 'inset 1px 1px 3px rgba(0,0,0,0.4), inset -1px -1px 2px rgba(255,255,255,0.6)'
                           }}
-                        />
+                        >
+                          {/* Inner recessed area */}
+                          <div
+                            style={{
+                              padding: '10px',
+                              background: '#e8e8e8',
+                              boxShadow: 'inset 3px 3px 8px rgba(0,0,0,0.15), inset 1px 1px 4px rgba(0,0,0,0.1)'
+                            }}
+                          >
+                            {/* ===== FOTOĞRAF ===== */}
+                            <div
+                              style={{
+                                width: `${basePhotoWidth}px`,
+                                height: `${basePhotoHeight}px`,
+                                position: 'relative',
+                                overflow: 'hidden',
+                              }}
+                            >
+                              {product.photos?.url && (
+                                <Image
+                                  src={product.photos.url}
+                                  alt={product.title}
+                                  fill
+                                  className="object-cover"
+                                  priority
+                                />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        /* Full bleed - no V-groove */
+                        <div
+                          style={{
+                            width: `${basePhotoWidth}px`,
+                            height: `${basePhotoHeight}px`,
+                            position: 'relative',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          {product.photos?.url && (
+                            <Image
+                              src={product.photos.url}
+                              alt={product.title}
+                              fill
+                              className="object-cover"
+                              priority
+                            />
+                          )}
+                        </div>
                       )}
-                      
-                      {/* ===== FOTOĞRAF ===== */}
-                      <div 
-                        style={{
-                          width: `${basePhotoWidth}px`,
-                          height: `${basePhotoHeight}px`,
-                          position: 'relative',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        {product.photos?.url && (
-                          <Image
-                            src={product.photos.url}
-                            alt={product.title}
-                            fill
-                            className="object-cover"
-                            priority
-                          />
-                        )}
-                      </div>
                     </div>
                   </div>
 

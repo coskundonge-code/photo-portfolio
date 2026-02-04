@@ -112,58 +112,90 @@ export default function Lightbox(props: LightboxProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 bg-[#f5f5f5] flex items-center justify-center">
       {/* Close Button */}
       <button
         onClick={onClose}
-        className="absolute top-6 right-6 p-2 text-white/70 hover:text-white z-10 transition-colors"
+        className="absolute top-6 right-6 p-2 text-neutral-400 hover:text-neutral-800 z-10 transition-colors"
         aria-label="Kapat"
       >
-        <X className="w-8 h-8" />
+        <X className="w-7 h-7" strokeWidth={1.5} />
       </button>
-
-      {/* Title & Counter */}
-      <div className="absolute top-6 left-6 text-white/70 text-sm tracking-wide">
-        {title && <span>{title}</span>}
-        {isArrayMode && photos && (
-          <span className={title ? 'ml-4' : ''}>
-            {currentIndex + 1} / {photos.length}
-          </span>
-        )}
-      </div>
 
       {/* Previous Button */}
       {hasPrev && (
         <button
           onClick={goToPrev}
-          className="absolute left-6 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white transition-colors"
+          className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 p-3 text-neutral-400 hover:text-neutral-800 transition-colors"
           aria-label="Önceki"
         >
-          <ChevronLeft className="w-10 h-10" />
+          <ChevronLeft className="w-10 h-10" strokeWidth={1.5} />
         </button>
       )}
 
-      {/* Image */}
-      <div className="relative max-w-[90vw] max-h-[90vh]">
-        <Image
-          src={imageUrl}
-          alt={title || 'Photo'}
-          width={1920}
-          height={1080}
-          className="max-w-full max-h-[90vh] object-contain"
-          priority
-        />
+      {/* Framed Image */}
+      <div className="relative z-40 mx-4">
+        {/* Frame border - black */}
+        <div
+          className="border-[10px] border-black"
+          style={{
+            boxShadow: '6px 6px 20px rgba(0,0,0,0.35), 3px 3px 10px rgba(0,0,0,0.2)'
+          }}
+        >
+          {/* White mat with inner shadow from top-left light */}
+          <div
+            className="bg-white p-10 md:p-14"
+            style={{
+              boxShadow: 'inset 20px 20px 45px rgba(0,0,0,0.18), inset 8px 8px 20px rgba(0,0,0,0.12)'
+            }}
+          >
+            {/* V-groove - realistic bevel with depth */}
+            <div
+              style={{
+                padding: '4px',
+                background: 'linear-gradient(145deg, #909090 0%, #b0b0b0 30%, #d0d0d0 70%, #e8e8e8 100%)',
+                boxShadow: 'inset 1px 1px 3px rgba(0,0,0,0.4), inset -1px -1px 2px rgba(255,255,255,0.6)'
+              }}
+            >
+              {/* Inner recessed area */}
+              <div
+                style={{
+                  padding: '12px',
+                  background: '#e8e8e8',
+                  boxShadow: 'inset 3px 3px 8px rgba(0,0,0,0.15), inset 1px 1px 4px rgba(0,0,0,0.1)'
+                }}
+              >
+                <Image
+                  src={imageUrl}
+                  alt={title || 'Photo'}
+                  width={1920}
+                  height={1280}
+                  quality={95}
+                  className="max-w-[85vw] max-h-[70vh] w-auto h-auto object-contain block"
+                  priority
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Next Button */}
       {hasNext && (
         <button
           onClick={goToNext}
-          className="absolute right-6 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white transition-colors"
+          className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 p-3 text-neutral-400 hover:text-neutral-800 transition-colors"
           aria-label="Sonraki"
         >
-          <ChevronRight className="w-10 h-10" />
+          <ChevronRight className="w-10 h-10" strokeWidth={1.5} />
         </button>
+      )}
+
+      {/* Counter */}
+      {isArrayMode && photos && (
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-neutral-400 text-sm tracking-[0.2em] font-light">
+          {currentIndex + 1} / {photos.length}
+        </div>
       )}
 
       {/* Click outside to close */}

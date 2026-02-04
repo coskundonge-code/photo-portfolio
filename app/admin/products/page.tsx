@@ -1,0 +1,466 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
+import { Plus, Trash2, Edit2, Loader2, Save, X, CheckSquare, Square, GripVertical } from 'lucide-react';
+import { getPhotos, getAllProducts, createProduct, updateProduct, deleteProduct, updateProductOrder } from '@/lib/supabase';
+import { Photo, Product } from '@/lib/types';
+import toast from 'react-hot-toast';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// Sortable Product Item Component
+interface SortableProductItemProps {
+  product: Product;
+  isSelectionMode: boolean;
+  isSelected: boolean;
+  onToggleSelection: (id: string) => void;
+  onEdit: (product: Product) => void;
+  onDelete: (id: string) => void;
+}
+
+function SortableProductItem({
+  product,
+  isSelectionMode,
+  isSelected,
+  onToggleSelection,
+  onEdit,
+  onDelete,
+}: SortableProductItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: product.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`admin-card group cursor-pointer transition-all ${
+        isSelectionMode && isSelected
+          ? 'ring-2 ring-blue-500'
+          : ''
+      }`}
+      onClick={isSelectionMode ? () => onToggleSelection(product.id) : undefined}
+    >
+      <div className="relative aspect-square mb-4 overflow-hidden rounded-lg bg-neutral-800">
+        {/* Drag Handle */}
+        {!isSelectionMode && (
+          <div
+            {...attributes}
+            {...listeners}
+            className="absolute top-2 left-2 z-20 p-1.5 bg-black/60 rounded cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <GripVertical className="w-4 h-4 text-white" />
+          </div>
+        )}
+
+        {product.photos?.url ? (
+          <Image src={product.photos.url} alt={product.title} fill className="object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-neutral-600">No Image</div>
+        )}
+        {isSelectionMode ? (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
+              isSelected
+                ? 'bg-blue-500 border-blue-500'
+                : 'border-white bg-black/30'
+            }`}>
+              {isSelected && (
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <button onClick={() => onEdit(product)} className="p-2 bg-white text-black rounded-lg hover:bg-neutral-200">
+              <Edit2 className="w-4 h-4" />
+            </button>
+            <button onClick={() => onDelete(product.id)} className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+      </div>
+      <h3 className="text-white font-medium truncate">{product.title}</h3>
+      <p className="text-neutral-400 text-sm">₺{product.base_price}</p>
+      <p className="text-neutral-500 text-xs mt-1">
+        {product.edition_type === 'limited' ? `Limitli (${product.edition_sold || 0}/${product.edition_total})` : 'Açık Edisyon'}
+      </p>
+    </div>
+  );
+}
+
+export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const [selectedPhotoId, setSelectedPhotoId] = useState('');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [basePrice, setBasePrice] = useState('');
+  const [editionType, setEditionType] = useState<'open' | 'limited'>('open');
+  const [editionTotal, setEditionTotal] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  // Drag-drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    const [productsData, photosData] = await Promise.all([getAllProducts(), getPhotos()]);
+    setProducts(productsData);
+    setPhotos(photosData);
+    setLoading(false);
+  };
+
+  const openModal = (product?: Product) => {
+    if (product) {
+      setEditingProduct(product);
+      setSelectedPhotoId(product.photo_id || '');
+      setTitle(product.title);
+      setDescription(product.description || '');
+      setBasePrice(product.base_price?.toString() || '');
+      setEditionType(product.edition_type === 'limited' ? 'limited' : 'open');
+      setEditionTotal(product.edition_total?.toString() || '');
+    } else {
+      setEditingProduct(null);
+      setSelectedPhotoId('');
+      setTitle('');
+      setDescription('');
+      setBasePrice('');
+      setEditionType('open');
+      setEditionTotal('');
+    }
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingProduct(null);
+  };
+
+  const handleSave = async () => {
+    if (!title || !basePrice) {
+      toast.error('Başlık ve fiyat gerekli!');
+      return;
+    }
+
+    setSaving(true);
+    const productData: Partial<Product> = {
+      title,
+      description,
+      base_price: parseFloat(basePrice),
+      edition_type: editionType,
+      is_available: true,
+    };
+    if (selectedPhotoId) productData.photo_id = selectedPhotoId;
+    if (editionType === 'limited' && editionTotal) productData.edition_total = parseInt(editionTotal);
+
+    const result = editingProduct
+      ? await updateProduct(editingProduct.id, productData)
+      : await createProduct(productData);
+
+    if (result) {
+      toast.success(editingProduct ? 'Ürün güncellendi!' : 'Ürün oluşturuldu!');
+      closeModal();
+      loadData();
+    } else {
+      toast.error('Bir hata oluştu!');
+    }
+    setSaving(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Bu ürünü silmek istediğinize emin misiniz?')) return;
+    const success = await deleteProduct(id);
+    if (success) {
+      toast.success('Ürün silindi!');
+      loadData();
+    }
+  };
+
+  // Selection functions
+  const toggleProductSelection = (id: string) => {
+    setSelectedProducts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedProducts.size === products.length) {
+      setSelectedProducts(new Set());
+    } else {
+      setSelectedProducts(new Set(products.map(p => p.id)));
+    }
+  };
+
+  const cancelSelection = () => {
+    setSelectedProducts(new Set());
+    setIsSelectionMode(false);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedProducts.size === 0) return;
+
+    if (confirm(`${selectedProducts.size} ürünü silmek istediğinize emin misiniz?`)) {
+      setIsDeleting(true);
+      try {
+        let successCount = 0;
+        const idsToDelete = Array.from(selectedProducts);
+        for (const id of idsToDelete) {
+          const success = await deleteProduct(id);
+          if (success) successCount++;
+        }
+        toast.success(`${successCount} ürün silindi!`);
+        setSelectedProducts(new Set());
+        setIsSelectionMode(false);
+        await loadData();
+      } catch (error) {
+        console.error('Bulk delete error:', error);
+        toast.error('Silme işlemi sırasında bir hata oluştu.');
+      } finally {
+        setIsDeleting(false);
+      }
+    }
+  };
+
+  // Drag-drop handler
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = products.findIndex((p) => p.id === active.id);
+      const newIndex = products.findIndex((p) => p.id === over.id);
+
+      const newProducts = arrayMove(products, oldIndex, newIndex);
+      setProducts(newProducts);
+
+      // Update order in database
+      const orderUpdates = newProducts.map((product, index) => ({
+        id: product.id,
+        order_index: index,
+      }));
+
+      await updateProductOrder(orderUpdates);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-white" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-display text-white mb-2">Ürünler</h1>
+          <p className="text-neutral-400">Satışa sunulan ürünleri yönetin</p>
+        </div>
+        <div className="flex items-center gap-3">
+          {isSelectionMode ? (
+            <>
+              <span className="text-neutral-400 text-sm">{selectedProducts.size} seçili</span>
+              <button
+                onClick={toggleSelectAll}
+                className="flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors"
+              >
+                {selectedProducts.size === products.length ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
+                <span>{selectedProducts.size === products.length ? 'Seçimi Kaldır' : 'Tümünü Seç'}</span>
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={selectedProducts.size === 0 || isDeleting}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isDeleting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                <span>Sil ({selectedProducts.size})</span>
+              </button>
+              <button
+                onClick={cancelSelection}
+                className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+                <span>İptal</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setIsSelectionMode(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors"
+              >
+                <CheckSquare className="w-5 h-5" />
+                <span>Seç</span>
+              </button>
+              <button onClick={() => openModal()} className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg hover:bg-neutral-200 transition-colors">
+                <Plus className="w-5 h-5" />
+                <span>Yeni Ürün</span>
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {products.length === 0 ? (
+        <div className="admin-card text-center py-12">
+          <p className="text-neutral-400 mb-4">Henüz ürün eklenmemiş.</p>
+          <button onClick={() => openModal()} className="text-white hover:underline">İlk ürünü ekle →</button>
+        </div>
+      ) : (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={products.map(p => p.id)} strategy={rectSortingStrategy}>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {products.map((product) => (
+                <SortableProductItem
+                  key={product.id}
+                  product={product}
+                  isSelectionMode={isSelectionMode}
+                  isSelected={selectedProducts.has(product.id)}
+                  onToggleSelection={toggleProductSelection}
+                  onEdit={openModal}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      )}
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-neutral-900 rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-neutral-800">
+              <h2 className="text-xl font-display text-white">{editingProduct ? 'Ürünü Düzenle' : 'Yeni Ürün'}</h2>
+              <button onClick={closeModal} className="text-neutral-400 hover:text-white"><X className="w-6 h-6" /></button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm text-neutral-300 mb-2">Fotoğraf</label>
+                <select value={selectedPhotoId} onChange={(e) => setSelectedPhotoId(e.target.value)}
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white rounded-lg focus:outline-none focus:border-neutral-500">
+                  <option value="">Fotoğraf Seç</option>
+                  {photos.map((photo) => (
+                    <option key={photo.id} value={photo.id}>{photo.title || 'İsimsiz'}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm text-neutral-300 mb-2">Ürün Adı *</label>
+                <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ürün adı"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 rounded-lg focus:outline-none focus:border-neutral-500" />
+              </div>
+
+              <div>
+                <label className="block text-sm text-neutral-300 mb-2">Açıklama</label>
+                <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ürün açıklaması" rows={3}
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 rounded-lg focus:outline-none focus:border-neutral-500 resize-none" />
+              </div>
+
+              <div>
+                <label className="block text-sm text-neutral-300 mb-2">Fiyat (₺) *</label>
+                <input type="number" value={basePrice} onChange={(e) => setBasePrice(e.target.value)} placeholder="0" min="0"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 rounded-lg focus:outline-none focus:border-neutral-500" />
+              </div>
+
+              <div>
+                <label className="block text-sm text-neutral-300 mb-2">Edisyon</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" checked={editionType === 'open'} onChange={() => setEditionType('open')} className="w-4 h-4" />
+                    <span className="text-white">Açık</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" checked={editionType === 'limited'} onChange={() => setEditionType('limited')} className="w-4 h-4" />
+                    <span className="text-white">Limitli</span>
+                  </label>
+                </div>
+              </div>
+
+              {editionType === 'limited' && (
+                <div>
+                  <label className="block text-sm text-neutral-300 mb-2">Toplam Adet</label>
+                  <input type="number" value={editionTotal} onChange={(e) => setEditionTotal(e.target.value)} placeholder="10" min="1"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-500 rounded-lg focus:outline-none focus:border-neutral-500" />
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-4 p-6 border-t border-neutral-800">
+              <button onClick={closeModal} className="flex-1 px-4 py-3 border border-neutral-700 text-white rounded-lg hover:bg-neutral-800 transition-colors">İptal</button>
+              <button onClick={handleSave} disabled={saving} className="flex-1 px-4 py-3 bg-white text-black rounded-lg hover:bg-neutral-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                <span>Kaydet</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

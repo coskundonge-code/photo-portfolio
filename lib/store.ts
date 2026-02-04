@@ -9,7 +9,7 @@ interface AdminState {
 }
 
 // Admin şifreleri
-const ADMIN_PASSWORDS = ['admin123', 'coskun2024'];
+const ADMIN_PASSWORDS = ['Astakoz1!'];
 
 export const useAdminStore = create<AdminState>()(
   persist(

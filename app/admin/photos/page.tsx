@@ -2,9 +2,27 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Loader2, Plus, Edit2, Trash2, X, Upload, ImageIcon, Star } from 'lucide-react';
-import { getPhotos, getProjects, createPhoto, updatePhoto, deletePhoto, uploadImage } from '@/lib/supabase';
-import { Photo, Project } from '@/lib/types';
+import { Loader2, Plus, Edit2, Trash2, X, Upload, ImageIcon, Star, ShoppingBag, CheckSquare, Square, GripVertical } from 'lucide-react';
+import { getPhotos, getProjects, createPhoto, updatePhoto, deletePhoto, getAllProducts, createProduct, createProductSize, updateProduct, uploadImage, updatePhotoOrder } from '@/lib/supabase';
+import { smartUploadToCloudinary } from '@/lib/cloudinary';
+import { Photo, Project, Product } from '@/lib/types';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const themeOptions = [
   { id: '', label: 'Tema Seçin...' },
@@ -17,17 +35,171 @@ const themeOptions = [
   { id: 'documentary', label: 'Belgesel' },
 ];
 
+// Sortable Photo Item Component
+interface SortablePhotoItemProps {
+  photo: Photo;
+  isSelectionMode: boolean;
+  isSelected: boolean;
+  isFeatured: boolean;
+  isInShop: boolean;
+  theme?: string;
+  projectTitle?: string;
+  onToggleSelection: (id: string) => void;
+  onEdit: (photo: Photo) => void;
+  onDelete: (id: string) => void;
+}
+
+function SortablePhotoItem({
+  photo,
+  isSelectionMode,
+  isSelected,
+  isFeatured,
+  isInShop,
+  theme,
+  projectTitle,
+  onToggleSelection,
+  onEdit,
+  onDelete,
+}: SortablePhotoItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: photo.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative group bg-neutral-900 border rounded-lg overflow-hidden transition-all ${
+        isSelectionMode && isSelected
+          ? 'border-blue-500 ring-2 ring-blue-500/50'
+          : 'border-neutral-800'
+      }`}
+    >
+      {/* Drag Handle */}
+      {!isSelectionMode && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute top-2 left-2 z-20 p-1.5 bg-black/60 rounded cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <GripVertical className="w-4 h-4 text-white" />
+        </div>
+      )}
+
+      <div
+        className="aspect-square relative cursor-pointer"
+        onClick={isSelectionMode ? () => onToggleSelection(photo.id) : undefined}
+      >
+        <Image src={photo.url} alt={photo.title || ''} fill className="object-cover" />
+
+        {isSelectionMode ? (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
+              isSelected
+                ? 'bg-blue-500 border-blue-500'
+                : 'border-white bg-black/30'
+            }`}>
+              {isSelected && (
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <button
+              onClick={() => onEdit(photo)}
+              className="p-2 bg-white/20 hover:bg-white/30 rounded-full"
+            >
+              <Edit2 className="w-5 h-5 text-white" />
+            </button>
+            <button
+              onClick={() => onDelete(photo.id)}
+              className="p-2 bg-white/20 hover:bg-red-500/50 rounded-full"
+            >
+              <Trash2 className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        )}
+
+        {/* Featured star */}
+        {isFeatured && (
+          <div className="absolute top-2 left-2 p-1 bg-yellow-500 rounded-full" style={{ left: isSelectionMode ? '8px' : '40px' }}>
+            <Star className="w-4 h-4 text-white" fill="white" />
+          </div>
+        )}
+
+        {/* Shop indicator */}
+        {!isSelectionMode && isInShop && (
+          <div className="absolute top-2 right-2 p-1.5 bg-green-500 rounded-full" title="Mağazada">
+            <ShoppingBag className="w-3.5 h-3.5 text-white" />
+          </div>
+        )}
+
+        {!isSelectionMode && theme && (
+          <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 rounded text-xs text-white">
+            {themeOptions.find(t => t.id === theme)?.label}
+          </div>
+        )}
+      </div>
+
+      <div className="p-3">
+        <p className="text-sm text-white truncate">{photo.title || 'Başlıksız'}</p>
+        <p className="text-xs text-neutral-500 truncate">
+          {projectTitle || 'Proje yok'}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPhotosPage() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPhoto, setEditingPhoto] = useState<Photo | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  
+  const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Multi-upload state
+  const [isMultiUploadOpen, setIsMultiUploadOpen] = useState(false);
+  const [multiUploadFiles, setMultiUploadFiles] = useState<File[]>([]);
+  const [multiUploadProgress, setMultiUploadProgress] = useState<{[key: string]: number}>({});
+  const [isMultiUploading, setIsMultiUploading] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+  const multiFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Drag-drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   const [formData, setFormData] = useState({
     title: '',
     url: '',
@@ -35,6 +207,12 @@ export default function AdminPhotosPage() {
     theme: '',
     is_featured: false,
     orientation: 'landscape' as 'landscape' | 'portrait',
+    addToShop: true, // Mağazaya ekle checkbox
+    // 4 boyut için fiyatlar
+    price20x30: '1500',
+    price40x60: '2500',
+    price60x90: '3500',
+    price100x150: '5000',
   });
 
   useEffect(() => {
@@ -42,10 +220,25 @@ export default function AdminPhotosPage() {
   }, []);
 
   const loadData = async () => {
-    const [photosData, projectsData] = await Promise.all([getPhotos(), getProjects()]);
+    const [photosData, projectsData, productsData] = await Promise.all([
+      getPhotos(),
+      getProjects(),
+      getAllProducts()
+    ]);
     setPhotos(photosData);
     setProjects(projectsData);
+    setProducts(productsData);
     setLoading(false);
+  };
+
+  // Check if a photo is in the shop
+  const isPhotoInShop = (photoId: string) => {
+    return products.some(p => p.photo_id === photoId);
+  };
+
+  // Get product for a photo
+  const getProductForPhoto = (photoId: string) => {
+    return products.find(p => p.photo_id === photoId);
   };
 
   const resetForm = () => {
@@ -56,8 +249,17 @@ export default function AdminPhotosPage() {
       theme: '',
       is_featured: false,
       orientation: 'landscape',
+      addToShop: true,
+      price20x30: '1500',
+      price40x60: '2500',
+      price60x90: '3500',
+      price100x150: '5000',
     });
     setEditingPhoto(null);
+    // File input'u sıfırla
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const openCreateModal = () => {
@@ -74,57 +276,112 @@ export default function AdminPhotosPage() {
       theme: (photo as any).theme || '',
       is_featured: photo.is_featured,
       orientation: (photo as any).orientation || 'landscape',
+      addToShop: false, // Edit modunda bu gösterilmez
+      price20x30: '1500',
+      price40x60: '2500',
+      price60x90: '3500',
+      price100x150: '5000',
     });
     setIsModalOpen(true);
   };
 
-  // DOSYA YÜKLEME - ÇALIŞAN VERSİYON
+  // DOSYA YÜKLEME - CLOUDINARY İLE ÇALIŞAN VERSİYON
+  // Çözünürlük ve kalite korunarak yükleme yapılır
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Dosya boyutu kontrolü (100MB sınırı)
+    const fileSizeMB = file.size / (1024 * 1024);
+    if (fileSizeMB > 100) {
+      alert(`Dosya çok büyük (${fileSizeMB.toFixed(1)} MB). Maksimum 100 MB yüklenebilir.`);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+
     setUploading(true);
-    setUploadProgress(10);
+    setUploadProgress(5);
 
     try {
+    // RAW dosya kontrolü
+      const rawExtensions = ['.raw', '.cr2', '.cr3', '.nef', '.arw', '.dng', '.orf', '.rw2'];
+      const fileExt = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+      const isRawFile = rawExtensions.includes(fileExt);
+
+      if (isRawFile) {
+        // RAW dosyalar için direkt yükle (boyut algılama yapma)
+       setUploadProgress(30);
+      const uploadedUrl = await uploadImage(file);
+      setUploadProgress(90);
+
+        if (uploadedUrl) {
+          setFormData(prev => ({
+            ...prev,
+            url: uploadedUrl,
+          }));
+          setUploadProgress(100);
+        } else {
+          alert('RAW yükleme başarısız oldu.');
+        }
+
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+
+        setTimeout(() => {
+          setUploading(false);
+          setUploadProgress(0);
+        }, 500);
+        return;
+      }
       // Resim boyutlarını al
       const img = document.createElement('img');
       const objectUrl = URL.createObjectURL(file);
-      
+
       img.onload = async () => {
         const width = img.width;
         const height = img.height;
         const orientation = height > width ? 'portrait' : 'landscape';
-        
+
         URL.revokeObjectURL(objectUrl);
-        setUploadProgress(30);
-        
-        // Supabase'e yükle
-        const uploadedUrl = await uploadImage(file);
-        setUploadProgress(90);
-        
+        setUploadProgress(10);
+
+        // Cloudinary'ye yükle - çözünürlük korunur
+        const uploadedUrl = await smartUploadToCloudinary(file, (progress) => {
+          // Progress: 10-90 arası Cloudinary upload
+          const mappedProgress = 10 + Math.round(progress.percent * 0.8);
+          setUploadProgress(mappedProgress);
+        });
+
         if (uploadedUrl) {
-          setFormData(prev => ({ 
-            ...prev, 
+          setFormData(prev => ({
+            ...prev,
             url: uploadedUrl,
             orientation: orientation,
           }));
           setUploadProgress(100);
         } else {
-          alert('Yükleme başarısız oldu. Lütfen tekrar deneyin.');
+          alert(`Yükleme başarısız oldu.\n\nDosya: ${file.name}\nBoyut: ${fileSizeMB.toFixed(1)} MB\n\nLütfen tekrar deneyin veya daha küçük bir dosya seçin.`);
         }
-        
+
+        // File input'u sıfırla (yeni yükleme için)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+
         setTimeout(() => {
           setUploading(false);
           setUploadProgress(0);
         }, 500);
       };
-      
+
       img.onerror = () => {
         alert('Görsel okunamadı.');
         setUploading(false);
       };
-      
+
       img.src = objectUrl;
     } catch (error) {
       console.error('Upload error:', error);
@@ -135,7 +392,7 @@ export default function AdminPhotosPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.url) {
       alert('Lütfen bir fotoğraf yükleyin.');
       return;
@@ -152,8 +409,43 @@ export default function AdminPhotosPage() {
 
     if (editingPhoto) {
       await updatePhoto(editingPhoto.id, photoData);
+
+      // Eğer bu fotoğrafa bağlı bir ürün varsa, ürün başlığını da güncelle
+      const linkedProduct = getProductForPhoto(editingPhoto.id);
+      if (linkedProduct && formData.title) {
+        await updateProduct(linkedProduct.id, { title: formData.title });
+      }
     } else {
-      await createPhoto(photoData);
+      // Yeni fotoğraf oluştur
+      const newPhoto = await createPhoto(photoData);
+
+      // Mağazaya da ekle seçiliyse ürün ve boyutları oluştur
+      if (newPhoto && formData.addToShop) {
+        const newProduct = await createProduct({
+          title: formData.title || 'İsimsiz Eser',
+          photo_id: newPhoto.id,
+          base_price: parseFloat(formData.price20x30) || 1500,
+          edition_type: 'open',
+          is_available: true,
+        });
+
+        // 4 boyut için fiyatları oluştur
+        if (newProduct) {
+          const sizes = [
+            { name: 'Classic', dimensions: '20×30 cm', price: parseFloat(formData.price20x30) || 1500, order_index: 0 },
+            { name: 'Medium', dimensions: '40×60 cm', price: parseFloat(formData.price40x60) || 2500, order_index: 1 },
+            { name: 'Large', dimensions: '60×90 cm', price: parseFloat(formData.price60x90) || 3500, order_index: 2 },
+            { name: 'Luxe', dimensions: '100×150 cm', price: parseFloat(formData.price100x150) || 5000, order_index: 3 },
+          ];
+
+          for (const size of sizes) {
+            await createProductSize({
+              product_id: newProduct.id,
+              ...size,
+            });
+          }
+        }
+      }
     }
 
     setIsModalOpen(false);
@@ -165,6 +457,172 @@ export default function AdminPhotosPage() {
     if (confirm('Bu fotoğrafı silmek istediğinize emin misiniz?')) {
       await deletePhoto(id);
       await loadData();
+    }
+  };
+
+  // Selection functions
+  const togglePhotoSelection = (id: string) => {
+    setSelectedPhotos(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedPhotos.size === photos.length) {
+      setSelectedPhotos(new Set());
+    } else {
+      setSelectedPhotos(new Set(photos.map(p => p.id)));
+    }
+  };
+
+  const cancelSelection = () => {
+    setSelectedPhotos(new Set());
+    setIsSelectionMode(false);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedPhotos.size === 0) return;
+
+    if (confirm(`${selectedPhotos.size} fotoğrafı silmek istediğinize emin misiniz?`)) {
+      setIsDeleting(true);
+      try {
+        const idsToDelete = Array.from(selectedPhotos);
+        for (const id of idsToDelete) {
+          await deletePhoto(id);
+        }
+        setSelectedPhotos(new Set());
+        setIsSelectionMode(false);
+        await loadData();
+      } catch (error) {
+        console.error('Bulk delete error:', error);
+        alert('Silme işlemi sırasında bir hata oluştu.');
+      } finally {
+        setIsDeleting(false);
+      }
+    }
+  };
+
+  // Multi-upload functions
+  const handleMultiFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const fileArray = Array.from(files);
+    setMultiUploadFiles(fileArray);
+    setIsMultiUploadOpen(true);
+
+    // Reset file input
+    if (multiFileInputRef.current) {
+      multiFileInputRef.current.value = '';
+    }
+  };
+
+  const handleMultiUpload = async () => {
+    if (multiUploadFiles.length === 0) return;
+
+    setIsMultiUploading(true);
+    const initialProgress: {[key: string]: number} = {};
+    multiUploadFiles.forEach((file, index) => {
+      initialProgress[`file_${index}`] = 0;
+    });
+    setMultiUploadProgress(initialProgress);
+
+    for (let i = 0; i < multiUploadFiles.length; i++) {
+      const file = multiUploadFiles[i];
+      const fileKey = `file_${i}`;
+
+      try {
+        // Get image dimensions
+        const img = document.createElement('img');
+        const objectUrl = URL.createObjectURL(file);
+
+        await new Promise<void>((resolve, reject) => {
+          img.onload = async () => {
+            const width = img.width;
+            const height = img.height;
+            const orientation = height > width ? 'portrait' : 'landscape';
+            URL.revokeObjectURL(objectUrl);
+
+            // Upload to Cloudinary
+            const uploadedUrl = await smartUploadToCloudinary(file, (progress) => {
+              setMultiUploadProgress(prev => ({
+                ...prev,
+                [fileKey]: Math.round(progress.percent)
+              }));
+            });
+
+            if (uploadedUrl) {
+              // Create photo in database (no title, just the image)
+              await createPhoto({
+                title: '',
+                url: uploadedUrl,
+                project_id: undefined,
+                is_featured: false,
+                orientation: orientation,
+              });
+
+              setMultiUploadProgress(prev => ({
+                ...prev,
+                [fileKey]: 100
+              }));
+            }
+            resolve();
+          };
+
+          img.onerror = () => {
+            reject(new Error('Image load failed'));
+          };
+
+          img.src = objectUrl;
+        });
+      } catch (error) {
+        console.error(`Error uploading file ${file.name}:`, error);
+        setMultiUploadProgress(prev => ({
+          ...prev,
+          [fileKey]: -1 // -1 indicates error
+        }));
+      }
+    }
+
+    setIsMultiUploading(false);
+    await loadData();
+  };
+
+  const closeMultiUpload = () => {
+    setIsMultiUploadOpen(false);
+    setMultiUploadFiles([]);
+    setMultiUploadProgress({});
+    setIsMultiUploading(false);
+  };
+
+  const removeFileFromMultiUpload = (index: number) => {
+    setMultiUploadFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Drag-drop handler
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = photos.findIndex((p) => p.id === active.id);
+      const newIndex = photos.findIndex((p) => p.id === over.id);
+
+      const newPhotos = arrayMove(photos, oldIndex, newIndex);
+      setPhotos(newPhotos);
+
+      // Update order in database
+      const orderUpdates = newPhotos.map((photo, index) => ({
+        id: photo.id,
+        order_index: index,
+      }));
+
+      await updatePhotoOrder(orderUpdates);
     }
   };
 
@@ -184,13 +642,59 @@ export default function AdminPhotosPage() {
           <h1 className="text-2xl font-semibold text-white">Fotoğraflar</h1>
           <p className="text-neutral-400 mt-1">{photos.length} fotoğraf</p>
         </div>
-        <button
-          onClick={openCreateModal}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Fotoğraf Yükle</span>
-        </button>
+        <div className="flex items-center gap-3">
+          {isSelectionMode ? (
+            <>
+              <span className="text-neutral-400 text-sm">{selectedPhotos.size} seçili</span>
+              <button
+                onClick={toggleSelectAll}
+                className="flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg"
+              >
+                {selectedPhotos.size === photos.length ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
+                <span>{selectedPhotos.size === photos.length ? 'Seçimi Kaldır' : 'Tümünü Seç'}</span>
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={selectedPhotos.size === 0 || isDeleting}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                <span>Sil ({selectedPhotos.size})</span>
+              </button>
+              <button
+                onClick={cancelSelection}
+                className="flex items-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg"
+              >
+                <X className="w-5 h-5" />
+                <span>İptal</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setIsSelectionMode(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg"
+              >
+                <CheckSquare className="w-5 h-5" />
+                <span>Seç</span>
+              </button>
+              <button
+                onClick={() => multiFileInputRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg"
+              >
+                <Upload className="w-5 h-5" />
+                <span>Çoklu Yükle</span>
+              </button>
+              <button
+                onClick={openCreateModal}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Tek Fotoğraf</span>
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Fotoğraf Grid */}
@@ -203,49 +707,31 @@ export default function AdminPhotosPage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {photos.map((photo) => (
-            <div key={photo.id} className="relative group bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden">
-              <div className="aspect-square relative">
-                <Image src={photo.url} alt={photo.title || ''} fill className="object-cover" />
-                
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <button
-                    onClick={() => openEditModal(photo)}
-                    className="p-2 bg-white/20 hover:bg-white/30 rounded-full"
-                  >
-                    <Edit2 className="w-5 h-5 text-white" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(photo.id)}
-                    className="p-2 bg-white/20 hover:bg-red-500/50 rounded-full"
-                  >
-                    <Trash2 className="w-5 h-5 text-white" />
-                  </button>
-                </div>
-
-                {photo.is_featured && (
-                  <div className="absolute top-2 left-2 p-1 bg-yellow-500 rounded-full">
-                    <Star className="w-4 h-4 text-white" fill="white" />
-                  </div>
-                )}
-
-                {(photo as any).theme && (
-                  <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 rounded text-xs text-white">
-                    {themeOptions.find(t => t.id === (photo as any).theme)?.label}
-                  </div>
-                )}
-              </div>
-
-              <div className="p-3">
-                <p className="text-sm text-white truncate">{photo.title || 'Başlıksız'}</p>
-                <p className="text-xs text-neutral-500 truncate">
-                  {projects.find(p => p.id === photo.project_id)?.title || 'Proje yok'}
-                </p>
-              </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={photos.map(p => p.id)} strategy={rectSortingStrategy}>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {photos.map((photo) => (
+                <SortablePhotoItem
+                  key={photo.id}
+                  photo={photo}
+                  isSelectionMode={isSelectionMode}
+                  isSelected={selectedPhotos.has(photo.id)}
+                  isFeatured={photo.is_featured}
+                  isInShop={isPhotoInShop(photo.id)}
+                  theme={(photo as any).theme}
+                  projectTitle={projects.find(p => p.id === photo.project_id)?.title}
+                  onToggleSelection={togglePhotoSelection}
+                  onEdit={openEditModal}
+                  onDelete={handleDelete}
+                />
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+        </DndContext>
       )}
 
       {/* MODAL */}
@@ -262,11 +748,11 @@ export default function AdminPhotosPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              
+
               {/* Fotoğraf Yükleme */}
               <div>
                 <label className="block text-sm font-medium text-neutral-300 mb-2">Fotoğraf</label>
-                
+
                 {formData.url ? (
                   <div className="relative">
                     <div className="relative aspect-video rounded-lg overflow-hidden bg-neutral-800">
@@ -290,7 +776,7 @@ export default function AdminPhotosPage() {
                         <Loader2 className="w-10 h-10 text-blue-500 mx-auto animate-spin" />
                         <p className="text-sm text-neutral-500">Yükleniyor... {uploadProgress}%</p>
                         <div className="w-full bg-neutral-700 rounded-full h-2">
-                          <div 
+                          <div
                             className="bg-blue-500 h-2 rounded-full transition-all"
                             style={{ width: `${uploadProgress}%` }}
                           />
@@ -305,7 +791,7 @@ export default function AdminPhotosPage() {
                     )}
                   </div>
                 )}
-                
+
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -397,6 +883,78 @@ export default function AdminPhotosPage() {
                 <label htmlFor="is_featured" className="text-neutral-300">Öne çıkan fotoğraf</label>
               </div>
 
+              {/* Mağazaya Ekle - Sadece yeni fotoğraf için göster */}
+              {!editingPhoto && (
+                <div className="p-4 bg-neutral-800/50 rounded-lg border border-neutral-700 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="addToShop"
+                      checked={formData.addToShop}
+                      onChange={(e) => setFormData({ ...formData, addToShop: e.target.checked })}
+                      className="w-5 h-5 rounded"
+                    />
+                    <label htmlFor="addToShop" className="text-neutral-300 flex items-center gap-2">
+                      <ShoppingBag className="w-4 h-4 text-green-500" />
+                      Mağazaya da ekle
+                    </label>
+                  </div>
+
+                  {formData.addToShop && (
+                    <div className="space-y-3">
+                      <label className="block text-sm font-medium text-neutral-400">Boyut Fiyatları (₺)</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">20×30 cm</label>
+                          <input
+                            type="number"
+                            value={formData.price20x30}
+                            onChange={(e) => setFormData({ ...formData, price20x30: e.target.value })}
+                            className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm"
+                            placeholder="1500"
+                            min="0"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">40×60 cm</label>
+                          <input
+                            type="number"
+                            value={formData.price40x60}
+                            onChange={(e) => setFormData({ ...formData, price40x60: e.target.value })}
+                            className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm"
+                            placeholder="2500"
+                            min="0"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">60×90 cm</label>
+                          <input
+                            type="number"
+                            value={formData.price60x90}
+                            onChange={(e) => setFormData({ ...formData, price60x90: e.target.value })}
+                            className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm"
+                            placeholder="3500"
+                            min="0"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">100×150 cm</label>
+                          <input
+                            type="number"
+                            value={formData.price100x150}
+                            onChange={(e) => setFormData({ ...formData, price100x150: e.target.value })}
+                            className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm"
+                            placeholder="5000"
+                            min="0"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-neutral-500">Mağazada ürün detaylarını daha sonra düzenleyebilirsiniz.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Butonlar */}
               <div className="flex justify-end gap-3 pt-4 border-t border-neutral-800">
                 <button
@@ -415,6 +973,133 @@ export default function AdminPhotosPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden Multi File Input */}
+      <input
+        ref={multiFileInputRef}
+        type="file"
+        accept="image/*, .raw, .cr2, .cr3, .nef, .arw, .dng"
+        multiple
+        onChange={handleMultiFileSelect}
+        className="hidden"
+      />
+
+      {/* Multi Upload Modal */}
+      {isMultiUploadOpen && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-neutral-800">
+              <h2 className="text-xl font-semibold text-white">
+                Çoklu Fotoğraf Yükle ({multiUploadFiles.length} dosya)
+              </h2>
+              <button
+                onClick={closeMultiUpload}
+                disabled={isMultiUploading}
+                className="text-neutral-400 hover:text-white disabled:opacity-50"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {/* File List */}
+              <div className="space-y-3 mb-6 max-h-[400px] overflow-y-auto">
+                {multiUploadFiles.map((file, index) => {
+                  const fileKey = `file_${index}`;
+                  const progress = multiUploadProgress[fileKey] || 0;
+                  const isError = progress === -1;
+                  const isComplete = progress === 100;
+
+                  return (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-4 p-3 rounded-lg ${
+                        isError ? 'bg-red-900/30 border border-red-700' :
+                        isComplete ? 'bg-green-900/30 border border-green-700' :
+                        'bg-neutral-800 border border-neutral-700'
+                      }`}
+                    >
+                      <div className="w-12 h-12 rounded overflow-hidden bg-neutral-700 flex-shrink-0">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={file.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white truncate">{file.name}</p>
+                        <p className="text-xs text-neutral-500">
+                          {(file.size / (1024 * 1024)).toFixed(1)} MB
+                        </p>
+                        {isMultiUploading && !isComplete && !isError && (
+                          <div className="w-full bg-neutral-700 rounded-full h-1.5 mt-2">
+                            <div
+                              className="bg-blue-500 h-1.5 rounded-full transition-all"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                        )}
+                        {isError && (
+                          <p className="text-xs text-red-400 mt-1">Yükleme başarısız</p>
+                        )}
+                        {isComplete && (
+                          <p className="text-xs text-green-400 mt-1">Yüklendi ✓</p>
+                        )}
+                      </div>
+                      {!isMultiUploading && (
+                        <button
+                          onClick={() => removeFileFromMultiUpload(index)}
+                          className="p-1 text-neutral-500 hover:text-red-400"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      )}
+                      {isMultiUploading && !isComplete && !isError && (
+                        <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Info Text */}
+              <p className="text-sm text-neutral-400 mb-6">
+                Fotoğraflar yüklendikten sonra her birinin başlık, proje ve tema bilgilerini düzenleyebilirsiniz.
+              </p>
+
+              {/* Buttons */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-neutral-800">
+                <button
+                  onClick={closeMultiUpload}
+                  disabled={isMultiUploading}
+                  className="px-6 py-2 text-neutral-400 hover:text-white disabled:opacity-50"
+                >
+                  {Object.values(multiUploadProgress).some(p => p === 100) ? 'Kapat' : 'İptal'}
+                </button>
+                {!Object.values(multiUploadProgress).every(p => p === 100 || p === -1) && (
+                  <button
+                    onClick={handleMultiUpload}
+                    disabled={isMultiUploading || multiUploadFiles.length === 0}
+                    className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:bg-neutral-600"
+                  >
+                    {isMultiUploading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Yükleniyor...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-5 h-5" />
+                        <span>Tümünü Yükle</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
