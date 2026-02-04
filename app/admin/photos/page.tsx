@@ -634,7 +634,7 @@ export default function AdminPhotosPage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*, .raw, .cr2, .cr3, .nef, .arw, .dng"
                   onChange={handleFileUpload}
                   className="hidden"
                 />
@@ -820,7 +820,7 @@ export default function AdminPhotosPage() {
       <input
         ref={multiFileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*, .raw, .cr2, .cr3, .nef, .arw, .dng"
         multiple
         onChange={handleMultiFileSelect}
         className="hidden"
