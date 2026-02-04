@@ -23,7 +23,6 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [isWorkDropdownOpen, setIsWorkDropdownOpen] = useState(false);
-  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -169,39 +168,17 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
                 )}
               </button>
 
-              {/* Language Switcher */}
-              <div
-                className="relative"
-                onMouseEnter={() => setIsLangDropdownOpen(true)}
-                onMouseLeave={() => setIsLangDropdownOpen(false)}
+              {/* Language Switcher - Single Click Toggle */}
+              <button
+                onClick={() => setLanguage(language === 'en' ? 'tr' : 'en')}
+                className="p-2 hover:opacity-60 transition-opacity flex items-center gap-1"
+                title={language === 'en' ? 'Türkçe' : 'English'}
               >
-                <button
-                  className="p-2 hover:opacity-60 transition-opacity flex items-center gap-1"
-                  title="Language"
-                >
-                  <Globe className="w-5 h-5" strokeWidth={1.5} />
-                  <span className="text-xs font-medium uppercase hidden sm:inline">{language}</span>
-                </button>
-
-                {isLangDropdownOpen && (
-                  <div className="absolute top-full right-0 pt-2 z-50">
-                    <div className="bg-white border border-neutral-200 shadow-lg min-w-[120px]">
-                      <button
-                        onClick={() => { setLanguage('en'); setIsLangDropdownOpen(false); }}
-                        className={`block w-full text-left px-4 py-2 text-sm hover:bg-neutral-50 ${language === 'en' ? 'font-medium bg-neutral-50' : ''}`}
-                      >
-                        English
-                      </button>
-                      <button
-                        onClick={() => { setLanguage('tr'); setIsLangDropdownOpen(false); }}
-                        className={`block w-full text-left px-4 py-2 text-sm hover:bg-neutral-50 ${language === 'tr' ? 'font-medium bg-neutral-50' : ''}`}
-                      >
-                        Turkce
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+                <Globe className="w-5 h-5" strokeWidth={1.5} />
+                <span className="text-xs font-medium hidden sm:inline">
+                  {language === 'en' ? 'TR' : 'EN'}
+                </span>
+              </button>
 
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -233,22 +210,15 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
               <Link href="/about" className="block text-lg" onClick={() => setIsMenuOpen(false)}>{t('nav.about')}</Link>
               <Link href="/contact" className="block text-lg" onClick={() => setIsMenuOpen(false)}>{t('nav.contact')}</Link>
 
-              {/* Mobile Language Switcher */}
+              {/* Mobile Language Switcher - Single Click Toggle */}
               <div className="pt-4 border-t border-neutral-200">
-                <div className="flex gap-4">
-                  <button
-                    onClick={() => { setLanguage('en'); setIsMenuOpen(false); }}
-                    className={`text-lg ${language === 'en' ? 'font-medium' : 'text-neutral-500'}`}
-                  >
-                    English
-                  </button>
-                  <button
-                    onClick={() => { setLanguage('tr'); setIsMenuOpen(false); }}
-                    className={`text-lg ${language === 'tr' ? 'font-medium' : 'text-neutral-500'}`}
-                  >
-                    Turkce
-                  </button>
-                </div>
+                <button
+                  onClick={() => { setLanguage(language === 'en' ? 'tr' : 'en'); setIsMenuOpen(false); }}
+                  className="text-lg font-medium flex items-center gap-2"
+                >
+                  <Globe className="w-5 h-5" />
+                  {language === 'en' ? 'Türkçe' : 'English'}
+                </button>
               </div>
             </div>
           </div>
