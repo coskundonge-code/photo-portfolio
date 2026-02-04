@@ -410,7 +410,7 @@ export const getAllProducts = async (): Promise<Product[]> => {
   const { data, error } = await supabase
     .from('products')
     .select('*, photos(*)')
-    .order('created_at', { ascending: false });
+    .order('order_index', { ascending: true });
 
   if (error) {
     console.error('Error fetching all products:', error);
@@ -491,6 +491,26 @@ export const deleteProduct = async (id: string): Promise<boolean> => {
   }
 
   return true;
+};
+
+export const updateProductOrder = async (products: { id: string; order_index: number }[]): Promise<boolean> => {
+  try {
+    for (const product of products) {
+      const { error } = await supabase
+        .from('products')
+        .update({ order_index: product.order_index })
+        .eq('id', product.id);
+
+      if (error) {
+        console.error('Error updating product order:', error);
+        return false;
+      }
+    }
+    return true;
+  } catch (error) {
+    console.error('Error updating product order:', error);
+    return false;
+  }
 };
 
 // ================================================

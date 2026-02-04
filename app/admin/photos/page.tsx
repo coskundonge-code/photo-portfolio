@@ -2,10 +2,27 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Loader2, Plus, Edit2, Trash2, X, Upload, ImageIcon, Star, ShoppingBag, CheckSquare, Square } from 'lucide-react';
-import { getPhotos, getProjects, createPhoto, updatePhoto, deletePhoto, getAllProducts, createProduct, createProductSize, updateProduct, uploadImage } from '@/lib/supabase';
+import { Loader2, Plus, Edit2, Trash2, X, Upload, ImageIcon, Star, ShoppingBag, CheckSquare, Square, GripVertical } from 'lucide-react';
+import { getPhotos, getProjects, createPhoto, updatePhoto, deletePhoto, getAllProducts, createProduct, createProductSize, updateProduct, uploadImage, updatePhotoOrder } from '@/lib/supabase';
 import { smartUploadToCloudinary } from '@/lib/cloudinary';
 import { Photo, Project, Product } from '@/lib/types';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const themeOptions = [
   { id: '', label: 'Tema Seçin...' },
@@ -17,6 +34,137 @@ const themeOptions = [
   { id: 'travel', label: 'Seyahat' },
   { id: 'documentary', label: 'Belgesel' },
 ];
+
+// Sortable Photo Item Component
+interface SortablePhotoItemProps {
+  photo: Photo;
+  isSelectionMode: boolean;
+  isSelected: boolean;
+  isFeatured: boolean;
+  isInShop: boolean;
+  theme?: string;
+  projectTitle?: string;
+  onToggleSelection: (id: string) => void;
+  onEdit: (photo: Photo) => void;
+  onDelete: (id: string) => void;
+}
+
+function SortablePhotoItem({
+  photo,
+  isSelectionMode,
+  isSelected,
+  isFeatured,
+  isInShop,
+  theme,
+  projectTitle,
+  onToggleSelection,
+  onEdit,
+  onDelete,
+}: SortablePhotoItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: photo.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative group bg-neutral-900 border rounded-lg overflow-hidden transition-all ${
+        isSelectionMode && isSelected
+          ? 'border-blue-500 ring-2 ring-blue-500/50'
+          : 'border-neutral-800'
+      }`}
+    >
+      {/* Drag Handle */}
+      {!isSelectionMode && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute top-2 left-2 z-20 p-1.5 bg-black/60 rounded cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <GripVertical className="w-4 h-4 text-white" />
+        </div>
+      )}
+
+      <div
+        className="aspect-square relative cursor-pointer"
+        onClick={isSelectionMode ? () => onToggleSelection(photo.id) : undefined}
+      >
+        <Image src={photo.url} alt={photo.title || ''} fill className="object-cover" />
+
+        {isSelectionMode ? (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
+              isSelected
+                ? 'bg-blue-500 border-blue-500'
+                : 'border-white bg-black/30'
+            }`}>
+              {isSelected && (
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <button
+              onClick={() => onEdit(photo)}
+              className="p-2 bg-white/20 hover:bg-white/30 rounded-full"
+            >
+              <Edit2 className="w-5 h-5 text-white" />
+            </button>
+            <button
+              onClick={() => onDelete(photo.id)}
+              className="p-2 bg-white/20 hover:bg-red-500/50 rounded-full"
+            >
+              <Trash2 className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        )}
+
+        {/* Featured star */}
+        {isFeatured && (
+          <div className="absolute top-2 left-2 p-1 bg-yellow-500 rounded-full" style={{ left: isSelectionMode ? '8px' : '40px' }}>
+            <Star className="w-4 h-4 text-white" fill="white" />
+          </div>
+        )}
+
+        {/* Shop indicator */}
+        {!isSelectionMode && isInShop && (
+          <div className="absolute top-2 right-2 p-1.5 bg-green-500 rounded-full" title="Mağazada">
+            <ShoppingBag className="w-3.5 h-3.5 text-white" />
+          </div>
+        )}
+
+        {!isSelectionMode && theme && (
+          <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 rounded text-xs text-white">
+            {themeOptions.find(t => t.id === theme)?.label}
+          </div>
+        )}
+      </div>
+
+      <div className="p-3">
+        <p className="text-sm text-white truncate">{photo.title || 'Başlıksız'}</p>
+        <p className="text-xs text-neutral-500 truncate">
+          {projectTitle || 'Proje yok'}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminPhotosPage() {
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -39,6 +187,18 @@ export default function AdminPhotosPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const multiFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Drag-drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const [formData, setFormData] = useState({
     title: '',
@@ -445,6 +605,27 @@ export default function AdminPhotosPage() {
     setMultiUploadFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Drag-drop handler
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = photos.findIndex((p) => p.id === active.id);
+      const newIndex = photos.findIndex((p) => p.id === over.id);
+
+      const newPhotos = arrayMove(photos, oldIndex, newIndex);
+      setPhotos(newPhotos);
+
+      // Update order in database
+      const orderUpdates = newPhotos.map((photo, index) => ({
+        id: photo.id,
+        order_index: index,
+      }));
+
+      await updatePhotoOrder(orderUpdates);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -526,81 +707,31 @@ export default function AdminPhotosPage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {photos.map((photo) => (
-            <div
-              key={photo.id}
-              className={`relative group bg-neutral-900 border rounded-lg overflow-hidden cursor-pointer transition-all ${
-                isSelectionMode && selectedPhotos.has(photo.id)
-                  ? 'border-blue-500 ring-2 ring-blue-500/50'
-                  : 'border-neutral-800'
-              }`}
-              onClick={isSelectionMode ? () => togglePhotoSelection(photo.id) : undefined}
-            >
-              <div className="aspect-square relative">
-                <Image src={photo.url} alt={photo.title || ''} fill className="object-cover" />
-
-                {isSelectionMode ? (
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
-                      selectedPhotos.has(photo.id)
-                        ? 'bg-blue-500 border-blue-500'
-                        : 'border-white bg-black/30'
-                    }`}>
-                      {selectedPhotos.has(photo.id) && (
-                        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <button
-                      onClick={() => openEditModal(photo)}
-                      className="p-2 bg-white/20 hover:bg-white/30 rounded-full"
-                    >
-                      <Edit2 className="w-5 h-5 text-white" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(photo.id)}
-                      className="p-2 bg-white/20 hover:bg-red-500/50 rounded-full"
-                    >
-                      <Trash2 className="w-5 h-5 text-white" />
-                    </button>
-                  </div>
-                )}
-
-                {/* Featured star */}
-                {photo.is_featured && (
-                  <div className="absolute top-2 left-2 p-1 bg-yellow-500 rounded-full">
-                    <Star className="w-4 h-4 text-white" fill="white" />
-                  </div>
-                )}
-
-                {/* Shop indicator */}
-                {!isSelectionMode && isPhotoInShop(photo.id) && (
-                  <div className="absolute top-2 right-2 p-1.5 bg-green-500 rounded-full" title="Mağazada">
-                    <ShoppingBag className="w-3.5 h-3.5 text-white" />
-                  </div>
-                )}
-
-                {!isSelectionMode && (photo as any).theme && (
-                  <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 rounded text-xs text-white">
-                    {themeOptions.find(t => t.id === (photo as any).theme)?.label}
-                  </div>
-                )}
-              </div>
-
-              <div className="p-3">
-                <p className="text-sm text-white truncate">{photo.title || 'Başlıksız'}</p>
-                <p className="text-xs text-neutral-500 truncate">
-                  {projects.find(p => p.id === photo.project_id)?.title || 'Proje yok'}
-                </p>
-              </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={photos.map(p => p.id)} strategy={rectSortingStrategy}>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {photos.map((photo) => (
+                <SortablePhotoItem
+                  key={photo.id}
+                  photo={photo}
+                  isSelectionMode={isSelectionMode}
+                  isSelected={selectedPhotos.has(photo.id)}
+                  isFeatured={photo.is_featured}
+                  isInShop={isPhotoInShop(photo.id)}
+                  theme={(photo as any).theme}
+                  projectTitle={projects.find(p => p.id === photo.project_id)?.title}
+                  onToggleSelection={togglePhotoSelection}
+                  onEdit={openEditModal}
+                  onDelete={handleDelete}
+                />
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+        </DndContext>
       )}
 
       {/* MODAL */}
