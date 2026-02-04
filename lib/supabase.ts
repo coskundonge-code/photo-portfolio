@@ -410,7 +410,6 @@ export const getAllProducts = async (): Promise<Product[]> => {
   const { data, error } = await supabase
     .from('products')
     .select('*, photos(*)')
-    .order('order_index', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false });
 
   if (error) {
