@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Loader2, Plus, Edit2, Trash2, X, Upload, ImageIcon, Star, ShoppingBag, CheckSquare, Square } from 'lucide-react';
-import { getPhotos, getProjects, createPhoto, updatePhoto, deletePhoto, getAllProducts, createProduct, createProductSize, updateProduct, uploadImage } from '@/lib/supabase'; } from '@/lib/supabase';
+import { getPhotos, getProjects, createPhoto, updatePhoto, deletePhoto, getAllProducts, createProduct, createProductSize, updateProduct, uploadImage } from '@/lib/supabase';
 import { smartUploadToCloudinary } from '@/lib/cloudinary';
 import { Photo, Project, Product } from '@/lib/types';
 
