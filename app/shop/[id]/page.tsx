@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import Lightbox from '@/components/Lightbox';
 import { getSettings, getProjects, getProductById } from '@/lib/supabase';
 import { Settings, Project, Product } from '@/lib/types';
+import { useLanguage } from '@/lib/language';
 import { Loader2, Check, ZoomIn } from 'lucide-react';
 
 // Boyutlar
@@ -83,6 +84,7 @@ const formatPrice = (price: number) => price.toLocaleString('tr-TR');
 export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
+  const { t } = useLanguage();
   const [settings, setSettings] = useState<Settings | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [product, setProduct] = useState<Product | null>(null);
@@ -174,7 +176,7 @@ export default function ProductPage() {
       <main className="min-h-screen bg-white">
         <Navigation projects={projects} settings={settings} />
         <div className="pt-32 pb-16 px-6 text-center">
-          <h1 className="text-2xl">Ürün bulunamadı</h1>
+          <h1 className="text-2xl">{t('product.productNotFound')}</h1>
         </div>
         <Footer settings={settings} />
       </main>
@@ -310,41 +312,41 @@ export default function ProductPage() {
             <div className="lg:w-[45%]">
               {/* Edisyon Badge */}
               <div className="inline-block bg-black text-white text-xs px-4 py-2 mb-4 tracking-wider">
-                {product.edition_type === 'limited' 
-                  ? `SINIRLI EDİSYON`
-                  : 'AÇIK EDİSYON'}
+                {product.edition_type === 'limited'
+                  ? t('product.limitedEdition')
+                  : t('product.openEdition')}
               </div>
 
               <div className="mb-8">
                 <p className="text-3xl font-light">₺{formatPrice(calculatePrice())},00</p>
-                <p className="text-sm text-neutral-500 mt-2">KDV dahil. Kargo ödeme sırasında hesaplanır.</p>
+                <p className="text-sm text-neutral-500 mt-2">{t('product.vatIncluded')}</p>
               </div>
 
               {/* Stil Seçimi */}
               <div className="mb-10">
                 <h3 className="text-sm text-neutral-600 mb-4">
-                  Stil Seçin: <span className="text-black font-medium">{selectedStyle === 'mat' ? 'Mat' : 'Full Bleed'}</span>
+                  {t('product.selectStyle')}: <span className="text-black font-medium">{selectedStyle === 'mat' ? t('product.mat') : t('product.fullBleed')}</span>
                 </h3>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setSelectedStyle('mat')}
                     className={`px-8 py-3 text-sm transition-all duration-300 border ${
-                      selectedStyle === 'mat' 
-                        ? 'border-black bg-white' 
+                      selectedStyle === 'mat'
+                        ? 'border-black bg-white'
                         : 'border-neutral-200 hover:border-neutral-400'
                     }`}
                   >
-                    Mat
+                    {t('product.mat')}
                   </button>
                   <button
                     onClick={() => setSelectedStyle('fullbleed')}
                     className={`px-8 py-3 text-sm transition-all duration-300 border ${
-                      selectedStyle === 'fullbleed' 
-                        ? 'border-black bg-white' 
+                      selectedStyle === 'fullbleed'
+                        ? 'border-black bg-white'
                         : 'border-neutral-200 hover:border-neutral-400'
                     }`}
                   >
-                    Full Bleed
+                    {t('product.fullBleed')}
                   </button>
                 </div>
               </div>
@@ -352,7 +354,7 @@ export default function ProductPage() {
               {/* Boyut Seçimi */}
               <div className="mb-10">
                 <h3 className="text-sm text-neutral-600 mb-4">
-                  Çerçeve Boyutu Seçin: <span className="text-black font-medium">{selectedSize.name}</span>
+                  {t('product.selectFrameSize')}: <span className="text-black font-medium">{selectedSize.name}</span>
                 </h3>
                 <div className="space-y-2">
                   {defaultSizes.map((size) => (
@@ -375,7 +377,7 @@ export default function ProductPage() {
               {/* Çerçeve Rengi - Ahşap dokulu butonlar */}
               <div className="mb-10">
                 <h3 className="text-sm text-neutral-600 mb-4">
-                  Çerçeve Rengi Seçin: <span className="text-black font-medium">{selectedFrame.name}</span>
+                  {t('product.selectFrameColor')}: <span className="text-black font-medium">{selectedFrame.name}</span>
                 </h3>
                 <div className="flex gap-4">
                   {defaultFrames.map((frame) => (
@@ -408,7 +410,7 @@ export default function ProductPage() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                 </svg>
-                <span className="underline underline-offset-4">Boyut Rehberi</span>
+                <span className="underline underline-offset-4">{t('product.sizeGuide')}</span>
               </button>
 
               {/* Sepete Ekle */}
@@ -416,35 +418,35 @@ export default function ProductPage() {
                 onClick={handleAddToCart}
                 className="w-full py-5 bg-black text-white text-sm tracking-widest hover:bg-neutral-800 transition-all duration-300"
               >
-                Sepete Ekle
+                {t('product.addToCart')}
               </button>
 
               {/* Ürün Bilgileri */}
               <div className="mt-16 pt-10 border-t border-neutral-200">
-                <h3 className="text-2xl font-light mb-3 tracking-wide text-center">KALİTE KORUMASI</h3>
+                <h3 className="text-2xl font-light mb-3 tracking-wide text-center">{t('product.qualityProtection')}</h3>
                 <p className="text-sm text-neutral-500 text-center mb-10">
-                  Kendi bünyemizde yapılan baskı ve çerçeveleme sürecimiz, en yüksek müze kalitesinde çerçeveli parçalar üretir.
+                  {t('product.qualityDesc')}
                 </p>
-                
+
                 <div className="space-y-8 text-sm">
                   <div>
-                    <h4 className="font-medium mb-2 tracking-wide">BASKI KALİTESİ</h4>
+                    <h4 className="font-medium mb-2 tracking-wide">{t('product.printQuality')}</h4>
                     <p className="text-neutral-500 leading-relaxed">
-                      Resimlerimizi bastığımız kağıt, mümkün olan en iyi görüntü kalitesini sunan gümüş halojenür fotoğraf substratıdır.
+                      {t('product.printQualityDesc')}
                     </p>
                   </div>
-                  
+
                   <div>
-                    <h4 className="font-medium mb-2 tracking-wide">MALZEME ÖNEMLİ</h4>
+                    <h4 className="font-medium mb-2 tracking-wide">{t('product.materialMatters')}</h4>
                     <p className="text-neutral-500 leading-relaxed">
-                      Müze camı gibi müze kalitesinde malzemeler kullanan ikonik çerçeveleme, parçanın korunmasını sağlar.
+                      {t('product.materialDesc')}
                     </p>
                   </div>
-                  
+
                   <div>
-                    <h4 className="font-medium mb-2 tracking-wide">SERTİFİKA</h4>
+                    <h4 className="font-medium mb-2 tracking-wide">{t('product.certificate')}</h4>
                     <p className="text-neutral-500 leading-relaxed">
-                      Her parça, sanatçı tarafından imzalanmış bir orijinallik sertifikası içerir.
+                      {t('product.certificateDesc')}
                     </p>
                   </div>
                 </div>
@@ -495,28 +497,28 @@ export default function ProductPage() {
             <div className="flex-1 p-4">
               <h4 className="font-medium text-sm mb-2">{product.title.toUpperCase()}</h4>
               <div className="text-xs text-neutral-500 space-y-0.5">
-                <p>Stil Seçin: {selectedStyle === 'mat' ? 'Mat' : 'Full Bleed'}</p>
-                <p>Çerçeve Boyutu: {selectedSize.name}</p>
-                <p>Çerçeve Rengi: {selectedFrame.name}</p>
+                <p>{t('product.selectStyle')}: {selectedStyle === 'mat' ? t('product.mat') : t('product.fullBleed')}</p>
+                <p>{t('product.selectFrameSize').replace('Select ', '').replace('Seçin', '')}: {selectedSize.name}</p>
+                <p>{t('product.selectFrameColor').replace('Select ', '').replace('Seçin', '')}: {selectedFrame.name}</p>
               </div>
               <div className="flex items-center justify-between mt-3">
                 <span className="font-medium">₺{formatPrice(calculatePrice())},00</span>
-                <button 
+                <button
                   onClick={scrollToTop}
                   className="text-xs text-neutral-500 hover:text-black underline underline-offset-2"
                 >
-                  Değiştir
+                  {t('product.change')}
                 </button>
               </div>
             </div>
           </div>
-          
+
           {/* Sepete Ekle Butonu */}
           <button
             onClick={handleAddToCart}
             className="w-full py-4 bg-black text-white text-sm tracking-wide hover:bg-neutral-800 transition-colors"
           >
-            Sepete Ekle
+            {t('product.addToCart')}
           </button>
         </div>
       </div>

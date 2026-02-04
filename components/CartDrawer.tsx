@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { X, Trash2, ShoppingBag } from 'lucide-react';
+import { useLanguage } from '@/lib/language';
 
 interface CartItem {
   productId: string;
@@ -24,6 +25,7 @@ interface CartDrawerProps {
 const formatPrice = (price: number) => price.toLocaleString('tr-TR');
 
 export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
+  const { t } = useLanguage();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   useEffect(() => {
@@ -62,7 +64,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white z-50 shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-lg font-medium">Sepetim ({cartItems.length})</h2>
+          <h2 className="text-lg font-medium">{t('cart.title')} ({cartItems.length})</h2>
           <button onClick={onClose} className="p-2 hover:bg-neutral-100 rounded-full">
             <X className="w-5 h-5" />
           </button>
@@ -73,12 +75,12 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           {cartItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center p-6">
               <ShoppingBag className="w-16 h-16 text-neutral-300 mb-4" />
-              <p className="text-neutral-500 mb-4">Sepetiniz boş</p>
+              <p className="text-neutral-500 mb-4">{t('cart.empty')}</p>
               <button
                 onClick={onClose}
                 className="text-sm underline hover:no-underline"
               >
-                Alışverişe Devam Et
+                {t('cart.continueShopping')}
               </button>
             </div>
           ) : (
@@ -126,7 +128,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         {cartItems.length > 0 && (
           <div className="border-t p-6 space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-neutral-600">Toplam</span>
+              <span className="text-neutral-600">{t('cart.total')}</span>
               <span className="text-xl font-medium">₺{formatPrice(totalPrice)}</span>
             </div>
 
@@ -135,14 +137,14 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               onClick={onClose}
               className="block w-full py-4 bg-black text-white text-center text-sm tracking-wide hover:bg-neutral-800 transition-colors"
             >
-              ÖDEMEYE GEÇ
+              {t('cart.checkout')}
             </Link>
 
             <button
               onClick={clearCart}
               className="w-full text-sm text-neutral-500 hover:text-black underline"
             >
-              Sepeti Temizle
+              {t('cart.remove')}
             </button>
           </div>
         )}

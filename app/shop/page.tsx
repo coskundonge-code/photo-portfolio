@@ -7,41 +7,37 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { getSettings, getProjects, getProducts } from '@/lib/supabase';
 import { Settings, Project, Product } from '@/lib/types';
+import { useLanguage } from '@/lib/language';
 import { Loader2, SlidersHorizontal, ChevronDown, X } from 'lucide-react';
 
-const themes = [
-  { id: 'all', label: 'Tümü', aliases: ['all', 'tümü', 'tumu', 'hepsi'] },
-  { id: 'portrait', label: 'Portre', aliases: ['portrait', 'portre'] },
-  { id: 'landscape', label: 'Manzara', aliases: ['landscape', 'manzara'] },
-  { id: 'street', label: 'Sokak', aliases: ['street', 'sokak'] },
-  { id: 'nature', label: 'Doğa', aliases: ['nature', 'doğa', 'doga'] },
-  { id: 'blackwhite', label: 'Siyah Beyaz', aliases: ['blackwhite', 'black-white', 'siyah beyaz', 'siyahbeyaz', 'siyah-beyaz', 'bw'] },
-  { id: 'travel', label: 'Seyahat', aliases: ['travel', 'seyahat'] },
-  { id: 'documentary', label: 'Belgesel', aliases: ['documentary', 'belgesel'] },
-];
-
-const sortOptions = [
-  { value: 'featured', label: 'Öne Çıkanlar' },
-  { value: 'newest', label: 'En Yeni' },
-  { value: 'price-asc', label: 'Fiyat: Düşükten Yükseğe' },
-  { value: 'price-desc', label: 'Fiyat: Yüksekten Düşüğe' },
-];
+const themeIds = ['all', 'portrait', 'landscape', 'street', 'nature', 'blackwhite', 'travel', 'documentary'] as const;
+const themeAliases: Record<string, string[]> = {
+  all: ['all', 'tümü', 'tumu', 'hepsi'],
+  portrait: ['portrait', 'portre'],
+  landscape: ['landscape', 'manzara'],
+  street: ['street', 'sokak'],
+  nature: ['nature', 'doğa', 'doga'],
+  blackwhite: ['blackwhite', 'black-white', 'siyah beyaz', 'siyahbeyaz', 'siyah-beyaz', 'bw'],
+  travel: ['travel', 'seyahat'],
+  documentary: ['documentary', 'belgesel'],
+};
 
 const formatPrice = (price: number) => price.toLocaleString('tr-TR');
 
 const normalizeTheme = (productTheme: string | undefined | null): string => {
   if (!productTheme) return '';
   const normalized = productTheme.toLowerCase().trim();
-  
-  for (const theme of themes) {
-    if (theme.aliases.some(alias => alias.toLowerCase() === normalized)) {
-      return theme.id;
+
+  for (const themeId of themeIds) {
+    if (themeAliases[themeId].some(alias => alias.toLowerCase() === normalized)) {
+      return themeId;
     }
   }
   return normalized;
 };
 
 export default function ShopPage() {
+  const { t } = useLanguage();
   const [settings, setSettings] = useState<Settings | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -54,6 +50,19 @@ export default function ShopPage() {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
   const [pageReady, setPageReady] = useState(false);
+
+  const themes = themeIds.map(id => ({
+    id,
+    label: t(`shop.${id}`),
+    aliases: themeAliases[id]
+  }));
+
+  const sortOptions = [
+    { value: 'featured', label: t('shop.featured') },
+    { value: 'newest', label: t('shop.newest') },
+    { value: 'price-asc', label: t('shop.priceLowHigh') },
+    { value: 'price-desc', label: t('shop.priceHighLow') },
+  ];
 
   useEffect(() => {
     const loadData = async () => {
@@ -166,7 +175,7 @@ export default function ShopPage() {
               style={{ transition: 'color 0.3s ease' }}
             >
               <SlidersHorizontal className="w-4 h-4" />
-              <span>TEMALAR</span>
+              <span>{t('shop.themes')}</span>
               {selectedTheme !== 'all' && (
                 <span className="px-2 py-0.5 bg-black text-white text-xs rounded-full">1</span>
               )}
@@ -215,7 +224,7 @@ export default function ShopPage() {
 
           {filteredProducts.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-neutral-500">Bu kategoride eser bulunamadı.</p>
+              <p className="text-neutral-500">{t('shop.noProducts')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -298,7 +307,7 @@ export default function ShopPage() {
                       <h3 className="text-sm font-medium tracking-wide group-hover:opacity-70 transition-opacity">
                         {product.title.toUpperCase()}
                       </h3>
-                      <p className="text-sm mt-2">₺{formatPrice(product.base_price)}'den başlayan</p>
+                      <p className="text-sm mt-2">{t('shop.startingFrom')} ₺{formatPrice(product.base_price)}</p>
                     </div>
                   </Link>
                 );
@@ -327,7 +336,7 @@ export default function ShopPage() {
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-sm font-medium">TEMALAR</h2>
+                <h2 className="text-sm font-medium">{t('shop.themes')}</h2>
                 <button
                   onClick={closeFilter}
                   className="p-1 hover:bg-neutral-100 rounded transition-colors duration-200"
