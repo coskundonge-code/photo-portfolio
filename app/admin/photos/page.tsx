@@ -415,6 +415,34 @@ export default function AdminPhotosPage() {
       if (linkedProduct && formData.title) {
         await updateProduct(linkedProduct.id, { title: formData.title });
       }
+
+      // Mağazada değilse ve mağazaya ekle seçiliyse, ürün oluştur
+      if (!linkedProduct && formData.addToShop) {
+        const newProduct = await createProduct({
+          title: formData.title || 'İsimsiz Eser',
+          photo_id: editingPhoto.id,
+          base_price: parseFloat(formData.price20x30) || 1500,
+          edition_type: 'open',
+          is_available: true,
+        });
+
+        // 4 boyut için fiyatları oluştur
+        if (newProduct) {
+          const sizes = [
+            { name: 'Classic', dimensions: '20×30 cm', price: parseFloat(formData.price20x30) || 1500, order_index: 0 },
+            { name: 'Medium', dimensions: '40×60 cm', price: parseFloat(formData.price40x60) || 2500, order_index: 1 },
+            { name: 'Large', dimensions: '60×90 cm', price: parseFloat(formData.price60x90) || 3500, order_index: 2 },
+            { name: 'Luxe', dimensions: '100×150 cm', price: parseFloat(formData.price100x150) || 5000, order_index: 3 },
+          ];
+
+          for (const size of sizes) {
+            await createProductSize({
+              product_id: newProduct.id,
+              ...size,
+            });
+          }
+        }
+      }
     } else {
       // Yeni fotoğraf oluştur
       const newPhoto = await createPhoto(photoData);
@@ -883,8 +911,8 @@ export default function AdminPhotosPage() {
                 <label htmlFor="is_featured" className="text-neutral-300">Öne çıkan fotoğraf</label>
               </div>
 
-              {/* Mağazaya Ekle - Sadece yeni fotoğraf için göster */}
-              {!editingPhoto && (
+              {/* Mağazaya Ekle - Yeni fotoğraf veya mağazada olmayan fotoğraf için göster */}
+              {(!editingPhoto || (editingPhoto && !isPhotoInShop(editingPhoto.id))) && (
                 <div className="p-4 bg-neutral-800/50 rounded-lg border border-neutral-700 space-y-4">
                   <div className="flex items-center gap-3">
                     <input
