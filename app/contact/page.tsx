@@ -1,5 +1,6 @@
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import ContactForm from '@/components/ContactForm';
 import { getSettings, getProjects } from '@/lib/supabase';
 
 export const revalidate = 60;
@@ -85,66 +86,7 @@ export default async function ContactPage() {
             {/* Sağ: İletişim Formu */}
             <div>
               <h2 className="text-lg font-medium mb-6">Mesaj Gönderin</h2>
-              
-              <form className="space-y-5">
-                <div>
-                  <label className="block text-sm text-neutral-600 mb-2">
-                    Adınız
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-4 py-3 border border-neutral-200 focus:border-black outline-none transition-colors"
-                    placeholder="Adınız Soyadınız"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm text-neutral-600 mb-2">
-                    E-posta
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    className="w-full px-4 py-3 border border-neutral-200 focus:border-black outline-none transition-colors"
-                    placeholder="ornek@email.com"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm text-neutral-600 mb-2">
-                    Konu
-                  </label>
-                  <select
-                    className="w-full px-4 py-3 border border-neutral-200 focus:border-black outline-none transition-colors bg-white"
-                  >
-                    <option value="">Konu Seçin</option>
-                    <option value="order">Sipariş Hakkında</option>
-                    <option value="custom">Özel Talep</option>
-                    <option value="collab">İşbirliği</option>
-                    <option value="other">Diğer</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm text-neutral-600 mb-2">
-                    Mesajınız
-                  </label>
-                  <textarea
-                    required
-                    rows={5}
-                    className="w-full px-4 py-3 border border-neutral-200 focus:border-black outline-none transition-colors resize-none"
-                    placeholder="Mesajınızı buraya yazın..."
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-4 bg-black text-white text-sm tracking-wide hover:bg-neutral-800 transition-colors"
-                >
-                  Gönder
-                </button>
-              </form>
+              <ContactForm />
             </div>
           </div>
         </div>
