@@ -236,7 +236,7 @@ export default function CheckoutPage() {
           <div className="max-w-lg mx-auto lg:ml-auto lg:mr-0">
             {/* Logo/Back Link */}
             <Link href="/" className="text-xl font-light tracking-wide mb-10 block">
-              {settings?.site_title || 'COŞKUN DÖNGE'}
+              {settings?.site_name || 'COŞKUN DÖNGE'}
             </Link>
 
             <form onSubmit={handleSubmit} className="space-y-8">
