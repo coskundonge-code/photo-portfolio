@@ -164,10 +164,10 @@ export default function CheckoutPage() {
                   <p><span className="text-neutral-500">{t('checkout.bankName')}:</span> Akbank</p>
                   <div className="flex items-center gap-2">
                     <span className="text-neutral-500">{t('checkout.accountHolder')}:</span>
-                    <span className="font-medium">SFT</span>
+                    <span className="font-medium">Coşkun Dönge</span>
                     <button
                       type="button"
-                      onClick={() => copyToClipboard('SFT', 'accountHolder')}
+                      onClick={() => copyToClipboard('Coşkun Dönge', 'accountHolder')}
                       className="p-1 hover:bg-neutral-200 rounded transition-colors"
                       title={t('checkout.copy')}
                     >
@@ -452,10 +452,10 @@ export default function CheckoutPage() {
                         <div className="flex justify-between items-center">
                           <span className="text-neutral-500">{t('checkout.accountHolder')}:</span>
                           <div className="flex items-center gap-2">
-                            <span className="font-medium">SFT</span>
+                            <span className="font-medium">Coşkun Dönge</span>
                             <button
                               type="button"
-                              onClick={() => copyToClipboard('SFT', 'accountHolder')}
+                              onClick={() => copyToClipboard('Coşkun Dönge', 'accountHolder')}
                               className="p-1 hover:bg-neutral-200 rounded transition-colors"
                               title={t('checkout.copy')}
                             >
