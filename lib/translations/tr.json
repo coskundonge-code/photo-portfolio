@@ -162,7 +162,8 @@
     "shippingCost": "Adrese göre hesaplanacak",
     "total": "Toplam",
     "items": "ürün",
-    "turkey": "Türkiye"
+    "turkey": "Türkiye",
+    "copy": "Kopyala"
   },
   "auth": {
     "title": "Hesap",

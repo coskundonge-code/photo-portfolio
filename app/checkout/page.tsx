@@ -9,7 +9,7 @@ import Footer from '@/components/Footer';
 import { getSettings, getProjects } from '@/lib/supabase';
 import { useLanguage } from '@/lib/language';
 import { Settings, Project } from '@/lib/types';
-import { Loader2, CreditCard, Building2, Check, ShoppingBag } from 'lucide-react';
+import { Loader2, CreditCard, Building2, Check, ShoppingBag, Copy } from 'lucide-react';
 
 interface CartItem {
   productId: string;
@@ -35,6 +35,13 @@ export default function CheckoutPage() {
   const [processing, setProcessing] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const copyToClipboard = async (text: string, fieldName: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopiedField(fieldName);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
 
   // Form state
   const [formData, setFormData] = useState({
@@ -153,10 +160,40 @@ export default function CheckoutPage() {
             {paymentMethod === 'transfer' && (
               <div className="bg-neutral-50 border border-neutral-200 p-6 mb-8 text-left">
                 <h3 className="font-medium mb-4">{t('checkout.bankInfo')}</h3>
-                <div className="space-y-2 text-sm">
-                  <p><span className="text-neutral-500">{t('checkout.bankName')}:</span> Ziraat Bankası</p>
-                  <p><span className="text-neutral-500">{t('checkout.iban')}:</span> TR00 0000 0000 0000 0000 0000 00</p>
-                  <p><span className="text-neutral-500">{t('checkout.accountHolder')}:</span> Coşkun Dönge</p>
+                <div className="space-y-3 text-sm">
+                  <p><span className="text-neutral-500">{t('checkout.bankName')}:</span> Akbank</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-neutral-500">{t('checkout.accountHolder')}:</span>
+                    <span className="font-medium">SFT</span>
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard('SFT', 'accountHolder')}
+                      className="p-1 hover:bg-neutral-200 rounded transition-colors"
+                      title={t('checkout.copy')}
+                    >
+                      {copiedField === 'accountHolder' ? (
+                        <Check className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <Copy className="w-4 h-4 text-neutral-500" />
+                      )}
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-neutral-500">{t('checkout.iban')}:</span>
+                    <span className="font-mono text-xs sm:text-sm">TR04 0004 6002 8788 8000 1937 83</span>
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard('TR040004600287888000193783', 'iban')}
+                      className="p-1 hover:bg-neutral-200 rounded transition-colors"
+                      title={t('checkout.copy')}
+                    >
+                      {copiedField === 'iban' ? (
+                        <Check className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <Copy className="w-4 h-4 text-neutral-500" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <p className="text-sm text-neutral-500 mt-4">{t('checkout.transferNote')}</p>
               </div>
@@ -410,15 +447,43 @@ export default function CheckoutPage() {
                       <div className="space-y-3 text-sm">
                         <div className="flex justify-between">
                           <span className="text-neutral-500">{t('checkout.bankName')}:</span>
-                          <span className="font-medium">Ziraat Bankası</span>
+                          <span className="font-medium">Akbank</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-neutral-500">{t('checkout.iban')}:</span>
-                          <span className="font-mono">TR00 0000 0000 0000 0000 0000 00</span>
-                        </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center">
                           <span className="text-neutral-500">{t('checkout.accountHolder')}:</span>
-                          <span className="font-medium">Coşkun Dönge</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">SFT</span>
+                            <button
+                              type="button"
+                              onClick={() => copyToClipboard('SFT', 'accountHolder')}
+                              className="p-1 hover:bg-neutral-200 rounded transition-colors"
+                              title={t('checkout.copy')}
+                            >
+                              {copiedField === 'accountHolder' ? (
+                                <Check className="w-4 h-4 text-green-600" />
+                              ) : (
+                                <Copy className="w-4 h-4 text-neutral-500" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-neutral-500">{t('checkout.iban')}:</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs sm:text-sm">TR04 0004 6002 8788 8000 1937 83</span>
+                            <button
+                              type="button"
+                              onClick={() => copyToClipboard('TR040004600287888000193783', 'iban')}
+                              className="p-1 hover:bg-neutral-200 rounded transition-colors"
+                              title={t('checkout.copy')}
+                            >
+                              {copiedField === 'iban' ? (
+                                <Check className="w-4 h-4 text-green-600" />
+                              ) : (
+                                <Copy className="w-4 h-4 text-neutral-500" />
+                              )}
+                            </button>
+                          </div>
                         </div>
                       </div>
                       <p className="text-sm text-neutral-500 mt-4 pt-4 border-t border-neutral-200">

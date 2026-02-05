@@ -163,7 +163,8 @@
     "shippingCost": "Calculated based on address",
     "total": "Total",
     "items": "items",
-    "turkey": "Turkey"
+    "turkey": "Turkey",
+    "copy": "Copy"
   },
   "auth": {
     "title": "Account",
