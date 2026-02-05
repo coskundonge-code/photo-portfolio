@@ -317,6 +317,9 @@ export default function ProductPage() {
                   : t('product.openEdition')}
               </div>
 
+              {/* Ürün İsmi */}
+              <h1 className="text-2xl font-light tracking-wide mb-4">{product.title}</h1>
+
               <div className="mb-8">
                 <p className="text-3xl font-light">₺{formatPrice(calculatePrice())},00</p>
                 <p className="text-sm text-neutral-500 mt-2">{t('product.vatIncluded')}</p>
