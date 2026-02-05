@@ -2,18 +2,24 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { X, Loader2, Mail, Lock, User } from 'lucide-react';
+import { X, Loader2, Mail, Lock, User, CheckCircle, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
+import { useLanguage } from '@/lib/language';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialMode?: 'login' | 'register' | 'forgot';
 }
 
-export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalProps) {
+  const { t } = useLanguage();
+  const { signIn, signUp, resetPassword } = useAuth();
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot'>(initialMode);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -24,21 +30,72 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage('');
+    setError(null);
+    setSuccess(null);
 
-    // Şifre kontrolü (kayıt için)
-    if (mode === 'register' && formData.password !== formData.confirmPassword) {
-      setMessage('Şifreler eşleşmiyor');
+    try {
+      if (mode === 'login') {
+        const result = await signIn(formData.email, formData.password);
+        if (result.error) {
+          // Translate common errors
+          if (result.error.includes('Invalid login credentials')) {
+            setError(t('auth.invalidCredentials'));
+          } else if (result.error.includes('Email not confirmed')) {
+            setError(t('auth.emailNotConfirmed'));
+          } else {
+            setError(result.error);
+          }
+        } else {
+          onClose();
+          // Reset form
+          setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+        }
+      } else if (mode === 'register') {
+        // Password validation
+        if (formData.password !== formData.confirmPassword) {
+          setError(t('auth.passwordMismatch'));
+          setLoading(false);
+          return;
+        }
+
+        if (formData.password.length < 6) {
+          setError(t('auth.passwordTooShort'));
+          setLoading(false);
+          return;
+        }
+
+        const result = await signUp(formData.email, formData.password, formData.name);
+        if (result.error) {
+          if (result.error.includes('already registered')) {
+            setError(t('auth.emailAlreadyExists'));
+          } else {
+            setError(result.error);
+          }
+        } else if (result.needsConfirmation) {
+          setSuccess(t('auth.confirmEmail'));
+        } else {
+          onClose();
+          setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+        }
+      } else if (mode === 'forgot') {
+        const result = await resetPassword(formData.email);
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setSuccess(t('auth.resetEmailSent'));
+        }
+      }
+    } catch (err) {
+      setError(t('common.error'));
+    } finally {
       setLoading(false);
-      return;
     }
+  };
 
-    // Simülasyon - Supabase Auth entegrasyonu yapılacak
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Şimdilik bilgi mesajı göster
-    setMessage('Üyelik sistemi yakında aktif olacak!');
-    setLoading(false);
+  const switchMode = (newMode: 'login' | 'register' | 'forgot') => {
+    setMode(newMode);
+    setError(null);
+    setSuccess(null);
   };
 
   if (!isOpen) return null;
@@ -47,10 +104,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Overlay */}
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      
+
       {/* Modal */}
       <div className="relative bg-white w-full max-w-4xl max-h-[90vh] overflow-hidden flex">
-        
+
         {/* Sol: Görsel */}
         <div className="hidden md:block w-1/2 bg-neutral-100 relative">
           <div className="absolute inset-0 flex items-center justify-center p-12">
@@ -69,7 +126,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 </div>
               </div>
               {/* Gölge */}
-              <div 
+              <div
                 className="absolute -bottom-3 left-[15%] right-[15%] h-6 -z-10"
                 style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, transparent 70%)' }}
               />
@@ -89,22 +146,29 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
           {/* Başlık */}
           <h2 className="text-2xl font-semibold mb-2">
-            {mode === 'login' ? 'GİRİŞ YAP' : 'HESAP OLUŞTUR'}
+            {mode === 'login' && t('auth.login').toUpperCase()}
+            {mode === 'register' && t('auth.createAccount').toUpperCase()}
+            {mode === 'forgot' && t('auth.forgotPassword').toUpperCase()}
           </h2>
           <p className="text-neutral-500 text-sm mb-8">
-            {mode === 'login' 
-              ? 'Siparişlerinizi takip edin ve özel fırsatlardan haberdar olun.'
-              : 'Siparişlerinizi takip edin ve özel fırsatlardan haberdar olun.'}
+            {mode === 'login' && t('auth.loginSubtitle')}
+            {mode === 'register' && t('auth.registerSubtitle')}
+            {mode === 'forgot' && t('auth.forgotSubtitle')}
           </p>
 
-          {/* Mesaj */}
-          {message && (
-            <div className={`mb-6 p-4 rounded-lg text-sm ${
-              message.includes('yakında') 
-                ? 'bg-blue-50 text-blue-700 border border-blue-200' 
-                : 'bg-red-50 text-red-700 border border-red-200'
-            }`}>
-              {message}
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
+          {/* Success Message */}
+          {success && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
+              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-green-600">{success}</p>
             </div>
           )}
 
@@ -112,7 +176,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'register' && (
               <div>
-                <label className="block text-xs font-medium text-neutral-500 mb-2">AD SOYAD</label>
+                <label className="block text-xs font-medium text-neutral-500 mb-2">
+                  {t('auth.fullName').toUpperCase()}
+                </label>
                 <div className="relative">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                   <input
@@ -121,14 +187,16 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full pl-12 pr-4 py-3 border border-neutral-300 focus:border-black outline-none"
-                    placeholder="Adınız Soyadınız"
+                    placeholder={t('auth.namePlaceholder')}
                   />
                 </div>
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-medium text-neutral-500 mb-2">E-POSTA</label>
+              <label className="block text-xs font-medium text-neutral-500 mb-2">
+                {t('auth.email').toUpperCase()}
+              </label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                 <input
@@ -137,40 +205,60 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full pl-12 pr-4 py-3 border border-neutral-300 focus:border-black outline-none"
-                  placeholder="ornek@email.com"
+                  placeholder={t('auth.emailPlaceholder')}
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-neutral-500 mb-2">ŞİFRE</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
-                <input
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3 border border-neutral-300 focus:border-black outline-none"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
-
-            {mode === 'register' && (
+            {mode !== 'forgot' && (
               <div>
-                <label className="block text-xs font-medium text-neutral-500 mb-2">ŞİFRE TEKRAR</label>
+                <label className="block text-xs font-medium text-neutral-500 mb-2">
+                  {t('auth.password').toUpperCase()}
+                </label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                   <input
                     type="password"
                     required
+                    minLength={6}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full pl-12 pr-4 py-3 border border-neutral-300 focus:border-black outline-none"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
+            )}
+
+            {mode === 'register' && (
+              <div>
+                <label className="block text-xs font-medium text-neutral-500 mb-2">
+                  {t('auth.confirmPassword').toUpperCase()}
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                     className="w-full pl-12 pr-4 py-3 border border-neutral-300 focus:border-black outline-none"
                     placeholder="••••••••"
                   />
                 </div>
+              </div>
+            )}
+
+            {mode === 'login' && (
+              <div className="text-right">
+                <button
+                  type="button"
+                  onClick={() => switchMode('forgot')}
+                  className="text-sm text-neutral-500 hover:text-black transition-colors"
+                >
+                  {t('auth.forgotPassword')}
+                </button>
               </div>
             )}
 
@@ -182,29 +270,42 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  İşleniyor...
+                  {t('common.loading')}
                 </>
               ) : (
-                mode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'
+                <>
+                  {mode === 'login' && t('auth.login')}
+                  {mode === 'register' && t('auth.register')}
+                  {mode === 'forgot' && t('auth.sendResetLink')}
+                </>
               )}
             </button>
           </form>
 
           {/* Alt Link */}
           <div className="mt-6 text-center">
-            {mode === 'login' ? (
+            {mode === 'login' && (
               <button
-                onClick={() => { setMode('register'); setMessage(''); }}
+                onClick={() => switchMode('register')}
                 className="text-sm text-neutral-600 hover:text-black underline"
               >
-                Hesabınız yok mu? Kayıt olun
+                {t('auth.noAccount')} {t('auth.register')}
               </button>
-            ) : (
+            )}
+            {mode === 'register' && (
               <button
-                onClick={() => { setMode('login'); setMessage(''); }}
+                onClick={() => switchMode('login')}
                 className="text-sm text-neutral-600 hover:text-black underline"
               >
-                Zaten hesabım var
+                {t('auth.haveAccount')}
+              </button>
+            )}
+            {mode === 'forgot' && (
+              <button
+                onClick={() => switchMode('login')}
+                className="text-sm text-neutral-600 hover:text-black underline"
+              >
+                {t('auth.backToLogin')}
               </button>
             )}
           </div>

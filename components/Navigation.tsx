@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Menu, X, User, ShoppingBag, ChevronDown, Globe } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Menu, X, User, ShoppingBag, ChevronDown, Globe, LogOut } from 'lucide-react';
 import { Settings as SettingsType, Project } from '@/lib/types';
 import { useLanguage } from '@/lib/language';
+import { useAuth } from '@/lib/auth';
 import CartDrawer from './CartDrawer';
 import AuthModal from './AuthModal';
 
@@ -16,13 +17,16 @@ interface NavigationProps {
 
 export default function Navigation({ projects = [], settings }: NavigationProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
+  const { user, member, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [isWorkDropdownOpen, setIsWorkDropdownOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -163,13 +167,62 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
 
             {/* Sağ: User, Cart, Language & Mobile Menu */}
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => setIsAuthOpen(true)}
-                className="p-2 hover:opacity-60 transition-opacity"
-                title={t('nav.myAccount')}
-              >
-                <User className="w-5 h-5" strokeWidth={1.5} />
-              </button>
+              {/* User Account */}
+              {user ? (
+                <div
+                  className="relative"
+                  onMouseEnter={() => setIsUserDropdownOpen(true)}
+                  onMouseLeave={() => setIsUserDropdownOpen(false)}
+                >
+                  <button
+                    className="p-2 hover:opacity-60 transition-opacity flex items-center gap-1"
+                    title={t('auth.myAccount')}
+                  >
+                    <User className="w-5 h-5" strokeWidth={1.5} />
+                  </button>
+                  {isUserDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-neutral-200 shadow-lg py-2">
+                      <div className="px-4 py-2 border-b border-neutral-100">
+                        <p className="text-sm font-medium truncate">{member?.name || user.email}</p>
+                        <p className="text-xs text-neutral-500 truncate">{user.email}</p>
+                      </div>
+                      <Link
+                        href="/account"
+                        className="block px-4 py-2 text-sm hover:bg-neutral-50 transition-colors"
+                        onClick={() => setIsUserDropdownOpen(false)}
+                      >
+                        {t('auth.myAccount')}
+                      </Link>
+                      <Link
+                        href="/account"
+                        className="block px-4 py-2 text-sm hover:bg-neutral-50 transition-colors"
+                        onClick={() => setIsUserDropdownOpen(false)}
+                      >
+                        {t('auth.myOrders')}
+                      </Link>
+                      <button
+                        onClick={async () => {
+                          await signOut();
+                          setIsUserDropdownOpen(false);
+                          router.push('/');
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-neutral-50 transition-colors flex items-center gap-2"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        {t('auth.logout')}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsAuthOpen(true)}
+                  className="p-2 hover:opacity-60 transition-opacity"
+                  title={t('auth.login')}
+                >
+                  <User className="w-5 h-5" strokeWidth={1.5} />
+                </button>
+              )}
 
               <button
                 onClick={() => setIsCartOpen(true)}

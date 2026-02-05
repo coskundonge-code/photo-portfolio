@@ -968,3 +968,174 @@ export const deleteMember = async (id: string): Promise<boolean> => {
 
   return true;
 };
+
+// ================================================
+// AUTHENTICATION (Supabase Auth)
+// ================================================
+
+// Sign up with email and password
+export const signUp = async (email: string, password: string, name: string) => {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        name,
+      },
+      emailRedirectTo: `${window.location.origin}/auth/callback`,
+    },
+  });
+
+  if (error) {
+    console.error('Error signing up:', error);
+    return { user: null, error: error.message };
+  }
+
+  // Also create a member record
+  if (data.user) {
+    await supabase.from('members').insert([{
+      id: data.user.id,
+      email: data.user.email,
+      name,
+      is_active: true,
+      role: 'member',
+      created_at: new Date().toISOString(),
+    }]);
+  }
+
+  return { user: data.user, error: null };
+};
+
+// Sign in with email and password
+export const signIn = async (email: string, password: string) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    console.error('Error signing in:', error);
+    return { user: null, session: null, error: error.message };
+  }
+
+  // Update last login
+  if (data.user) {
+    await supabase.from('members').update({
+      last_login: new Date().toISOString(),
+    }).eq('id', data.user.id);
+  }
+
+  return { user: data.user, session: data.session, error: null };
+};
+
+// Sign out
+export const signOut = async () => {
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    console.error('Error signing out:', error);
+    return { error: error.message };
+  }
+  return { error: null };
+};
+
+// Get current user
+export const getCurrentUser = async () => {
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error) {
+    console.error('Error getting user:', error);
+    return null;
+  }
+  return user;
+};
+
+// Get current session
+export const getSession = async () => {
+  const { data: { session }, error } = await supabase.auth.getSession();
+  if (error) {
+    console.error('Error getting session:', error);
+    return null;
+  }
+  return session;
+};
+
+// Reset password
+export const resetPassword = async (email: string) => {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/auth/reset-password`,
+  });
+
+  if (error) {
+    console.error('Error resetting password:', error);
+    return { error: error.message };
+  }
+
+  return { error: null };
+};
+
+// Update password
+export const updatePassword = async (newPassword: string) => {
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  if (error) {
+    console.error('Error updating password:', error);
+    return { error: error.message };
+  }
+
+  return { error: null };
+};
+
+// Update user profile
+export const updateProfile = async (userId: string, profile: { name?: string; phone?: string }) => {
+  const { data, error } = await supabase
+    .from('members')
+    .update({ ...profile, updated_at: new Date().toISOString() })
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating profile:', error);
+    return { data: null, error: error.message };
+  }
+
+  return { data, error: null };
+};
+
+// Get member profile
+export const getMemberProfile = async (userId: string): Promise<Member | null> => {
+  const { data, error } = await supabase
+    .from('members')
+    .select('*')
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    console.error('Error getting member profile:', error);
+    return null;
+  }
+
+  return data;
+};
+
+// Get user's orders
+export const getUserOrders = async (email: string): Promise<Order[]> => {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('customer_email', email)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching user orders:', error);
+    return [];
+  }
+
+  return data || [];
+};
+
+// Listen to auth state changes
+export const onAuthStateChange = (callback: (event: string, session: any) => void) => {
+  return supabase.auth.onAuthStateChange(callback);
+};
