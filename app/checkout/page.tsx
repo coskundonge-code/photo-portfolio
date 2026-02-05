@@ -528,9 +528,9 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        {/* Right Side - Order Summary (Sticky) */}
-        <div className="bg-neutral-50 border-l border-neutral-200 order-1 lg:order-2 lg:relative">
-          <div className="lg:fixed lg:top-0 lg:right-0 lg:w-1/2 lg:h-screen lg:overflow-y-auto px-6 lg:px-12 py-10 lg:py-16 bg-neutral-50">
+        {/* Right Side - Order Summary (Fixed) */}
+        <div className="bg-neutral-50 border-l border-neutral-200 order-1 lg:order-2">
+          <div className="lg:fixed lg:top-0 lg:right-0 lg:w-1/2 lg:h-screen px-6 lg:px-12 py-10 lg:py-16 bg-neutral-50 flex flex-col justify-center overflow-hidden">
             <div className="max-w-md mx-auto lg:mx-0">
               {/* Cart Items */}
               <div className="space-y-4 mb-6">
