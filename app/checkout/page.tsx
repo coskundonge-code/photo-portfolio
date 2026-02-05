@@ -239,7 +239,7 @@ export default function CheckoutPage() {
               {settings?.site_name || 'COŞKUN DÖNGE'}
             </Link>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form id="checkout-form" onSubmit={handleSubmit} className="space-y-8">
               {/* Contact Section */}
               <div>
                 <div className="flex items-center justify-between mb-4">
@@ -500,22 +500,13 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={processing}
-                className="w-full py-4 bg-black text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors disabled:bg-neutral-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {processing && <Loader2 className="w-5 h-5 animate-spin" />}
-                {processing ? t('checkout.processing') : t('checkout.completeOrder')}
-              </button>
             </form>
           </div>
         </div>
 
         {/* Right Side - Order Summary (Sticky) */}
-        <div className="bg-neutral-50 border-l border-neutral-200 order-1 lg:order-2">
-          <div className="lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto px-6 lg:px-12 py-10 lg:py-16">
+        <div className="bg-neutral-50 border-l border-neutral-200 order-1 lg:order-2 lg:relative">
+          <div className="lg:fixed lg:top-0 lg:right-0 lg:w-1/2 lg:h-screen lg:overflow-y-auto px-6 lg:px-12 py-10 lg:py-16 bg-neutral-50">
             <div className="max-w-md mx-auto lg:mx-0">
               {/* Cart Items */}
               <div className="space-y-4 mb-6">
@@ -586,6 +577,17 @@ export default function CheckoutPage() {
                   </p>
                 )}
               </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                form="checkout-form"
+                disabled={processing}
+                className="w-full mt-6 py-4 bg-black text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors disabled:bg-neutral-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {processing && <Loader2 className="w-5 h-5 animate-spin" />}
+                {processing ? t('checkout.processing') : t('checkout.completeOrder')}
+              </button>
             </div>
           </div>
         </div>
