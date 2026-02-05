@@ -170,7 +170,9 @@
     "iban": "IBAN",
     "accountHolder": "Hesap Sahibi",
     "transferNote": "Lütfen havale açıklamasına sipariş numaranızı yazın. Ödeme onaylandıktan sonra siparişiniz işleme alınacaktır.",
-    "freeShipping": "₺5.000 üzeri ücretsiz kargo"
+    "freeShipping": "₺5.000 üzeri ücretsiz kargo",
+    "underConstruction": "Değerli Müşterimiz, Satın Alma sayfamız şu anda yapım aşamasındadır. En kısa sürede hizmete açılacaktır. Satın alma taleplerinizi o zamana kadar e-posta yolu ile iletebilirsiniz. Anlayışınız için teşekkür ederiz.",
+    "contactViaEmail": "E-posta ile İletişime Geçin"
   },
   "auth": {
     "title": "Hesap",

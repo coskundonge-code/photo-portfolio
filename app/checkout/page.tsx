@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { getSettings, getProjects } from '@/lib/supabase';
 import { useLanguage } from '@/lib/language';
 import { Settings, Project } from '@/lib/types';
-import { Loader2, Check, ShoppingBag, Copy, Lock } from 'lucide-react';
+import { Loader2, Check, ShoppingBag, Copy, Lock, X, Mail, AlertCircle } from 'lucide-react';
 
 interface CartItem {
   productId: string;
@@ -37,6 +37,7 @@ export default function CheckoutPage() {
   const [emailOffers, setEmailOffers] = useState(true);
   const [useBillingAddress, setUseBillingAddress] = useState(true);
   const [discountCode, setDiscountCode] = useState('');
+  const [showUnderConstruction, setShowUnderConstruction] = useState(false);
 
   const copyToClipboard = async (text: string, fieldName: string) => {
     await navigator.clipboard.writeText(text);
@@ -118,21 +119,8 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setProcessing(true);
-
-    // Simulate order processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Generate order number
-    const orderNum = 'ORD-' + Date.now().toString(36).toUpperCase();
-    setOrderNumber(orderNum);
-
-    // Clear cart
-    localStorage.setItem('cart', '[]');
-    window.dispatchEvent(new Event('cartUpdated'));
-
-    setOrderPlaced(true);
-    setProcessing(false);
+    // Show under construction message instead of processing
+    setShowUnderConstruction(true);
   };
 
   if (loading) {
@@ -230,6 +218,42 @@ export default function CheckoutPage() {
 
   return (
     <main className="min-h-screen bg-white">
+      {/* Under Construction Modal */}
+      {showUnderConstruction && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-8 relative">
+            <button
+              onClick={() => setShowUnderConstruction(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-neutral-100 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5 text-neutral-500" />
+            </button>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <AlertCircle className="w-8 h-8 text-amber-600" />
+              </div>
+
+              <p className="text-neutral-700 leading-relaxed mb-8">
+                {t('checkout.underConstruction')}
+              </p>
+
+              <a
+                href={`mailto:${settings?.email || 'info@coskundonge.com'}`}
+                className="inline-flex items-center justify-center gap-3 w-full py-4 bg-black text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors"
+              >
+                <Mail className="w-5 h-5" />
+                {t('checkout.contactViaEmail')}
+              </a>
+
+              <p className="text-sm text-neutral-500 mt-4">
+                {settings?.email || 'info@coskundonge.com'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid lg:grid-cols-2 min-h-screen">
         {/* Left Side - Forms */}
         <div className="bg-white px-6 lg:px-12 xl:px-20 py-10 lg:py-16 order-2 lg:order-1">

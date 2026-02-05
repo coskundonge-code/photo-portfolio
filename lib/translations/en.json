@@ -171,7 +171,9 @@
     "iban": "IBAN",
     "accountHolder": "Account Holder",
     "transferNote": "Please include your order number in the transfer description. Your order will be processed after payment is confirmed.",
-    "freeShipping": "Free shipping over ₺5,000"
+    "freeShipping": "Free shipping over ₺5,000",
+    "underConstruction": "Dear Customer, Our purchase page is currently under construction. It will be available soon. Until then, you can submit your purchase requests via email. Thank you for your understanding.",
+    "contactViaEmail": "Contact via Email"
   },
   "auth": {
     "title": "Account",
