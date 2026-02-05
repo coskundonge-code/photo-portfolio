@@ -75,11 +75,13 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
             </Link>
 
             {/* Orta: Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-8">
+            <div className="hidden lg:flex items-center gap-10">
               <Link
                 href="/"
-                className={`text-sm tracking-wide hover:opacity-60 transition-opacity ${
-                  pathname === '/' ? 'font-medium' : ''
+                className={`relative text-[15px] tracking-wide transition-colors pb-1 ${
+                  pathname === '/'
+                    ? 'text-black after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-black'
+                    : 'text-neutral-700 hover:text-black'
                 }`}
               >
                 {t('nav.home')}
@@ -93,8 +95,10 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
               >
                 <Link
                   href="/work"
-                  className={`text-sm tracking-wide hover:opacity-60 transition-opacity flex items-center gap-1 ${
-                    pathname?.startsWith('/work') ? 'font-medium' : ''
+                  className={`relative text-[15px] tracking-wide transition-colors flex items-center gap-1 pb-1 ${
+                    pathname?.startsWith('/work')
+                      ? 'text-black after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-black'
+                      : 'text-neutral-700 hover:text-black'
                   }`}
                 >
                   {t('nav.work')}
@@ -127,24 +131,30 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
 
               <Link
                 href="/shop"
-                className={`text-sm tracking-wide hover:opacity-60 transition-opacity ${
-                  pathname?.startsWith('/shop') ? 'font-medium' : ''
+                className={`relative text-[15px] tracking-wide transition-colors pb-1 ${
+                  pathname?.startsWith('/shop')
+                    ? 'text-black after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-black'
+                    : 'text-neutral-700 hover:text-black'
                 }`}
               >
                 {t('nav.shop')}
               </Link>
               <Link
                 href="/about"
-                className={`text-sm tracking-wide hover:opacity-60 transition-opacity ${
-                  pathname === '/about' ? 'font-medium' : ''
+                className={`relative text-[15px] tracking-wide transition-colors pb-1 ${
+                  pathname === '/about'
+                    ? 'text-black after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-black'
+                    : 'text-neutral-700 hover:text-black'
                 }`}
               >
                 {t('nav.about')}
               </Link>
               <Link
                 href="/contact"
-                className={`text-sm tracking-wide hover:opacity-60 transition-opacity ${
-                  pathname === '/contact' ? 'font-medium' : ''
+                className={`relative text-[15px] tracking-wide transition-colors pb-1 ${
+                  pathname === '/contact'
+                    ? 'text-black after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-black'
+                    : 'text-neutral-700 hover:text-black'
                 }`}
               >
                 {t('nav.contact')}
