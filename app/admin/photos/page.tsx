@@ -184,6 +184,7 @@ export default function AdminPhotosPage() {
   const [multiUploadFiles, setMultiUploadFiles] = useState<File[]>([]);
   const [multiUploadProgress, setMultiUploadProgress] = useState<{[key: string]: number}>({});
   const [isMultiUploading, setIsMultiUploading] = useState(false);
+  const [multiUploadThumbnails, setMultiUploadThumbnails] = useState<{[key: string]: string}>({});
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const multiFileInputRef = useRef<HTMLInputElement>(null);
@@ -545,6 +546,16 @@ export default function AdminPhotosPage() {
     setMultiUploadFiles(fileArray);
     setIsMultiUploadOpen(true);
 
+    // Thumbnail URL'lerini bir kere oluştur (memory leak önlemi)
+    const rawExtensions = ['.raw', '.cr2', '.cr3', '.nef', '.arw', '.dng', '.orf', '.rw2'];
+    const thumbnails: {[key: string]: string} = {};
+    fileArray.forEach((file, index) => {
+      const fileExt = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+      const isRawFile = rawExtensions.includes(fileExt);
+      thumbnails[`file_${index}`] = isRawFile ? '' : URL.createObjectURL(file);
+    });
+    setMultiUploadThumbnails(thumbnails);
+
     // Reset file input
     if (multiFileInputRef.current) {
       multiFileInputRef.current.value = '';
@@ -566,7 +577,32 @@ export default function AdminPhotosPage() {
       const fileKey = `file_${i}`;
 
       try {
-        // Get image dimensions
+        // RAW dosya kontrolü
+        const rawExtensions = ['.raw', '.cr2', '.cr3', '.nef', '.arw', '.dng', '.orf', '.rw2'];
+        const fileExt = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+        const isRawFile = rawExtensions.includes(fileExt);
+
+        if (isRawFile) {
+          // RAW dosyalar için Supabase'e direkt yükle (img element ile boyut algılanamaz)
+          setMultiUploadProgress(prev => ({ ...prev, [fileKey]: 30 }));
+          const uploadedUrl = await uploadImage(file);
+
+          if (uploadedUrl) {
+            await createPhoto({
+              title: '',
+              url: uploadedUrl,
+              project_id: undefined,
+              is_featured: false,
+              orientation: 'landscape',
+            });
+            setMultiUploadProgress(prev => ({ ...prev, [fileKey]: 100 }));
+          } else {
+            setMultiUploadProgress(prev => ({ ...prev, [fileKey]: -1 }));
+          }
+          continue;
+        }
+
+        // Normal resim dosyaları için boyut algıla ve Cloudinary'ye yükle
         const img = document.createElement('img');
         const objectUrl = URL.createObjectURL(file);
 
@@ -586,7 +622,6 @@ export default function AdminPhotosPage() {
             });
 
             if (uploadedUrl) {
-              // Create photo in database (no title, just the image)
               await createPhoto({
                 title: '',
                 url: uploadedUrl,
@@ -594,16 +629,16 @@ export default function AdminPhotosPage() {
                 is_featured: false,
                 orientation: orientation,
               });
-
-              setMultiUploadProgress(prev => ({
-                ...prev,
-                [fileKey]: 100
-              }));
+              setMultiUploadProgress(prev => ({ ...prev, [fileKey]: 100 }));
+            } else {
+              // Upload failed - mark as error
+              setMultiUploadProgress(prev => ({ ...prev, [fileKey]: -1 }));
             }
             resolve();
           };
 
           img.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
             reject(new Error('Image load failed'));
           };
 
@@ -623,6 +658,11 @@ export default function AdminPhotosPage() {
   };
 
   const closeMultiUpload = () => {
+    // Thumbnail URL'lerini temizle (memory leak önlemi)
+    Object.values(multiUploadThumbnails).forEach(url => {
+      if (url) URL.revokeObjectURL(url);
+    });
+    setMultiUploadThumbnails({});
     setIsMultiUploadOpen(false);
     setMultiUploadFiles([]);
     setMultiUploadProgress({});
@@ -1050,12 +1090,18 @@ export default function AdminPhotosPage() {
                         'bg-neutral-800 border border-neutral-700'
                       }`}
                     >
-                      <div className="w-12 h-12 rounded overflow-hidden bg-neutral-700 flex-shrink-0">
-                        <img
-                          src={URL.createObjectURL(file)}
-                          alt={file.name}
-                          className="w-full h-full object-cover"
-                        />
+                      <div className="w-12 h-12 rounded overflow-hidden bg-neutral-700 flex-shrink-0 flex items-center justify-center">
+                        {multiUploadThumbnails[fileKey] ? (
+                          <img
+                            src={multiUploadThumbnails[fileKey]}
+                            alt={file.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-[10px] text-neutral-400 font-mono uppercase">
+                            {file.name.substring(file.name.lastIndexOf('.') + 1)}
+                          </span>
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-white truncate">{file.name}</p>
@@ -1107,7 +1153,7 @@ export default function AdminPhotosPage() {
                 >
                   {Object.values(multiUploadProgress).some(p => p === 100) ? 'Kapat' : 'İptal'}
                 </button>
-                {!Object.values(multiUploadProgress).every(p => p === 100 || p === -1) && (
+                {(Object.keys(multiUploadProgress).length === 0 || !Object.values(multiUploadProgress).every(p => p === 100 || p === -1)) && (
                   <button
                     onClick={handleMultiUpload}
                     disabled={isMultiUploading || multiUploadFiles.length === 0}
