@@ -233,8 +233,12 @@ export default function ShopPage() {
                 const isPortrait = isPhotoPortrait(product);
 
                 const frameAspect = isPortrait ? '12 / 17' : '17 / 12';
-                const frameMaxWidth = isPortrait ? '240px' : '340px';
-                const frameWidth = isPortrait ? 'min(240px, 50vw)' : 'min(340px, 60vw)';
+                // Frame overhead: border(8)*2 + mat(32-40)*2 + groove(3)*2 + inner(8)*2
+                // Portrait: 2*(8+32+3+8)=102px, Landscape: 2*(8+40+3+8)=118px
+                // Page padding: px-4 = 32px total. So max photo = 100vw - padding - overhead - margin
+                const frameWidth = isPortrait
+                  ? 'min(240px, calc(100vw - 140px))'
+                  : 'min(340px, calc(100vw - 160px))';
 
                 return (
                   <Link
