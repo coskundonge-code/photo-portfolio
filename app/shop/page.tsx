@@ -233,12 +233,8 @@ export default function ShopPage() {
                 const isPortrait = isPhotoPortrait(product);
 
                 const frameAspect = isPortrait ? '12 / 17' : '17 / 12';
-                // Frame overhead: border(8)*2 + mat(32-40)*2 + groove(3)*2 + inner(8)*2
-                // Portrait: 2*(8+32+3+8)=102px, Landscape: 2*(8+40+3+8)=118px
-                // Page padding: px-4 = 32px total. So max photo = 100vw - padding - overhead - margin
-                const frameWidth = isPortrait
-                  ? 'min(240px, calc(100vw - 140px))'
-                  : 'min(340px, calc(100vw - 160px))';
+                // Max total frame widths: portrait=342px, landscape=458px
+                const frameMaxWidth = isPortrait ? '342px' : '458px';
 
                 return (
                   <Link
@@ -247,11 +243,14 @@ export default function ShopPage() {
                     className="group block"
                   >
                     <div
-                      className="bg-[#f5f5f5] flex items-center justify-center"
+                      className="bg-[#f5f5f5] flex items-center justify-center p-4 sm:p-6"
                       style={{ aspectRatio: isPortrait ? '3 / 4' : '4 / 3' }}
                     >
                       {/* Realistic frame - same as home page */}
-                      <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
+                      <div
+                        className="relative transition-transform duration-300 group-hover:-translate-y-1"
+                        style={{ width: '100%', maxWidth: frameMaxWidth }}
+                      >
                         {/* Frame border - black */}
                         <div
                           className="border-[8px] border-black"
@@ -285,9 +284,8 @@ export default function ShopPage() {
                               >
                                 {/* Photo */}
                                 <div
-                                  className="relative overflow-hidden"
+                                  className="relative overflow-hidden w-full"
                                   style={{
-                                    width: frameWidth,
                                     aspectRatio: frameAspect,
                                   }}
                                 >
