@@ -232,8 +232,9 @@ export default function ShopPage() {
                 const photo = product.photos;
                 const isPortrait = isPhotoPortrait(product);
 
-                const frameWidth = isPortrait ? 240 : 340;
-                const frameHeight = isPortrait ? 340 : 240;
+                const frameAspect = isPortrait ? '12 / 17' : '17 / 12';
+                const frameMaxWidth = isPortrait ? '240px' : '340px';
+                const frameWidth = isPortrait ? 'min(240px, 50vw)' : 'min(340px, 60vw)';
 
                 return (
                   <Link
@@ -282,8 +283,8 @@ export default function ShopPage() {
                                 <div
                                   className="relative overflow-hidden"
                                   style={{
-                                    width: `${frameWidth}px`,
-                                    height: `${frameHeight}px`,
+                                    width: frameWidth,
+                                    aspectRatio: frameAspect,
                                   }}
                                 >
                                   {photo?.url && (
