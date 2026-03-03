@@ -243,7 +243,7 @@ export default function ShopPage() {
                   >
                     <div
                       className="bg-[#f5f5f5] flex items-center justify-center"
-                      style={{ height: 'calc(100vh - 260px)' }}
+                      style={{ aspectRatio: isPortrait ? '3 / 4' : '4 / 3' }}
                     >
                       {/* Realistic frame - same as home page */}
                       <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
