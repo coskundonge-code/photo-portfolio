@@ -132,9 +132,9 @@ export default function ProductPage() {
 
   const isPortrait = isPhotoPortrait();
   
-  // Fotoğraf boyutları
-  const basePhotoWidth = isPortrait ? 340 : 480;
-  const basePhotoHeight = isPortrait ? 480 : 340;
+  // Fotoğraf aspect ratio ve max boyutlar
+  const photoAspect = isPortrait ? '340 / 480' : '480 / 340';
+  const frameMaxWidth = isPortrait ? '442px' : '632px'; // photo + 2*(12+50+4+10) for mat
 
   const calculatePrice = () => {
     return (selectedSize.price || product?.base_price || 0) + (selectedFrame.price || 0);
@@ -207,7 +207,7 @@ export default function ProductPage() {
                 {/* Çerçeve + Fotoğraf */}
                 <div
                   className="relative transition-all duration-700 ease-out"
-                  style={{ transform: `scale(${selectedSize.scale})` }}
+                  style={{ transform: `scale(${selectedSize.scale})`, width: '100%', maxWidth: frameMaxWidth }}
                 >
                   {/* ===== ÇERÇEVE - Ana sayfa ile aynı yapı ===== */}
                   <div
@@ -249,8 +249,8 @@ export default function ProductPage() {
                             {/* ===== FOTOĞRAF ===== */}
                             <div
                               style={{
-                                width: `${basePhotoWidth}px`,
-                                height: `${basePhotoHeight}px`,
+                                width: '100%',
+                                aspectRatio: photoAspect,
                                 position: 'relative',
                                 overflow: 'hidden',
                               }}
@@ -271,8 +271,8 @@ export default function ProductPage() {
                         /* Full bleed - no V-groove */
                         <div
                           style={{
-                            width: `${basePhotoWidth}px`,
-                            height: `${basePhotoHeight}px`,
+                            width: '100%',
+                            aspectRatio: photoAspect,
                             position: 'relative',
                             overflow: 'hidden',
                           }}
