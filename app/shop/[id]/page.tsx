@@ -96,6 +96,7 @@ export default function ProductPage() {
   
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [showFloatingCart, setShowFloatingCart] = useState(false);
+  const [detectedPortrait, setDetectedPortrait] = useState<boolean | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -109,6 +110,17 @@ export default function ProductPage() {
     };
     loadData();
   }, [params.id]);
+
+  // Gerçek resim boyutlarını tespit et (metadata yanlış olabilir)
+  useEffect(() => {
+    if (product?.photos?.url) {
+      const img = new window.Image();
+      img.onload = () => {
+        setDetectedPortrait(img.naturalHeight > img.naturalWidth);
+      };
+      img.src = product.photos.url;
+    }
+  }, [product?.photos?.url]);
 
   // Floating cart gösterme
   useEffect(() => {
@@ -130,7 +142,8 @@ export default function ProductPage() {
     return false;
   };
 
-  const isPortrait = isPhotoPortrait();
+  // Gerçek resim boyutları tespit edildiyse onu kullan, yoksa metadata'ya bak
+  const isPortrait = detectedPortrait !== null ? detectedPortrait : isPhotoPortrait();
   
   // Fotoğraf aspect ratio ve max boyutlar
   const photoAspect = isPortrait ? '340 / 480' : '480 / 340';

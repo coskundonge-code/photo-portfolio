@@ -31,11 +31,11 @@ interface LightboxProps {
 }
 
 export default function Lightbox(props: LightboxProps) {
-  const { 
+  const {
     // Yeni API
-    photos, 
+    photos,
     initialIndex = 0,
-    
+
     // Eski API
     isOpen: isOpenProp,
     imageUrl: imageUrlProp,
@@ -44,15 +44,16 @@ export default function Lightbox(props: LightboxProps) {
     onNext: onNextProp,
     hasPrev: hasPrevProp = false,
     hasNext: hasNextProp = false,
-    
+
     // Ortak
-    onClose 
+    onClose
   } = props;
 
   // Dizi modu mu tekil mod mu?
   const isArrayMode = Boolean(photos && photos.length > 0);
-  
+
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [isPortrait, setIsPortrait] = useState(false);
 
   // initialIndex değişince güncelle
   useEffect(() => {
@@ -83,6 +84,17 @@ export default function Lightbox(props: LightboxProps) {
       onNextProp();
     }
   }, [isArrayMode, currentIndex, photos?.length, onNextProp]);
+
+  // Gerçek resim boyutlarını tespit et
+  useEffect(() => {
+    if (imageUrl) {
+      const img = new window.Image();
+      img.onload = () => {
+        setIsPortrait(img.naturalHeight > img.naturalWidth);
+      };
+      img.src = imageUrl;
+    }
+  }, [imageUrl]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -134,17 +146,17 @@ export default function Lightbox(props: LightboxProps) {
       )}
 
       {/* Framed Image */}
-      <div className="relative z-40 mx-4">
+      <div className="relative z-40 mx-2 sm:mx-4" style={{ maxWidth: '95vw', maxHeight: '95vh' }}>
         {/* Frame border - black */}
         <div
-          className="border-[10px] border-black"
+          className="border-[6px] sm:border-[10px] border-black"
           style={{
             boxShadow: '6px 6px 20px rgba(0,0,0,0.35), 3px 3px 10px rgba(0,0,0,0.2)'
           }}
         >
           {/* White mat with inner shadow from top-left light */}
           <div
-            className="bg-white p-10 md:p-14"
+            className="bg-white p-4 sm:p-10 md:p-14"
             style={{
               boxShadow: 'inset 20px 20px 45px rgba(0,0,0,0.18), inset 8px 8px 20px rgba(0,0,0,0.12)'
             }}
@@ -152,15 +164,15 @@ export default function Lightbox(props: LightboxProps) {
             {/* V-groove - realistic bevel with depth */}
             <div
               style={{
-                padding: '4px',
+                padding: '3px',
                 background: 'linear-gradient(145deg, #909090 0%, #b0b0b0 30%, #d0d0d0 70%, #e8e8e8 100%)',
                 boxShadow: 'inset 1px 1px 3px rgba(0,0,0,0.4), inset -1px -1px 2px rgba(255,255,255,0.6)'
               }}
             >
               {/* Inner recessed area */}
               <div
+                className="p-1.5 sm:p-3"
                 style={{
-                  padding: '12px',
                   background: '#e8e8e8',
                   boxShadow: 'inset 3px 3px 8px rgba(0,0,0,0.15), inset 1px 1px 4px rgba(0,0,0,0.1)'
                 }}
@@ -168,10 +180,10 @@ export default function Lightbox(props: LightboxProps) {
                 <Image
                   src={imageUrl}
                   alt={title || 'Photo'}
-                  width={1920}
-                  height={1280}
+                  width={isPortrait ? 1280 : 1920}
+                  height={isPortrait ? 1920 : 1280}
                   quality={95}
-                  className="max-w-[85vw] max-h-[70vh] w-auto h-auto object-contain block"
+                  className="max-w-[82vw] sm:max-w-[85vw] max-h-[60vh] sm:max-h-[70vh] w-auto h-auto object-contain block"
                   priority
                 />
               </div>

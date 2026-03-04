@@ -50,6 +50,7 @@ export default function ShopPage() {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
   const [pageReady, setPageReady] = useState(false);
+  const [detectedOrientations, setDetectedOrientations] = useState<Record<string, boolean>>({});
 
   const themes = themeIds.map(id => ({
     id,
@@ -74,6 +75,20 @@ export default function ShopPage() {
       setProducts(productsData);
       setFilteredProducts(productsData);
       setLoading(false);
+
+      // Gerçek resim boyutlarını tespit et (metadata yanlış olabilir)
+      productsData.forEach((p: Product) => {
+        if (p.photos?.url) {
+          const img = new window.Image();
+          img.onload = () => {
+            setDetectedOrientations(prev => ({
+              ...prev,
+              [p.id]: img.naturalHeight > img.naturalWidth
+            }));
+          };
+          img.src = p.photos.url;
+        }
+      });
 
       // Simple page fade-in
       setTimeout(() => setPageReady(true), 100);
@@ -230,7 +245,10 @@ export default function ShopPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {filteredProducts.map((product) => {
                 const photo = product.photos;
-                const isPortrait = isPhotoPortrait(product);
+                // Gerçek resim boyutları tespit edildiyse onu kullan
+                const isPortrait = product.id in detectedOrientations
+                  ? detectedOrientations[product.id]
+                  : isPhotoPortrait(product);
 
                 const frameAspect = isPortrait ? '12 / 17' : '17 / 12';
                 // Max total frame widths: portrait=342px, landscape=458px
