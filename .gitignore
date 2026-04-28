@@ -44,3 +44,5 @@ coverage/
 # Misc
 *.log
 *.cache
+# local helper log (auto-generated)
+commit-push-coskun.log
