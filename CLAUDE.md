@@ -1,7 +1,7 @@
 # CLAUDE.md — photo-portfolio
 
 > Bu dosya Cowork (Claude) oturumlarının başında okunur.
-> Ana kural: `P:\AI_PROJECT\00_Sistem_Yonetimi\COSKUN_IKI_RAF_KURALLARI.md`
+> Ana kural: `G:\My Drive\AI_PROJECT\AI_PROJECT\00_Sistem_Yonetimi\COSKUN_IKI_RAF_KURALLARI.md`
 
 ---
 
@@ -28,7 +28,7 @@ Bu projede iki branch kullanılır:
 - coskun rafı yoksa: mevcut HEAD'den oluştur, push et
 
 ### Tam kural belgesi
-`P:\AI_PROJECT\00_Sistem_Yonetimi\COSKUN_IKI_RAF_KURALLARI.md`
+`G:\My Drive\AI_PROJECT\AI_PROJECT\00_Sistem_Yonetimi\COSKUN_IKI_RAF_KURALLARI.md`
 
 ---
 
