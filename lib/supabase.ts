@@ -391,11 +391,58 @@ export const updatePhotoOrder = async (photos: { id: string; order_index: number
 // ================================================
 // PRODUCTS
 // ================================================
+//
+// Ürünlerin "aktif" bayrağı iki farklı sütun adıyla gelebilir:
+//   • is_active    → uygulamanın beklediği sütun
+//   • is_available → Nisan 2026'da eski şemayla geri yüklenen veritabanındaki sütun
+// Sorgular hiçbir sütun adına bağlı kalmadan tüm satırları çeker ve filtrelemeyi
+// burada yapar; yazma işlemlerinde önce is_active denenir, sütun yoksa (42703)
+// is_available ile tekrar edilir. Kalıcı çözüm supabase-schema.sql dosyasıdır.
+
+type ProductRow = Record<string, any>;
+
+const isUndefinedColumnError = (error: { code?: string } | null | undefined): boolean =>
+  !!error && error.code === '42703';
+
+const isProductActive = (row: ProductRow): boolean => {
+  if (typeof row.is_active === 'boolean') return row.is_active;
+  if (typeof row.is_available === 'boolean') return row.is_available;
+  return true;
+};
+
+const normalizeProduct = (row: ProductRow): Product => {
+  const active = isProductActive(row);
+  const edition_type: Product['edition_type'] = row.edition_type === 'collector' ? 'limited' : (row.edition_type || 'open');
+  return { ...row, edition_type, is_available: active, is_active: active } as unknown as Product;
+};
+
+const toDbProduct = (product: Partial<Product>, activeColumn: 'is_active' | 'is_available'): ProductRow => {
+  const { is_available, photos: _photos, ...rest } = product as Partial<Product> & { photos?: unknown };
+  const dbProduct: ProductRow = { ...rest };
+  delete dbProduct.is_active;
+  if (typeof is_available === 'boolean') {
+    dbProduct[activeColumn] = is_available;
+  }
+  return dbProduct;
+};
+
+type ProductWriteResult = { data: ProductRow | null; error: { code?: string; message?: string } | null };
+
+const writeProductWithFallback = async (
+  product: Partial<Product>,
+  run: (dbProduct: ProductRow) => PromiseLike<ProductWriteResult>
+): Promise<ProductWriteResult> => {
+  let result = await run(toDbProduct(product, 'is_active'));
+  if (result.error && isUndefinedColumnError(result.error) && typeof product.is_available === 'boolean') {
+    result = await run(toDbProduct(product, 'is_available'));
+  }
+  return result;
+};
+
 export const getProducts = async (): Promise<Product[]> => {
   const { data, error } = await supabase
     .from('products')
     .select('*, photos(*)')
-    .eq('is_active', true)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -403,7 +450,7 @@ export const getProducts = async (): Promise<Product[]> => {
     return [];
   }
 
-  return (data || []).map(p => ({ ...p, is_available: p.is_active }));
+  return (data || []).map(normalizeProduct).filter((p) => p.is_available);
 };
 
 export const getAllProducts = async (): Promise<Product[]> => {
@@ -417,7 +464,7 @@ export const getAllProducts = async (): Promise<Product[]> => {
     return [];
   }
 
-  return (data || []).map(p => ({ ...p, is_available: p.is_active }));
+  return (data || []).map(normalizeProduct);
 };
 
 export const getProductById = async (id: string): Promise<Product | null> => {
@@ -432,51 +479,44 @@ export const getProductById = async (id: string): Promise<Product | null> => {
     return null;
   }
 
-  return data ? { ...data, is_available: data.is_active } : null;
+  return data ? normalizeProduct(data) : null;
 };
 
 export const createProduct = async (product: Partial<Product>): Promise<Product | null> => {
-  const dbProduct: any = { ...product };
-  if ('is_available' in product) {
-    dbProduct.is_active = product.is_available;
-    delete dbProduct.is_available;
-  }
-
-  const { data, error } = await supabase
-    .from('products')
-    .insert([dbProduct])
-    .select()
-    .single();
+  const { data, error } = await writeProductWithFallback(product, (dbProduct) =>
+    supabase
+      .from('products')
+      .insert([dbProduct])
+      .select()
+      .single()
+  );
 
   if (error) {
     console.error('Error creating product:', error);
     return null;
   }
 
-  return data;
+  return data ? normalizeProduct(data) : null;
 };
 
 export const updateProduct = async (id: string, product: Partial<Product>): Promise<Product | null> => {
-  const dbProduct: any = { ...product, updated_at: new Date().toISOString() };
-  
-  if ('is_available' in product) {
-    dbProduct.is_active = product.is_available;
-    delete dbProduct.is_available;
-  }
-
-  const { data, error } = await supabase
-    .from('products')
-    .update(dbProduct)
-    .eq('id', id)
-    .select()
-    .single();
+  const { data, error } = await writeProductWithFallback(
+    { ...product, updated_at: new Date().toISOString() },
+    (dbProduct) =>
+      supabase
+        .from('products')
+        .update(dbProduct)
+        .eq('id', id)
+        .select()
+        .single()
+  );
 
   if (error) {
     console.error('Error updating product:', error);
     return null;
   }
 
-  return data;
+  return data ? normalizeProduct(data) : null;
 };
 
 export const deleteProduct = async (id: string): Promise<boolean> => {

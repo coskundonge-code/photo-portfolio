@@ -52,14 +52,22 @@ Supabase, fotoğraflarınızı ve veritabanınızı barındıracak ücretsiz bir
 4. **Run** butonuna tıklayın (veya Ctrl/Cmd + Enter)
 5. ✅ "Success" mesajını görmelisiniz
 
-### Adım 1.4: Storage (Fotoğraf Depolama) Ayarlayın
+> Bu dosya tekrar tekrar çalıştırılabilir. Uygulama güncellendiğinde yeni sütun/tablo
+> gerekiyorsa aynı dosyayı yeniden çalıştırmanız yeterlidir; mevcut verilere dokunmaz.
 
-1. Sol menüden **Storage** seçin
-2. **New bucket** tıklayın
-3. Ayarlar:
-   - **Name**: `images`
-   - **Public bucket**: ✅ İşaretleyin
-4. **Create bucket** tıklayın
+### Adım 1.4: Fotoğraf Depolama (Cloudinary)
+
+Fotoğraf dosyaları Supabase'de değil **Cloudinary**'de tutulur; Supabase yalnızca
+fotoğrafların bağlantı ve bilgilerini saklar. Yönetim paneli dosyaları doğrudan
+Cloudinary'ye yükler (`lib/cloudinary.ts`):
+
+- Cloud name: `dgiak1uhc`
+- Upload preset: `photo-portfolio` (**unsigned** olmalı)
+- Klasör: `photo-portfolio`
+
+Farklı bir Cloudinary hesabı kullanacaksanız `lib/cloudinary.ts` içindeki
+`CLOUD_NAME` ve `UPLOAD_PRESET` değerlerini güncelleyin ve Cloudinary panelinde
+unsigned bir upload preset oluşturun.
 
 ### Adım 1.5: API Anahtarlarını Alın
 
@@ -248,6 +256,18 @@ siteName="SİZİN İSMİNİZ"
 
 - Supabase SQL şemasını çalıştırdınız mı?
 - `NEXT_PUBLIC_SUPABASE_URL` ve `NEXT_PUBLIC_SUPABASE_ANON_KEY` doğru mu?
+
+### "Mağaza boş / ürün eklenemiyor / üye kaydı çalışmıyor"
+
+- Veritabanı şeması uygulamanın gerisinde kalmış olabilir. `supabase-schema.sql`
+  dosyasını SQL Editor'da yeniden çalıştırın (güvenlidir, verileri silmez).
+- Ayrıntılar: `docs/VERITABANI-ONARIM.md`
+
+### "Supabase projesi duraklatıldı (paused)"
+
+- Ücretsiz plan 7 gün boyunca istek gelmeyen projeleri duraklatır; uzun süre
+  duraklatılan projeler silinebilir. Supabase panelinden **Restore** yapın ve
+  düzenli yedek alın (Database → Backups).
 
 ### "Site yavaş açılıyor"
 

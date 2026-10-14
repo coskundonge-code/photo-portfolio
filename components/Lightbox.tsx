@@ -16,7 +16,7 @@ interface LightboxProps {
   // Yeni API - fotoğraf dizisi ile çalışma
   photos?: Photo[];
   initialIndex?: number;
-  
+
   // Eski API - tekil fotoğraf ile çalışma (geriye uyumluluk)
   isOpen?: boolean;
   imageUrl?: string;
@@ -25,7 +25,7 @@ interface LightboxProps {
   onNext?: () => void;
   hasPrev?: boolean;
   hasNext?: boolean;
-  
+
   // Ortak
   onClose: () => void;
 }
@@ -64,7 +64,7 @@ export default function Lightbox(props: LightboxProps) {
   const currentPhoto = isArrayMode ? photos![currentIndex] : null;
   const imageUrl = isArrayMode ? currentPhoto?.url : imageUrlProp;
   const title = isArrayMode ? currentPhoto?.title : titleProp;
-  
+
   // Navigasyon durumları
   const hasPrev = isArrayMode ? currentIndex > 0 : hasPrevProp;
   const hasNext = isArrayMode ? currentIndex < (photos?.length || 0) - 1 : hasNextProp;
@@ -85,16 +85,25 @@ export default function Lightbox(props: LightboxProps) {
     }
   }, [isArrayMode, currentIndex, photos?.length, onNextProp]);
 
-  // Gerçek resim boyutlarını tespit et
+  // Gerçek resim boyutlarını tespit et (veritabanındaki metadata yanlış olabilir)
   useEffect(() => {
-    if (imageUrl) {
-      const img = new window.Image();
-      img.onload = () => {
-        setIsPortrait(img.naturalHeight > img.naturalWidth);
-      };
-      img.src = imageUrl;
+    if (!imageUrl) return;
+    // Metadata varsa önce onu kullan, yüklenince gerçek boyutla düzelt
+    if (currentPhoto?.orientation === 'portrait' || currentPhoto?.orientation === 'landscape') {
+      setIsPortrait(currentPhoto.orientation === 'portrait');
+    } else if (currentPhoto?.width && currentPhoto?.height) {
+      setIsPortrait(currentPhoto.height > currentPhoto.width);
     }
-  }, [imageUrl]);
+    let cancelled = false;
+    const img = new window.Image();
+    img.onload = () => {
+      if (!cancelled) setIsPortrait(img.naturalHeight > img.naturalWidth);
+    };
+    img.src = imageUrl;
+    return () => {
+      cancelled = true;
+    };
+  }, [imageUrl, currentPhoto?.orientation, currentPhoto?.width, currentPhoto?.height]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -145,8 +154,10 @@ export default function Lightbox(props: LightboxProps) {
         </button>
       )}
 
-      {/* Framed Image */}
-      <div className="relative z-40 mx-2 sm:mx-4" style={{ maxWidth: '95vw', maxHeight: '95vh' }}>
+      {/* Framed Image.
+          The photo is sized with calc() so that photo + mat + frame always fit the
+          viewport on every breakpoint (mobile: 6px frame + 16px mat + 3px groove + 6px inner). */}
+      <div className="relative z-40 mx-2 sm:mx-4">
         {/* Frame border - black */}
         <div
           className="border-[6px] sm:border-[10px] border-black"
@@ -178,12 +189,14 @@ export default function Lightbox(props: LightboxProps) {
                 }}
               >
                 <Image
+                  key={imageUrl}
                   src={imageUrl}
                   alt={title || 'Photo'}
                   width={isPortrait ? 1280 : 1920}
                   height={isPortrait ? 1920 : 1280}
                   quality={95}
-                  className="max-w-[82vw] sm:max-w-[85vw] max-h-[60vh] sm:max-h-[70vh] w-auto h-auto object-contain block"
+                  sizes="100vw"
+                  className="block w-auto h-auto object-contain max-w-[calc(100vw-78px)] sm:max-w-[calc(100vw-162px)] md:max-w-[calc(100vw-194px)] max-h-[calc(100vh-162px)] sm:max-h-[calc(100vh-250px)] md:max-h-[calc(100vh-282px)]"
                   priority
                 />
               </div>

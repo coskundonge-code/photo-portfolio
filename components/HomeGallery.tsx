@@ -5,11 +5,16 @@ import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Photo, Project } from '@/lib/types';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import MasonryGrid from './MasonryGrid';
 
 interface HomeGalleryProps {
   photos: Photo[];
   projects: Project[];
 }
+
+const photoKey = (photo: Photo) => photo.id;
+const photoAspect = (photo: Photo) =>
+  photo.width && photo.height ? photo.height / photo.width : undefined;
 
 export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
   const searchParams = useSearchParams();
@@ -21,6 +26,8 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
   const [lightboxVisible, setLightboxVisible] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [highlightedPhoto, setHighlightedPhoto] = useState<string | null>(null);
+  // Lightbox'ta gerçek görsel yönü (veritabanındaki metadata yanlış olabilir)
+  const [lightboxPortrait, setLightboxPortrait] = useState<boolean | null>(null);
 
   // Scroll to photo when coming from intro page
   useEffect(() => {
@@ -71,8 +78,25 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
     };
   }, [lightboxOpen]);
 
+  const currentPhoto = photos[currentIndex];
+
+  // Gerçek görsel boyutlarını tespit et
+  useEffect(() => {
+    if (!lightboxOpen || !currentPhoto?.url) return;
+    let cancelled = false;
+    const img = new window.Image();
+    img.onload = () => {
+      if (!cancelled) setLightboxPortrait(img.naturalHeight > img.naturalWidth);
+    };
+    img.src = currentPhoto.url;
+    return () => {
+      cancelled = true;
+    };
+  }, [lightboxOpen, currentPhoto?.url]);
+
   const openLightbox = (index: number) => {
     setCurrentIndex(index);
+    setLightboxPortrait(null);
     setLightboxOpen(true);
     setTimeout(() => setLightboxVisible(true), 50);
   };
@@ -106,7 +130,11 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
     );
   }
 
-  const currentPhoto = photos[currentIndex];
+  const isPortrait =
+    lightboxPortrait !== null
+      ? lightboxPortrait
+      : currentPhoto?.orientation === 'portrait' ||
+        (!!currentPhoto?.width && !!currentPhoto?.height && currentPhoto.height > currentPhoto.width);
 
   return (
     <>
@@ -118,16 +146,19 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
           transition: 'opacity 1.2s ease',
         }}
       >
-        <div className="columns-1 sm:columns-2 lg:columns-3 gap-8 md:gap-10 lg:gap-12">
-          {photos.map((photo, index) => (
+        <MasonryGrid
+          items={photos}
+          getKey={photoKey}
+          getAspect={photoAspect}
+          className="gap-8 md:gap-10 lg:gap-12"
+          renderItem={(photo, index) => (
             <div
-              key={photo.id}
               ref={(el) => {
                 if (el) photoRefs.current.set(photo.id, el);
               }}
               data-photo-id={photo.id}
               onClick={() => openLightbox(index)}
-              className={`block mb-12 md:mb-14 lg:mb-16 break-inside-avoid cursor-pointer group transition-all duration-500 ${
+              className={`block mb-12 md:mb-14 lg:mb-16 cursor-pointer group transition-all duration-500 ${
                 highlightedPhoto === photo.id ? 'ring-4 ring-neutral-400 ring-offset-4 rounded-sm' : ''
               }`}
             >
@@ -172,6 +203,7 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                           width={800}
                           height={600}
                           quality={90}
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           className="w-full h-auto block"
                         />
                       </div>
@@ -180,8 +212,8 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+          )}
+        />
       </div>
 
       {/* Lightbox - White wall background */}
@@ -220,7 +252,9 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
             </>
           )}
 
-          {/* Framed Image - hanging on wall effect */}
+          {/* Framed Image - hanging on wall effect.
+              The photo is sized with calc() so that photo + mat + frame always fit the
+              viewport; previously landscape photos were cut off on phones. */}
           <div
             className="relative z-40 mx-4"
             onClick={(e) => e.stopPropagation()}
@@ -231,14 +265,14 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
           >
             {/* Frame border - black */}
             <div
-              className="border-[10px] border-black"
+              className="border-[6px] sm:border-[10px] border-black"
               style={{
                 boxShadow: '6px 6px 20px rgba(0,0,0,0.35), 3px 3px 10px rgba(0,0,0,0.2)'
               }}
             >
               {/* White mat with inner shadow from top-left light */}
               <div
-                className="bg-white p-10 md:p-14"
+                className="bg-white p-4 sm:p-10 md:p-14"
                 style={{
                   boxShadow: 'inset 20px 20px 45px rgba(0,0,0,0.18), inset 8px 8px 20px rgba(0,0,0,0.12)'
                 }}
@@ -253,19 +287,21 @@ export default function HomeGallery({ photos, projects }: HomeGalleryProps) {
                 >
                   {/* Inner recessed area */}
                   <div
+                    className="p-2 sm:p-3"
                     style={{
-                      padding: '12px',
                       background: '#e8e8e8',
                       boxShadow: 'inset 3px 3px 8px rgba(0,0,0,0.15), inset 1px 1px 4px rgba(0,0,0,0.1)'
                     }}
                   >
                     <Image
+                      key={currentPhoto.id}
                       src={currentPhoto.url}
-                      alt=""
-                      width={1920}
-                      height={1280}
+                      alt={currentPhoto.title || ''}
+                      width={isPortrait ? 1280 : 1920}
+                      height={isPortrait ? 1920 : 1280}
                       quality={95}
-                      className="max-w-[85vw] max-h-[70vh] w-auto h-auto object-contain block"
+                      sizes="100vw"
+                      className="block w-auto h-auto object-contain max-w-[calc(100vw-100px)] sm:max-w-[calc(100vw-164px)] md:max-w-[calc(100vw-196px)] max-h-[calc(100vh-168px)] sm:max-h-[calc(100vh-252px)] md:max-h-[calc(100vh-284px)]"
                       priority
                     />
                   </div>
