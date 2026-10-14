@@ -7,10 +7,15 @@ import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import Lightbox from '@/components/Lightbox';
+import MasonryGrid from '@/components/MasonryGrid';
 import { getSettings, getProjects, getPhotos } from '@/lib/supabase';
 import { Settings, Project, Photo } from '@/lib/types';
 import { useLanguage } from '@/lib/language';
 import { Loader2 } from 'lucide-react';
+
+const photoKey = (photo: Photo) => photo.id;
+const photoAspect = (photo: Photo) =>
+  photo.width && photo.height ? photo.height / photo.width : undefined;
 
 // Ana içerik bileşeni - useSearchParams burada
 function WorkContent() {
@@ -155,12 +160,16 @@ function WorkContent() {
               <p className="text-neutral-500">{t('work.noPhotos')}</p>
             </div>
           ) : (
-            <div className="columns-1 sm:columns-2 lg:columns-3 gap-8 md:gap-10 lg:gap-12 bg-[#f5f5f5] p-6 -mx-4 lg:-mx-8">
-              {filteredPhotos.map((photo, index) => (
+            <MasonryGrid
+              items={filteredPhotos}
+              getKey={photoKey}
+              getAspect={photoAspect}
+              className="gap-8 md:gap-10 lg:gap-12 bg-[#f5f5f5] p-6 -mx-4 lg:-mx-8"
+              renderItem={(photo, index) => (
                 <div
-                  key={photo.id}
+                  data-photo-id={photo.id}
                   onClick={() => openLightbox(index)}
-                  className="block mb-12 md:mb-14 lg:mb-16 break-inside-avoid cursor-pointer group"
+                  className="block mb-12 md:mb-14 lg:mb-16 cursor-pointer group"
                 >
                   {/* Realistic frame - same as home page, scaled down 15% */}
                   <div
@@ -203,6 +212,7 @@ function WorkContent() {
                               width={800}
                               height={600}
                               quality={90}
+                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                               className="w-full h-auto block"
                             />
                           </div>
@@ -211,8 +221,8 @@ function WorkContent() {
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              )}
+            />
           )}
         </div>
       </section>
