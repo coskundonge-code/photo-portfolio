@@ -3,6 +3,7 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import HomeGallery from '@/components/HomeGallery';
 import { getSettings, getProjects, getPhotos, getFeaturedPhotos } from '@/lib/supabase';
+import { filterGalleryPhotos } from '@/lib/gallery';
 
 export const revalidate = 60;
 
@@ -15,7 +16,7 @@ export default async function HomePage() {
   ]);
 
   // Featured fotoğraflar varsa onları göster, yoksa tümünü göster
-  const photos = featuredPhotos.length > 0 ? featuredPhotos : allPhotos;
+  const photos = filterGalleryPhotos(featuredPhotos.length > 0 ? featuredPhotos : allPhotos);
 
   return (
     <main className="min-h-screen bg-white">

@@ -9,6 +9,7 @@ import Footer from '@/components/Footer';
 import Lightbox from '@/components/Lightbox';
 import MasonryGrid from '@/components/MasonryGrid';
 import { getSettings, getProjects, getPhotos } from '@/lib/supabase';
+import { filterGalleryPhotos } from '@/lib/gallery';
 import { Settings, Project, Photo } from '@/lib/types';
 import { useLanguage } from '@/lib/language';
 import { Loader2 } from 'lucide-react';
@@ -51,7 +52,7 @@ function WorkContent() {
       ]);
       setSettings(settingsData);
       setProjects(projectsData);
-      setPhotos(photosData);
+      setPhotos(filterGalleryPhotos(photosData));
 
       // URL'de proje parametresi yoksa ilk projeyi seç
       if (!projectParam && projectsData.length > 0) {

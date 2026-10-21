@@ -108,3 +108,15 @@ migrasyonların Claude tarafından doğrudan uygulanabilmesi için iki seçenek:
 | Alan adları | www.coskundonge.com, coskundonge.com (DNS doğru) |
 | Supabase projesi | `uiwnhmhxqkhlhmnrmroq` (üretim paketinden doğrulandı) |
 | Görsel depolama | Cloudinary `dgiak1uhc`, klasör `photo-portfolio`, unsigned preset `photo-portfolio` |
+
+## 5. Kod tarafındaki geçici koruma (21 Ekim 2026)
+
+Veritabanındaki mükerrer ve küçük boyutlu fotoğraf kayıtları silinene kadar
+`lib/gallery.ts` içindeki `filterGalleryPhotos` herkese açık galerilerde (ana sayfa,
+`/gallery`, `/work`) şu kayıtları gizler:
+
+- uzun kenarı 600 pikselin altında olan görseller (küçük resim boyutunda yüklemeler),
+- aynı başlık ve aynı piksel boyutlarına sahip ikinci ve sonraki kayıtlar.
+
+Yönetim paneli bu filtreyi kullanmaz; tüm kayıtları görmeye ve silmeye devam eder.
+Adım 1 ve Adım 4 uygulandıktan sonra bu filtrenin etkisi kalmaz, kaldırılması gerekmez.
