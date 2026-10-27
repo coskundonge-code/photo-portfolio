@@ -7,6 +7,7 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/lib/auth';
 import { useLanguage } from '@/lib/language';
+import { SHOP_ENABLED } from '@/lib/features';
 import { getSettings, getProjects, getUserOrders, updateProfile, Order } from '@/lib/supabase';
 import { Settings, Project } from '@/lib/types';
 import { Loader2, User, Package, Settings as SettingsIcon, LogOut, CheckCircle, AlertCircle } from 'lucide-react';
@@ -182,12 +183,14 @@ export default function AccountPage() {
                 <div className="text-center py-16">
                   <Package className="w-12 h-12 text-neutral-300 mx-auto mb-4" />
                   <p className="text-neutral-500">{t('auth.noOrders')}</p>
-                  <Link
-                    href="/shop"
-                    className="inline-block mt-6 px-8 py-3 bg-black text-white text-sm hover:bg-neutral-800 transition-colors"
-                  >
-                    {t('nav.shop')}
-                  </Link>
+                  {SHOP_ENABLED && (
+                    <Link
+                      href="/shop"
+                      className="inline-block mt-6 px-8 py-3 bg-black text-white text-sm hover:bg-neutral-800 transition-colors"
+                    >
+                      {t('nav.shop')}
+                    </Link>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4">

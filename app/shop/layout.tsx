@@ -1,4 +1,6 @@
 import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
+import { SHOP_ENABLED } from '@/lib/features'
 
 export const metadata: Metadata = {
   title: 'Shop',
@@ -17,5 +19,6 @@ export default function ShopLayout({
 }: {
   children: React.ReactNode;
 }) {
+  if (!SHOP_ENABLED) notFound();
   return children;
 }
