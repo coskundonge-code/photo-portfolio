@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next'
 import { getProducts, getProjects } from '@/lib/supabase'
+import { SHOP_ENABLED } from '@/lib/features'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://www.coskundonge.com'
@@ -18,12 +19,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.9,
     },
-    {
-      url: `${baseUrl}/shop`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
+    ...(SHOP_ENABLED
+      ? [{
+          url: `${baseUrl}/shop`,
+          lastModified: new Date(),
+          changeFrequency: 'weekly' as const,
+          priority: 0.9,
+        }]
+      : []),
     {
       url: `${baseUrl}/contact`,
       lastModified: new Date(),
@@ -35,7 +38,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Dinamik ürün sayfaları
   let productPages: MetadataRoute.Sitemap = []
   try {
-    const products = await getProducts()
+    const products = SHOP_ENABLED ? await getProducts() : []
     productPages = products.map((product) => ({
       url: `${baseUrl}/shop/${product.id}`,
       lastModified: new Date(product.updated_at || product.created_at || new Date()),

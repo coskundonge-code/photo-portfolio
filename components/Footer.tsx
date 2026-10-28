@@ -7,6 +7,7 @@ import { Instagram, Mail, X, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Settings } from '@/lib/types';
 import { useAdminStore } from '@/lib/store';
 import { useLanguage } from '@/lib/language';
+import { SHOP_ENABLED } from '@/lib/features';
 
 interface FooterProps {
   settings?: Settings | null;
@@ -88,9 +89,11 @@ export default function Footer({ settings }: FooterProps) {
                 <Link href="/work" className="block text-neutral-600 hover:text-black text-sm transition-colors">
                   {t('nav.work')}
                 </Link>
-                <Link href="/shop" className="block text-neutral-600 hover:text-black text-sm transition-colors">
-                  {t('nav.shop')}
-                </Link>
+                {SHOP_ENABLED && (
+                  <Link href="/shop" className="block text-neutral-600 hover:text-black text-sm transition-colors">
+                    {t('nav.shop')}
+                  </Link>
+                )}
                 <Link href="/about" className="block text-neutral-600 hover:text-black text-sm transition-colors">
                   {t('nav.about')}
                 </Link>

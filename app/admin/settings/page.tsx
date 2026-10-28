@@ -215,7 +215,7 @@ export default function SettingsPage() {
               <div className="flex items-start gap-6">
                 {aboutImage ? (
                   <div className="relative w-40 h-40 rounded-lg overflow-hidden">
-                    <Image src={aboutImage} alt="About" fill className="object-cover" />
+                    <Image src={aboutImage} alt="About" fill className="object-cover grayscale" />
                     <button
                       onClick={() => setAboutImage('')}
                       className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"

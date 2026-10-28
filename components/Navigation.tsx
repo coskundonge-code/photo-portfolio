@@ -7,6 +7,7 @@ import { Menu, X, User, ShoppingBag, ChevronDown, Globe, LogOut } from 'lucide-r
 import { Settings as SettingsType, Project } from '@/lib/types';
 import { useLanguage } from '@/lib/language';
 import { useAuth } from '@/lib/auth';
+import { SHOP_ENABLED } from '@/lib/features';
 import CartDrawer from './CartDrawer';
 import AuthModal from './AuthModal';
 
@@ -133,16 +134,18 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
                 )}
               </div>
 
-              <Link
-                href="/shop"
-                className={`relative text-[15px] tracking-wide transition-colors pb-1 ${
-                  pathname?.startsWith('/shop')
-                    ? 'text-black after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-black'
-                    : 'text-neutral-700 hover:text-black'
-                }`}
-              >
-                {t('nav.shop')}
-              </Link>
+              {SHOP_ENABLED && (
+                <Link
+                  href="/shop"
+                  className={`relative text-[15px] tracking-wide transition-colors pb-1 ${
+                    pathname?.startsWith('/shop')
+                      ? 'text-black after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-black'
+                      : 'text-neutral-700 hover:text-black'
+                  }`}
+                >
+                  {t('nav.shop')}
+                </Link>
+              )}
               <Link
                 href="/about"
                 className={`relative text-[15px] tracking-wide transition-colors pb-1 ${
@@ -224,18 +227,20 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
                 </button>
               )}
 
-              <button
-                onClick={() => setIsCartOpen(true)}
-                className="p-2 hover:opacity-60 transition-opacity relative"
-                title={t('nav.myCart')}
-              >
-                <ShoppingBag className="w-5 h-5" strokeWidth={1.5} />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-xs rounded-full flex items-center justify-center">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
+              {SHOP_ENABLED && (
+                <button
+                  onClick={() => setIsCartOpen(true)}
+                  className="p-2 hover:opacity-60 transition-opacity relative"
+                  title={t('nav.myCart')}
+                >
+                  <ShoppingBag className="w-5 h-5" strokeWidth={1.5} />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-xs rounded-full flex items-center justify-center">
+                      {cartCount}
+                    </span>
+                  )}
+                </button>
+              )}
 
               {/* Language Switcher - Single Click Toggle */}
               <button
@@ -275,7 +280,9 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
                   {getProjectTitle(project.title)}
                 </Link>
               ))}
-              <Link href="/shop" className="block text-lg" onClick={() => setIsMenuOpen(false)}>{t('nav.shop')}</Link>
+              {SHOP_ENABLED && (
+                <Link href="/shop" className="block text-lg" onClick={() => setIsMenuOpen(false)}>{t('nav.shop')}</Link>
+              )}
               <Link href="/about" className="block text-lg" onClick={() => setIsMenuOpen(false)}>{t('nav.about')}</Link>
               <Link href="/contact" className="block text-lg" onClick={() => setIsMenuOpen(false)}>{t('nav.contact')}</Link>
 
@@ -294,7 +301,7 @@ export default function Navigation({ projects = [], settings }: NavigationProps)
         )}
       </nav>
 
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      {SHOP_ENABLED && <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />}
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </>
   );

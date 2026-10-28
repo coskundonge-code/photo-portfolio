@@ -53,7 +53,7 @@ export default function AboutPage() {
                     src={settings.about_image}
                     alt={settings?.site_name || 'Photographer'}
                     fill
-                    className="object-cover"
+                    className="object-cover grayscale"
                     priority
                   />
                 </div>
